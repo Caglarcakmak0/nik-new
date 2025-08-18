@@ -1,0 +1,306 @@
+.competitions-page {
+  .competition-card {
+    border-radius: 16px;
+    transition: all 0.3s ease;
+    border: 2px solid #f0f0f0;
+    
+    &:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15);
+    }
+    
+    &.active {
+      border-color: #52c41a;
+      background: linear-gradient(135deg, #f6ffed 0%, #f0f9ff 100%);
+      
+      .competition-icon {
+        background: linear-gradient(135deg, #52c41a 0%, #73d13d 100%);
+        animation: pulse-green 2s infinite;
+      }
+    }
+    
+    &.upcoming {
+      border-color: #1890ff;
+      background: linear-gradient(135deg, #e6f7ff 0%, #f0f5ff 100%);
+      
+      .competition-icon {
+        background: linear-gradient(135deg, #1890ff 0%, #40a9ff 100%);
+      }
+    }
+    
+    &.ended {
+      border-color: #d9d9d9;
+      background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%);
+      
+      .competition-icon {
+        background: linear-gradient(135deg, #d9d9d9 0%, #bfbfbf 100%);
+      }
+    }
+    
+    &.joined {
+      border-color: #faad14;
+      
+      &::before {
+        content: '';
+        position: absolute;
+        top: -2px;
+        left: -2px;
+        right: -2px;
+        bottom: -2px;
+        background: linear-gradient(45deg, #faad14, #ffd666, #faad14);
+        border-radius: 18px;
+        z-index: -1;
+        animation: joined-glow 2s ease-in-out infinite alternate;
+      }
+    }
+    
+    .competition-icon {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      color: white;
+      background: #1890ff;
+      box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
+    }
+    
+    .ant-card-body {
+      padding: 20px;
+    }
+    
+    .ant-card-actions {
+      background: transparent;
+      border-top: 1px solid #f0f0f0;
+      
+      .ant-btn {
+        border-radius: 8px;
+        font-weight: 500;
+        
+        &.ant-btn-primary {
+          background: linear-gradient(135deg, #1890ff 0%, #40a9ff 100%);
+          border: none;
+          
+          &:hover {
+            background: linear-gradient(135deg, #40a9ff 0%, #69c0ff 100%);
+            transform: translateY(-1px);
+          }
+        }
+      }
+    }
+    
+    .ant-statistic {
+      .ant-statistic-title {
+        font-size: 12px;
+        color: #8c8c8c;
+        margin-bottom: 4px;
+      }
+      
+      .ant-statistic-content {
+        .ant-statistic-content-value {
+          font-weight: 600;
+        }
+      }
+    }
+    
+    .ant-progress {
+      .ant-progress-outer {
+        .ant-progress-inner {
+          background: rgba(0, 0, 0, 0.04);
+        }
+      }
+    }
+  }
+  
+  .competition-detail {
+    .detail-header {
+      padding: 20px;
+      background: linear-gradient(135deg, #f0f9ff 0%, #e6f7ff 100%);
+      border-radius: 12px;
+      margin-bottom: 20px;
+      
+      .ant-typography {
+        margin-bottom: 8px;
+        
+        &:last-child {
+          margin-bottom: 0;
+        }
+      }
+    }
+    
+    .detail-content {
+      .ant-card {
+        border-radius: 12px;
+        
+        .ant-card-head {
+          .ant-card-head-title {
+            font-weight: 600;
+          }
+        }
+        
+        .ant-list-item {
+          padding: 8px 0;
+          
+          .ant-list-item-meta {
+            .ant-list-item-meta-avatar {
+              .ant-badge {
+                .ant-badge-count {
+                  min-width: 20px;
+                  height: 20px;
+                  line-height: 18px;
+                  font-size: 11px;
+                  font-weight: 600;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  .ant-card {
+    border-radius: 16px;
+    border: 1px solid #f0f0f0;
+    
+    .ant-card-head {
+      border-bottom: 1px solid #f0f0f0;
+      
+      .ant-card-head-title {
+        font-size: 18px;
+        font-weight: 600;
+      }
+    }
+  }
+  
+  .ant-tabs {
+    .ant-tabs-tab {
+      font-weight: 500;
+      
+      &.ant-tabs-tab-active {
+        .ant-tabs-tab-btn {
+          color: #1890ff !important;
+          font-weight: 600;
+        }
+      }
+    }
+  }
+  
+  .ant-tag {
+    border-radius: 8px;
+    font-weight: 500;
+    
+    &.ant-tag-green {
+      background: linear-gradient(135deg, #b7eb8f 0%, #52c41a 100%);
+      color: white;
+      border: none;
+    }
+    
+    &.ant-tag-blue {
+      background: linear-gradient(135deg, #91d5ff 0%, #1890ff 100%);
+      color: white;
+      border: none;
+    }
+    
+    &.ant-tag-gold {
+      background: linear-gradient(135deg, #ffd666 0%, #faad14 100%);
+      color: white;
+      border: none;
+    }
+  }
+  
+  .ant-btn {
+    border-radius: 8px;
+    font-weight: 500;
+    
+    &.ant-btn-primary {
+      background: linear-gradient(135deg, #1890ff 0%, #40a9ff 100%);
+      border: none;
+      
+      &:hover {
+        background: linear-gradient(135deg, #40a9ff 0%, #69c0ff 100%);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
+      }
+    }
+  }
+  
+  // Animations
+  @keyframes pulse-green {
+    0% {
+      box-shadow: 0 4px 12px rgba(82, 196, 26, 0.3);
+    }
+    50% {
+      box-shadow: 0 8px 20px rgba(82, 196, 26, 0.5);
+    }
+    100% {
+      box-shadow: 0 4px 12px rgba(82, 196, 26, 0.3);
+    }
+  }
+  
+  @keyframes joined-glow {
+    0% {
+      box-shadow: 0 0 5px #faad14, 0 0 10px #faad14, 0 0 15px #faad14;
+    }
+    100% {
+      box-shadow: 0 0 10px #ffd666, 0 0 20px #ffd666, 0 0 30px #ffd666;
+    }
+  }
+  
+  // Responsive design
+  @media (max-width: 768px) {
+    .competition-card {
+      margin-bottom: 16px;
+      
+      .ant-card-body {
+        padding: 16px;
+      }
+      
+      .competition-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 20px;
+      }
+      
+      .ant-statistic {
+        .ant-statistic-content {
+          .ant-statistic-content-value {
+            font-size: 16px;
+          }
+        }
+      }
+    }
+    
+    .competition-detail {
+      .detail-header {
+        padding: 16px;
+      }
+      
+      .ant-row {
+        .ant-col {
+          margin-bottom: 16px;
+        }
+      }
+    }
+  }
+  
+  @media (max-width: 576px) {
+    .ant-row {
+      .ant-col {
+        width: 100% !important;
+        flex: none !important;
+      }
+    }
+    
+    .competition-card {
+      .ant-row {
+        .ant-col {
+          width: 50% !important;
+          flex: 0 0 50% !important;
+        }
+      }
+    }
+  }
+}

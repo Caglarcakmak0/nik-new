@@ -1,0 +1,483 @@
+// Import variables and mixins
+@import 'variables';
+@import 'mixins';
+
+// ===== KEYFRAME ANİMASYONLARI =====
+@keyframes fadeIn {
+  from { 
+    opacity: 0; 
+  }
+  to { 
+    opacity: 1; 
+  }
+}
+
+@keyframes fadeInUp {
+  from { 
+    opacity: 0; 
+    transform: translateY(20px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
+}
+
+@keyframes slideInFromTop {
+  from { 
+    opacity: 0; 
+    transform: translateY(-20px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
+}
+
+@keyframes tabActive {
+  0% { 
+    opacity: 0.8;
+  }
+  50% { 
+    opacity: 1;
+  }
+  100% { 
+    opacity: 0.8;
+  }
+}
+
+// ===== GLOBAL ANİMASYON STİLLERİ =====
+// Hardware acceleration için genel stil
+.gpu-accelerated {
+  @include gpu-accelerated;
+}
+
+// Hover efektleri için genel stil
+.hover-lift {
+  @include hover-lift;
+}
+
+// Fade in animasyonları için genel stiller
+.fade-in {
+  @include fade-in;
+}
+
+.fade-in-up {
+  @include fade-in-up;
+}
+
+.slide-in-top {
+  @include slide-in-top;
+}
+
+// Stagger animasyonları için genel stil
+.stagger-container {
+  > * {
+    opacity: 0;
+    animation: fadeInUp $transition-normal $ease-out forwards;
+    @include stagger-animation;
+  }
+  
+  @media (prefers-reduced-motion: reduce) {
+    > * {
+      opacity: 1;
+      animation: none;
+    }
+  }
+}
+
+// Tab active animasyonu için genel stil
+.tab-active {
+  @include tab-active-animation;
+}
+
+// Page transition için genel stil
+.page-transition {
+  @include page-transition;
+}
+
+// ===== TİPOGRAFİ GLOBAL STİLLERİ =====
+// Heading stilleri
+.heading-h1 {
+  @include heading-h1;
+}
+
+.heading-h2 {
+  @include heading-h2;
+}
+
+.heading-h3 {
+  @include heading-h3;
+}
+
+.heading-h4 {
+  @include heading-h4;
+}
+
+.heading-h5 {
+  @include heading-h5;
+}
+
+// Body text stilleri
+.body-large {
+  @include body-large;
+}
+
+.body-medium {
+  @include body-medium;
+}
+
+.body-small {
+  @include body-small;
+}
+
+.body-extra-small {
+  @include body-extra-small;
+}
+
+// Tab başlık stili
+.tab-title {
+  @include tab-title;
+}
+
+// Global styles
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: $text-primary;
+  background-color: $bg-secondary;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.design-soft, .design-flat, .design-neon { /* light defaults via theme - intentionally empty */ }
+.theme-light.design-neon { background: #f8fafc; }
+
+.soft-header, .flat-header { /* light defaults via theme - intentionally empty */ }
+
+.soft-content, .flat-content { /* light defaults via theme - intentionally empty */ }
+
+// Sider varyantları (soft/flat/neon)
+.soft-sider, .flat-sider { /* light defaults via theme - intentionally empty */ }
+
+// Sidebar menü stilleri - güncellenmiş
+.ant-layout-sider {
+  .ant-menu {
+    border-radius: 6px;
+    backdrop-filter: blur(8px);
+    border-bottom: none;
+    box-shadow: 0 0 0 1px rgba(249, 115, 22, 0.28), 0 8px 24px rgba(249, 115, 22, 0.16);
+    
+    .ant-menu-item {
+      border-radius: 6px;
+      margin: 4px 8px;
+      
+      .ant-menu-title-content {
+        color: #374151 !important; // gray-700
+        font-weight: 500;
+      }
+      
+      .anticon {
+        color: #374151 !important; // gray-700
+      }
+      
+      &:hover {
+        .ant-menu-title-content {
+          color: #f97316 !important; // orange-500
+        }
+        
+        .anticon {
+          color: #f97316 !important; // orange-500
+        }
+      }
+      
+      &.ant-menu-item-selected {
+        background-color: #505254d9 !important; // hafif mor
+        border-radius: 4px;
+        
+        .ant-menu-title-content {
+          color: #f97316 !important; // orange-500
+          font-weight: 600;
+        }
+        
+        .anticon {
+          color: #f97316 !important; // orange-500
+        }
+        
+        &::after {
+          border-right-color: #f97316 !important; // orange-500
+        }
+      }
+    }
+    
+    .ant-menu-submenu {
+      border-radius: 6px;
+      margin: 4px 8px;
+      
+      .ant-menu-submenu-title {
+        border-radius: 6px;
+        
+        .ant-menu-title-content {
+          color: #374151 !important; // gray-700
+          font-weight: 500;
+        }
+        
+        .anticon {
+          color: #374151 !important; // gray-700
+        }
+        
+        &:hover {
+          .ant-menu-title-content {
+            color: #f97316 !important; // orange-500
+          }
+          
+          .anticon {
+            color: #f97316 !important; // orange-500
+          }
+        }
+      }
+      
+      &.ant-menu-submenu-selected {
+        .ant-menu-submenu-title {
+          .ant-menu-title-content {
+            color: #f97316 !important; // orange-500
+            font-weight: 600;
+          }
+          
+          .anticon {
+            color: #f97316 !important; // orange-500
+          }
+        }
+      }
+    }
+  }
+}
+
+.theme-light .neon-sider {
+  background: rgba(255, 255, 255, 0.86) !important;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  border-right: 1px solid #111827 !important; /* gray-900 */
+  box-shadow: 6px 0 18px rgba(0, 0, 0, 0.03);
+}
+
+/* Soft LIGHT mode: sidebar yarı saydam beyaz */
+.theme-light .soft-sider {
+  background: transparent !important;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+// Neon başlık ve içerik (yüksek kontrast, parlak vurgu)
+.theme-light .neon-header {
+  background: transparent !important;
+
+}
+
+/* Neon DARK mode only */
+.theme-dark .neon-sider {
+  background: rgba(11, 18, 32, 0.6) !important; /* deep navy glass */
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  border-right: 1px solid #111827 !important; /* gray-900 */
+}
+
+.theme-dark .neon-header {
+  background: rgba(11, 18, 32, 0.6) !important; /* deep navy glass */
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid #111827 !important; /* gray-900 */
+  box-shadow: 0 0 0 1px rgba(249, 115, 22, 0.28), 0 8px 24px rgba(249, 115, 22, 0.16);
+}
+
+.theme-dark .neon-content {
+  background: rgba(11, 18, 32, 0.6) !important; /* deep navy glass */
+  border-radius: 14px !important;
+  border: 1px solid #111827; /* gray-900 */
+  box-shadow: 0 10px 30px rgba(249, 115, 22, 0.18);
+  margin: 24px;
+  padding: 24px;
+  overflow: auto;
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid #111827 !important;
+  box-shadow: 0 0 0 1px rgba(249, 115, 22, 0.28), 0 8px 24px rgba(249, 115, 22, 0.16);
+}
+
+// Reset
+html, body, #root {
+  height: 100%;
+}
+
+// Utility classes
+.text-center {
+  text-align: center;
+}
+
+.mt-sm { margin-top: $spacing-sm; }
+.mt-md { margin-top: $spacing-md; }
+.mt-lg { margin-top: $spacing-lg; }
+.mb-sm { margin-bottom: $spacing-sm; }
+.mb-md { margin-bottom: $spacing-md; }
+.mb-lg { margin-bottom: $spacing-lg; }
+
+// Sayfa header'ları için Title level={2} stilleri - Yüksek specificity
+.ant-typography h2,
+h2.ant-typography,
+.ant-typography h2.ant-typography,
+div .ant-typography h2,
+div h2.ant-typography,
+body .ant-typography h2,
+body h2.ant-typography {
+  font-weight: 500 !important;
+  font-size: 24px !important;
+  line-height: 1.3 !important;
+}
+
+// AntD Button genel ayarları
+// Hem geliştirme (css-dev-only-do-not-override-*) hem prod (css-*) ve yalın .ant-btn için kapsayıcı
+:where([class^="css-"]).ant-btn,
+.ant-btn {
+  font-size: 15px;
+  height: 35px;
+  font-weight: 600;
+  border-radius: 9px;
+}
+
+// Kart içindeki butonlar: 500
+.ant-card .ant-btn {
+  font-weight: 500;
+}
+
+// Input ve form kontrolleri 9px
+:where([class^="css-"]) .ant-input,
+.ant-input,
+:where([class^="css-"]) .ant-input-affix-wrapper,
+.ant-input-affix-wrapper,
+:where([class^="css-"]) .ant-input-textarea,
+.ant-input-textarea,
+:where([class^="css-"]) .ant-input-number,
+.ant-input-number,
+:where([class^="css-"]) .ant-select-selector,
+.ant-select-selector,
+:where([class^="css-"]) .ant-cascader,
+.ant-cascader,
+:where([class^="css-"]) .ant-cascader-picker,
+.ant-cascader-picker,
+:where([class^="css-"]) .ant-mentions,
+.ant-mentions,
+:where([class^="css-"]) .ant-picker,
+.ant-picker,
+:where([class^="css-"]) .ant-upload,
+.ant-upload {
+  border-radius: 12px !important;
+  padding: 11px !important;
+}
+
+// Dropdown ve takvim panel overlay'leri 9px
+:where([class^="css-"]) .ant-select-dropdown,
+.ant-select-dropdown,
+:where([class^="css-"]) .ant-picker-dropdown,
+.ant-picker-dropdown,
+:where([class^="css-"]) .ant-picker-panel-container,
+.ant-picker-panel-container,
+:where([class^="css-"]) .ant-dropdown,
+.ant-dropdown,
+:where([class^="css-"]) .ant-dropdown-menu,
+.ant-dropdown-menu,
+:where([class^="css-"]) .ant-cascader-dropdown,
+.ant-cascader-dropdown,
+:where([class^="css-"]) .ant-tree-select-dropdown,
+.ant-tree-select-dropdown,
+:where([class^="css-"]) .ant-mentions-dropdown,
+.ant-mentions-dropdown {
+  border-radius: 9px !important; 
+}
+
+// Diğer yaygın bileşenler 12px
+:where([class^="css-"]) .ant-card,
+.ant-card,
+:where([class^="css-"]) .ant-modal,
+.ant-modal,
+:where([class^="css-"]) .ant-drawer,
+.ant-drawer,
+:where([class^="css-"]) .ant-badge,
+.ant-badge,
+:where([class^="css-"]) .ant-tag,
+.ant-tag,
+:where([class^="css-"]) .ant-alert,
+.ant-alert,
+:where([class^="css-"]) .ant-result,
+.ant-result,
+:where([class^="css-"]) .ant-popover,
+.ant-popover,
+:where([class^="css-"]) .ant-tooltip,
+.ant-tooltip,
+:where([class^="css-"]) .ant-pagination,
+.ant-pagination,
+:where([class^="css-"]) .ant-segmented,
+.ant-segmented,
+:where([class^="css-"]) .ant-steps,
+.ant-steps,
+:where([class^="css-"]) .ant-statistic,
+.ant-statistic,
+:where([class^="css-"]) .ant-table,
+.ant-table {
+  border-radius: 12px;
+}
+
+// ===== TAB BAŞLIKLARI İÇİN ÖZEL STİLLER =====
+// Tab başlıkları için font-weight ve margin ayarları
+.ant-tabs-tab {
+  .ant-tabs-tab-btn {
+    font-weight: $font-weight-medium;
+    
+    // Emoji için margin-right
+    span:first-child {
+      margin-right: 5px;
+    }
+  }
+}
+
+// ===== REDUCED MOTION SUPPORT =====
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+// Mobile cihazlarda uygulamayı gizle
+@media (max-width: 1280) {
+  #root {
+    display: none !important;
+  }
+  
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+  
+  body::before {
+    content: "Bu uygulama sadece masaüstü cihazlarda kullanılabilir.";
+    text-align: center;
+    font-size: 18px;
+    font-weight: 500;
+    max-width: 300px;
+    line-height: 1.5;
+  }
+}

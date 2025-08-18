@@ -1,0 +1,568 @@
+@import '../../styles/variables';
+@import '../../styles/mixins';
+
+.admin-dashboard {
+  .dashboard-header {
+    background: linear-gradient(135deg, #fff1f0 0%, #ffa39e 100%);
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 24px;
+    border: 1px solid #ff7875;
+
+    .ant-typography h2 {
+      @include heading-h2; // 24px sayfa başlığı
+    }
+
+    .ant-btn {
+      background: #fff;
+      border: 1px solid #f0f0f0;
+      color: #262626;
+      border-radius: 8px;
+      box-shadow: none;
+      @include hover-lift; // Hover efekti (gölge ve renk değişiklikleri)
+      font-size: $font-size-button; // 15px
+
+      &:hover {
+        // transform: translateY(-1px); // Kaldırıldı - mixin içinde
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+        background: #fff;
+        border-color: #e8e8e8;
+      }
+    }
+
+    .ant-btn-primary {
+      background: #fff;
+      border: 1px solid #f0f0f0;
+      color: #262626;
+
+      &:hover {
+        background: #fff;
+        border-color: #e8e8e8;
+        color: #262626;
+      }
+    }
+  }
+
+  // Metric Cards
+  .metric-card {
+    border-radius: 12px;
+    @include hover-lift; // Hover efekti (gölge ve renk değişiklikleri)
+    overflow: hidden;
+    background: #fff;
+    border: 1px solid #f0f0f0;
+    
+    &:hover {
+      // transform: translateY(-2px); // Kaldırıldı - mixin içinde
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    }
+    
+    &.users {
+      background: #fff;
+      border: 1px solid #f0f0f0;
+      
+      .ant-statistic-content-value {
+        background: linear-gradient(45deg, #1890ff, #40a9ff);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+    }
+    
+    &.sessions {
+      background: #fff;
+      border: 1px solid #f0f0f0;
+      
+      .ant-statistic-content-value {
+        background: linear-gradient(45deg, #52c41a, #73d13d);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+    }
+    
+    &.questions {
+      background: #fff;
+      border: 1px solid #f0f0f0;
+      
+      .ant-statistic-content-value {
+        background: linear-gradient(45deg, #faad14, #ffc53d);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+    }
+    
+    &.load {
+      background: #fff;
+      border: 1px solid #f0f0f0;
+      
+      .ant-statistic-content-value {
+        background: linear-gradient(45deg, #722ed1, #9254de);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+    }
+    
+    .ant-card-body {
+      padding: 16px;
+      text-align: center;
+    }
+    
+    .ant-statistic {
+      .ant-statistic-title {
+        @include body-small; // 12px
+        font-weight: $font-weight-semibold; // 600
+        margin-bottom: 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      
+      .ant-statistic-content {
+        .ant-statistic-content-value {
+          font-size: $font-size-stat-desktop; // 24px desktop
+          font-weight: $font-weight-bold; // 700
+          margin-bottom: 8px;
+        }
+        
+        .ant-statistic-content-prefix {
+          margin-right: 8px;
+          font-size: 18px;
+        }
+      }
+    }
+  }
+
+  // User Stat Cards
+  .user-stat {
+    text-align: center;
+    border-radius: 8px;
+    @include hover-lift; // Sadece translateY hover efekti
+    background: #fff;
+    border: 1px solid #f0f0f0;
+    
+    &:hover {
+      // transform: translateY(-1px); // Kaldırıldı - mixin içinde
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+    
+    &.students {
+      background: #fff;
+      border: 1px solid #f0f0f0;
+    }
+    
+    &.coaches {
+      background: #fff;
+      border: 1px solid #f0f0f0;
+    }
+    
+    &.admins {
+      background: #fff;
+      border: 1px solid #f0f0f0;
+    }
+    
+    &.growth {
+      background: #fff;
+      border: 1px solid #f0f0f0;
+    }
+    
+    .ant-card-body {
+      padding: 16px 12px;
+    }
+    
+    .ant-statistic {
+      .ant-statistic-title {
+        @include body-extra-small; // 10px
+        margin-bottom: 4px;
+      }
+      
+      .ant-statistic-content-value {
+        font-size: 20px;
+      }
+    }
+  }
+
+  // Performance Metrics
+  .performance-metric {
+    text-align: center;
+    padding: 12px;
+    background: rgba(245, 245, 245, 0.5);
+    border-radius: 8px;
+    
+    .ant-typography:first-child {
+      @include body-small; // 12px
+      color: #8c8c8c;
+      margin-bottom: 4px;
+    }
+    
+    .ant-typography:last-child {
+      @include body-extra-small; // 10px
+      color: #bfbfbf;
+      margin-top: 4px;
+    }
+  }
+
+  // Alert Enhancements
+  .ant-alert {
+    &.ant-alert-success {
+      background: #fff;
+      border: 1px solid #f0f0f0;
+      border-radius: 12px;
+      
+      .ant-alert-icon {
+        font-size: 18px;
+      }
+      
+      .ant-alert-message {
+        @include heading-h5; // 16px
+        font-weight: $font-weight-semibold; // 600
+      }
+    }
+  }
+
+  // Table Enhancements
+  .ant-table {
+    border-radius: 12px;
+    overflow: hidden;
+    
+    .ant-table-thead {
+      > tr > th {
+        background: linear-gradient(135deg, #fafafa 0%, #f0f0f0 100%);
+        @include body-small; // 12px
+        font-weight: $font-weight-semibold; // 600
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border-bottom: 2px solid #e8e8e8;
+      }
+    }
+    
+    .ant-table-tbody {
+      > tr {
+        transition: all $transition-normal $ease-in-out;
+        
+        &:hover {
+          background: linear-gradient(135deg, rgba(255, 77, 79, 0.02) 0%, rgba(255, 77, 79, 0.05) 100%);
+        }
+        
+        > td {
+          padding: 16px;
+          border-bottom: 1px solid #f0f0f0;
+          @include body-medium; // 14px
+          
+          .ant-avatar {
+            border: 2px solid #fff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+          }
+          
+          .ant-tag {
+            border-radius: 12px;
+            font-weight: $font-weight-medium; // 500
+            border: none;
+            @include body-small; // 12px
+          }
+          
+          .ant-btn {
+            border-radius: 6px;
+            font-weight: $font-weight-medium; // 500
+            font-size: $font-size-button-small; // 14px
+            
+            &.ant-btn-primary {
+              background: linear-gradient(135deg, #ff4d4f 0%, #ff7875 100%);
+              border: none;
+              
+              &:hover {
+                background: linear-gradient(135deg, #cf1322 0%, #ff4d4f 100%);
+                @include hover-lift; // Hover efekti (gölge ve renk değişiklikleri)
+                box-shadow: 0 4px 12px rgba(255, 77, 79, 0.3);
+              }
+            }
+            
+            &.ant-btn-dangerous {
+              color: #ff4d4f;
+              border-color: #ff4d4f;
+              
+              &:hover {
+                background: #ff4d4f;
+                color: white;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // Form Enhancements
+  .ant-form {
+    .ant-form-item {
+      margin-bottom: 16px;
+      
+      .ant-form-item-label {
+        padding-bottom: 4px;
+        
+        label {
+          @include body-small; // 12px
+          font-weight: $font-weight-semibold; // 600
+        }
+      }
+    }
+  }
+
+  // Switch Enhancements
+  .ant-switch {
+    &.ant-switch-checked {
+      background: linear-gradient(135deg, #52c41a 0%, #73d13d 100%);
+    }
+  }
+
+  // Drawer Enhancements
+  .ant-drawer {
+    .ant-drawer-header {
+      background: linear-gradient(135deg, #fff1f0 0%, #ffa39e 100%);
+      border-bottom: 2px solid #ff7875;
+      
+      .ant-drawer-title {
+        @include heading-h4; // 18px
+        font-weight: $font-weight-semibold; // 600
+        color: #262626;
+      }
+    }
+    
+    .ant-drawer-body {
+      padding: 24px;
+      background: #fafafa;
+    }
+  }
+
+  // List Enhancements
+  .ant-list {
+          .ant-list-item {
+        padding: 12px 16px;
+        border-radius: 8px;
+        margin-bottom: 8px;
+        background: rgba(255, 255, 255, 0.8);
+        border: 1px solid #f0f0f0;
+        @include hover-lift; // Hover efekti (gölge ve renk değişiklikleri)
+      
+      &:hover {
+        background: rgba(255, 77, 79, 0.02);
+        border-color: #ff7875;
+      }
+    }
+  }
+
+  // Progress Enhancements
+  .ant-progress {
+    .ant-progress-outer {
+      .ant-progress-inner {
+        background: rgba(0, 0, 0, 0.06);
+        border-radius: 8px;
+        
+        .ant-progress-bg {
+          border-radius: 8px;
+          transition: all $transition-slow $ease-in-out; // 0.5s
+        }
+      }
+    }
+  }
+}
+
+// Dark Mode
+.dark {
+  .admin-dashboard {
+    .dashboard-header {
+      .ant-btn {
+        background: #1f1f1f;
+        border-color: #434343;
+        color: #f0f0f0;
+
+        &:hover {
+          background: #1f1f1f;
+          border-color: #595959;
+          color: #ffffff;
+        }
+      }
+
+      .ant-btn-primary {
+        background: #1f1f1f;
+        border-color: #434343;
+        color: #f0f0f0;
+
+        &:hover {
+          background: #1f1f1f;
+          border-color: #595959;
+          color: #ffffff;
+        }
+      }
+    }
+
+    .ant-alert {
+      &.ant-alert-success {
+        background: #1f1f1f;
+        border-color: #434343;
+      }
+    }
+    .metric-card {
+      background: #1f1f1f;
+      border-color: #434343;
+    }
+    .dashboard-header {
+      background: linear-gradient(135deg, #2a1a1a 0%, #3a2a2a 100%);
+      border-color: #cf1322;
+    }
+    
+    .metric-card {
+      &.users {
+        background: #1f1f1f;
+        border-color: #434343;
+      }
+      
+      &.sessions {
+        background: #1f1f1f;
+        border-color: #434343;
+      }
+      
+      &.questions {
+        background: #1f1f1f;
+        border-color: #434343;
+      }
+      
+      &.load {
+        background: #1f1f1f;
+        border-color: #434343;
+      }
+    }
+    
+    .user-stat {
+      background: #1f1f1f;
+      border-color: #434343;
+      &.students {
+        background: #1f1f1f;
+        border-color: #434343;
+      }
+      
+      &.coaches {
+        background: #1f1f1f;
+        border-color: #434343;
+      }
+      
+      &.admins {
+        background: #1f1f1f;
+        border-color: #434343;
+      }
+      
+      &.growth {
+        background: #1f1f1f;
+        border-color: #434343;
+      }
+    }
+    
+    .performance-metric {
+      background: rgba(255, 255, 255, 0.04);
+    }
+    
+    .ant-table {
+      background: #262626;
+      
+      .ant-table-thead > tr > th {
+        background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+        color: #f0f0f0;
+        border-color: #434343;
+      }
+      
+      .ant-table-tbody > tr {
+        background: #262626;
+        color: #f0f0f0;
+        
+        > td {
+          border-color: #434343;
+          color: #f0f0f0;
+        }
+      }
+    }
+    
+    .ant-drawer {
+      .ant-drawer-header {
+        background: linear-gradient(135deg, #2a1a1a 0%, #3a2a2a 100%);
+        border-color: #cf1322;
+        
+        .ant-drawer-title {
+          color: #f0f0f0;
+        }
+      }
+      
+      .ant-drawer-body {
+        background: #1f1f1f;
+      }
+    }
+  }
+}
+
+// ===== RESPONSIVE DAVRANIŞ =====
+// Desktop only (1280px+)
+@media (min-width: 1280px) {
+  .admin-dashboard {
+    padding: 24px;
+    
+    .dashboard-header {
+      padding: 20px;
+      margin-bottom: 24px;
+      
+      .ant-typography h2 {
+        font-size: $font-size-h2; // 24px
+      }
+    }
+    
+    .metric-card {
+      margin-bottom: 16px;
+      
+      .ant-card-body {
+        padding: 16px;
+      }
+      
+      .ant-statistic-content-value {
+        font-size: $font-size-stat-desktop; // 24px
+      }
+    }
+    
+    .user-stat {
+      margin-bottom: 12px;
+      
+      .ant-card-body {
+        padding: 16px 12px;
+      }
+      
+      .ant-statistic-content-value {
+        font-size: 20px;
+      }
+    }
+    
+    .performance-metric {
+      padding: 12px;
+      margin-bottom: 12px;
+      
+      > div {
+        font-size: $font-size-body-medium; // 14px
+      }
+    }
+    
+    .ant-table {
+      .ant-table-thead > tr > th {
+        font-size: $font-size-body-small; // 12px
+        padding: 12px 8px;
+      }
+      
+      .ant-table-tbody > tr > td {
+        padding: 16px 12px;
+        font-size: $font-size-body-medium; // 14px
+      }
+    }
+  }
+}
+
+// Mobile gizleme (1280px altı)
+@media (max-width: 1279px) {
+  .admin-dashboard {
+    display: none !important;
+  }
+}

@@ -1,0 +1,83 @@
+Çağlar Çakmak
+Türkiye,İzmir  caglarcakmak0@icloud.com •  +90 543 677 18 63 
+ Linkedin, Github
+
+Frontend Developer with 3 years of experience in startup’s and companies. Proficient in TypeScript, React.js, 
+
+Vue.js,Next.js and Node.Js. Experienced in optimizing deployment processes, enhancing UI development workflows, and 
+
+building high-performance large-scale applications. Designed and implemented micro frontend architectures to scale 
+
+complex systems.
+
+Experience
+Frontend Developer
+Pixa Software – Turkey’s largest corporate e-commerce integrations company.
+
+İzmir
+ April 2025 - Present
+
+•  Spearheaded e-commerce development using Vue 3, TypeScript, and SCSS with 60% load time reduction through 
+performance optimization
+•Resolved critical race conditions and conducted comprehensive code audits, delivering high-priority bug fixes for system 
+stability
+•Partnered with CTO to integrate technologies and integrate technical innovation for enhanced scalability
+•Led code quality improvements within 15-member agile team, establishing development best practices through strategic 
+refactoring
+•Delivered pixel-perfect responsive interfaces that elevated user experience metrics across multiple platforms
+
+FullStack Developer
+Nik Yks Koçluğu – College Entrance Exam Coaching Company
+
+İzmir
+ May 2025 - Present
+
+• Developed comprehensive educational technology platform serving 150+ students
+  using MERN stack with sophisticated study tracking,Pomodoro timer, and gamification features that increased 
+engagement by 40% and completion rates by 60%.
+•Enterprise-grade authentication system, scalable database managing and integrated RAG-based AI recommendation 
+system that   improved study efficiency by 35% with personalized content suggestions and  intelligent study plan 
+optimization.
+•Implemented comprehensive testing suite achieving  85% code coverage and performance optimizations that  reduced 
+page load times by 40% with 99.5% uptime.
+
+Freelance Frontend Developer
+Armek Mekatronik- Leading Mechatronics Engineering Company
+
+İzmir
+Jan. 2025 - March 2025
+
+•  Developed a modern, fully responsive web interface allowing visitors to examine the product portfolio in detail
+•  Increased visitor engagement by 30% through implemented solutions
+•  Designed a custom admin dashboard enabling company managers to easily update content.
+E-commerce  - Personal Project 
+
+•  Contributed as a Fullstack Developer, Developed a MERN-based e-commerce platform for businesses, providing a 
+scalable and efficient solution for online sales and customer management.
+
+Education
+Ege University
+Associate Degree of Computer Programming
+
+Stanford University
+Supervised Machine Learning:Regression and Classification       
+Advanced Learning Algorithm
+
+Skills
+Languages: JavaScript, TypeScript, HTML, CSS,NodeJs Python
+
+Tools: AntDesign, MaterialUI, TailwindCSS, MySQL, FireStore, Vuetify 
+
+Frameworks/Libraries: React, Next.js, Vue.js
+
+Türkiye
+2024
+
+2024
+
+Concepts: Performance Optimization, UI/UX Design, Micro Frontends, A/B Testing, CI/CD, SPA, PWA, RESTful APIs, 
+Agile/Scrum
+
+Language Skills: English Fluent, Turkish Native, Dutch Beginner
+
+

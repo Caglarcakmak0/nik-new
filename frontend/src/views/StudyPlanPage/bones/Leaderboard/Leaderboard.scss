@@ -1,0 +1,348 @@
+.leaderboard-page {
+  .user-stats-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 16px;
+    border: none;
+    
+    .ant-card-body {
+      padding: 24px;
+    }
+    
+    .user-profile {
+      text-align: center;
+      
+      .ant-avatar {
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+      }
+      
+      .ant-typography {
+        color: white !important;
+        margin-top: 12px;
+      }
+    }
+    
+    .ant-statistic {
+      .ant-statistic-title {
+        color: rgba(255, 255, 255, 0.8) !important;
+        font-weight: 500;
+      }
+      
+      .ant-statistic-content {
+        color: white !important;
+      }
+    }
+    
+    .ant-progress {
+      .ant-progress-bg {
+        background: rgba(255, 255, 255, 0.2) !important;
+      }
+    }
+    
+    // Dark mode için user stats card stilleri
+    [data-theme='dark'] & {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      border: 1px solid #303030;
+      
+      .ant-avatar {
+        box-shadow: 0 8px 16px rgba(23, 125, 220, 0.2);
+      }
+      
+      .ant-tag {
+        background: rgba(23, 125, 220, 0.2);
+        border-color: #177ddc;
+        color: #177ddc;
+      }
+    }
+  }
+  
+  .competition-card {
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    }
+    
+    .ant-card-body {
+      padding: 16px;
+    }
+  }
+  
+  .leaderboard-item {
+    padding: 16px;
+    border-radius: 12px;
+    margin-bottom: 8px;
+    transition: all 0.3s ease;
+    border: 1px solid #f0f0f0;
+    
+    &:hover {
+      background: #fafafa;
+      border-color: #1890ff;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    // Dark mode için genel kart stilleri
+    [data-theme='dark'] & {
+      border-color: #434343;
+      background: #262626;
+      
+      .ant-list-item-meta-title {
+        color: rgba(255, 255, 255, 0.75);
+      }
+      
+      .ant-list-item-meta-description {
+        color: rgba(255, 255, 255, 0.45);
+      }
+      
+      .ant-statistic-title {
+        color: rgba(255, 255, 255, 0.55);
+      }
+      
+      .ant-statistic-content {
+        color: rgba(255, 255, 255, 0.75);
+      }
+      
+      &:hover {
+        background: #303030 !important;
+        border-color: #4096ff !important;
+        box-shadow: 0 4px 12px rgba(64, 150, 255, 0.15) !important;
+      }
+    }
+    
+    &.current-user {
+      background: linear-gradient(135deg, #e6f7ff 0%, #f0f9ff 100%);
+      border-color: #1890ff;
+      
+      .ant-list-item-meta-title {
+        color: #1890ff;
+        font-weight: 600;
+      }
+      
+      // Dark mode için öğrenci kartı stilleri
+      [data-theme='dark'] & {
+        background: linear-gradient(135deg, #1f1f1f 0%, #2a2a2a 100%) !important;
+        border-color: #177ddc !important;
+        box-shadow: 0 4px 12px rgba(23, 125, 220, 0.2) !important;
+        
+        .ant-list-item-meta-title {
+          color: #177ddc !important;
+        }
+        
+        .ant-list-item-meta-description {
+          color: rgba(255, 255, 255, 0.85) !important;
+        }
+        
+        .ant-statistic-title {
+          color: rgba(255, 255, 255, 0.65) !important;
+        }
+        
+        .ant-statistic-content {
+          color: #177ddc !important;
+        }
+        
+        .ant-tag {
+          background: rgba(23, 125, 220, 0.1) !important;
+          border-color: #177ddc !important;
+          color: #177ddc !important;
+        }
+        
+        &:hover {
+          background: linear-gradient(135deg, #2a2a2a 0%, #3a3a3a 100%) !important;
+          border-color: #177ddc !important;
+          box-shadow: 0 6px 16px rgba(23, 125, 220, 0.3) !important;
+        }
+      }
+    }
+    
+    .ant-list-item-meta-avatar {
+      .ant-badge {
+        .ant-badge-count {
+          background: #1890ff;
+          color: white;
+          font-weight: 600;
+          min-width: 24px;
+          height: 24px;
+          line-height: 22px;
+          border-radius: 12px;
+          font-size: 12px;
+          box-shadow: 0 2px 8px rgba(24, 144, 255, 0.3);
+        }
+      }
+    }
+    
+    .ant-list-item-action {
+      .ant-statistic {
+        text-align: center;
+        
+        .ant-statistic-title {
+          font-size: 12px;
+          margin-bottom: 4px;
+        }
+        
+        .ant-statistic-content {
+          font-size: 20px;
+          font-weight: 600;
+          color: #1890ff;
+        }
+      }
+    }
+  }
+  
+  .ant-card {
+    border-radius: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    border: 1px solid #f0f0f0;
+    
+    .ant-card-head {
+      border-bottom: 1px solid #f0f0f0;
+      
+      .ant-card-head-title {
+        font-size: 18px;
+        font-weight: 600;
+      }
+    }
+    
+    // Dark mode için genel kart stilleri
+    [data-theme='dark'] & {
+      border-color: #303030;
+      background: #1f1f1f;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      
+      .ant-card-head {
+        border-bottom-color: #303030;
+        
+        .ant-card-head-title {
+          color: rgba(255, 255, 255, 0.85);
+        }
+      }
+      
+      .ant-card-body {
+        color: rgba(255, 255, 255, 0.85);
+      }
+    }
+  }
+  
+  .ant-tabs {
+    .ant-tabs-tab {
+      font-weight: 500;
+      
+      &.ant-tabs-tab-active {
+        .ant-tabs-tab-btn {
+          color: #1890ff !important;
+          font-weight: 600;
+        }
+      }
+    }
+  }
+  
+  .ant-tag {
+    border-radius: 8px;
+    font-weight: 500;
+    
+    &.ant-tag-volcano {
+      background: linear-gradient(135deg, #ff7875 0%, #f5222d 100%);
+      color: white;
+      border: none;
+    }
+    
+    &.ant-tag-purple {
+      background: linear-gradient(135deg, #b37feb 0%, #722ed1 100%);
+      color: white;
+      border: none;
+    }
+    
+    &.ant-tag-gold {
+      background: linear-gradient(135deg, #ffd666 0%, #faad14 100%);
+      color: white;
+      border: none;
+    }
+  }
+  
+  .ant-progress {
+    .ant-progress-outer {
+      .ant-progress-inner {
+        background: #f0f0f0;
+        
+        .ant-progress-bg {
+          background: linear-gradient(90deg, #722ed1 0%, #b37feb 100%);
+        }
+      }
+    }
+  }
+  
+  .ant-list-pagination {
+    margin-top: 24px;
+    text-align: center;
+  }
+  
+  .ant-btn {
+    border-radius: 8px;
+    font-weight: 500;
+    
+    &.ant-btn-primary {
+      background: linear-gradient(135deg, #1890ff 0%, #40a9ff 100%);
+      border: none;
+      
+      &:hover {
+        background: linear-gradient(135deg, #40a9ff 0%, #69c0ff 100%);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
+      }
+    }
+  }
+  
+  // Responsive design
+  @media (max-width: 768px) {
+    .user-stats-card {
+      .ant-row {
+        flex-direction: column;
+        
+        .ant-col:first-child {
+          margin-bottom: 16px;
+        }
+      }
+    }
+    
+    .competition-card {
+      margin-bottom: 16px;
+    }
+    
+    .leaderboard-item {
+      .ant-list-item-action {
+        margin-left: 8px;
+        
+        .ant-statistic {
+          .ant-statistic-content {
+            font-size: 16px;
+          }
+        }
+      }
+    }
+  }
+  
+  @media (max-width: 576px) {
+    .ant-row {
+      .ant-col {
+        width: 100% !important;
+        flex: none !important;
+      }
+    }
+    
+    .leaderboard-item {
+      .ant-list-item-meta {
+        .ant-list-item-meta-description {
+          .ant-space-vertical {
+            .ant-space-item:last-child {
+              .ant-space {
+                flex-wrap: wrap;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

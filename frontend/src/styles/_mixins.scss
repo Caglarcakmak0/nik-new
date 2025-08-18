@@ -1,0 +1,237 @@
+// Flexbox mixins
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+@mixin flex-column {
+  display: flex;
+  flex-direction: column;
+}
+
+// Card mixin
+@mixin card-style {
+  background: $bg-primary;
+  border-radius: $border-radius;
+  box-shadow: $box-shadow;
+  padding: $spacing-lg;
+}
+
+// Button mixins
+@mixin button-base {
+  border: none;
+  border-radius: $border-radius;
+  padding: $spacing-sm $spacing-md;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: $font-size;
+  
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+}
+
+// ===== ANİMASYON MİXİNLERİ =====
+// Hardware acceleration
+@mixin gpu-accelerated {
+  transform: $transform-gpu;
+  will-change: transform;
+}
+
+// Hover efektleri (sadece translateY)
+@mixin hover-lift {
+  transition: all $transition-normal $ease-in-out;
+  
+  &:hover {
+    // transform: $transform-hover-y; // Kaldırıldı - translateY animasyonu kullanılmıyor
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  }
+  
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+    
+    &:hover {
+      transform: none;
+    }
+  }
+}
+
+// Fade in animasyonu
+@mixin fade-in($duration: $transition-normal) {
+  animation: fadeIn $duration $ease-out;
+  
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+// Fade in up animasyonu
+@mixin fade-in-up($duration: $transition-normal) {
+  animation: fadeInUp $duration $ease-out;
+  
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+// Slide in from top animasyonu
+@mixin slide-in-top($duration: $transition-normal) {
+  animation: slideInFromTop $duration $ease-out;
+  
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+// Stagger animasyonları
+@mixin stagger-animation($base-delay: $stagger-delay, $max-items: $stagger-max-items) {
+  @for $i from 1 through $max-items {
+    &:nth-child(#{$i}) {
+      animation-delay: $base-delay * $i;
+    }
+  }
+}
+
+// Tab active animasyonu
+@mixin tab-active-animation {
+  animation: tabActive $transition-fast $ease-out;
+  
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+// Page transition
+@mixin page-transition {
+  transition: opacity $transition-slow $ease-in-out, transform $transition-slow $ease-in-out;
+  
+  &.page-enter {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  
+  &.page-enter-active {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  
+  &.page-exit {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  
+  &.page-exit-active {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+    
+    &.page-enter,
+    &.page-enter-active,
+    &.page-exit,
+    &.page-exit-active {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
+
+// ===== TİPOGRAFİ MİXİNLERİ =====
+// Heading stilleri
+@mixin heading-h1 {
+  font-size: $font-size-h1;
+  font-weight: $font-weight-bold;
+  line-height: 1.2;
+}
+
+@mixin heading-h2 {
+  font-size: $font-size-h2;
+  font-weight: $font-weight-semibold;
+  line-height: 1.3;
+}
+
+@mixin heading-h3 {
+  font-size: $font-size-h3;
+  font-weight: $font-weight-semibold;
+  line-height: 1.4;
+}
+
+@mixin heading-h4 {
+  font-size: $font-size-h4;
+  font-weight: $font-weight-medium;
+  line-height: 1.4;
+}
+
+@mixin heading-h5 {
+  font-size: $font-size-h5;
+  font-weight: $font-weight-medium;
+  line-height: 1.5;
+}
+
+// Body text stilleri
+@mixin body-large {
+  font-size: $font-size-body-large;
+  font-weight: $font-weight-normal;
+  line-height: 1.6;
+}
+
+@mixin body-medium {
+  font-size: $font-size-body-medium;
+  font-weight: $font-weight-normal;
+  line-height: 1.6;
+}
+
+@mixin body-small {
+  font-size: $font-size-body-small;
+  font-weight: $font-weight-normal;
+  line-height: 1.5;
+}
+
+@mixin body-extra-small {
+  font-size: $font-size-body-extra-small;
+  font-weight: $font-weight-normal;
+  line-height: 1.4;
+}
+
+// Tab başlık stili
+@mixin tab-title {
+  font-size: $font-size-tab;
+  font-weight: $font-weight-medium;
+  margin-right: 5px; // Emoji için
+}
+
+// Responsive breakpoints
+@mixin mobile {
+  @media (max-width: 768px) {
+    @content;
+  }
+}
+
+@mixin tablet {
+  @media (min-width: 769px) and (max-width: 1024px) {
+    @content;
+  }
+}
+
+@mixin desktop {
+  @media (min-width: 1025px) {
+    @content;
+  }
+}
+
+// Desktop only (1280px+)
+@mixin desktop-only {
+  @media (min-width: 1280px) {
+    @content;
+  }
+}

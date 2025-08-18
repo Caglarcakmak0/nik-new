@@ -1,0 +1,354 @@
+.gamification-system {
+  .level-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 20px;
+    border: none;
+    color: white;
+    
+    .ant-card-body {
+      padding: 32px;
+    }
+    
+    .level-display {
+      text-align: center;
+      
+      .level-avatar {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 36px;
+        color: white;
+        margin: 0 auto;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+        position: relative;
+        
+        &::before {
+          content: '';
+          position: absolute;
+          top: -4px;
+          left: -4px;
+          right: -4px;
+          bottom: -4px;
+          border-radius: 50%;
+          background: linear-gradient(45deg, rgba(255,255,255,0.3), transparent, rgba(255,255,255,0.3));
+          z-index: -1;
+        }
+      }
+      
+      .ant-badge {
+        .ant-badge-count {
+          background: rgba(255, 255, 255, 0.9);
+          color: #333;
+          font-weight: 700;
+          min-width: 28px;
+          height: 28px;
+          line-height: 26px;
+          font-size: 14px;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+      }
+    }
+    
+    .ant-statistic {
+      .ant-statistic-title {
+        color: rgba(255, 255, 255, 0.8) !important;
+        font-weight: 500;
+        font-size: 13px;
+        margin-bottom: 4px;
+      }
+      
+      .ant-statistic-content {
+        color: white !important;
+        
+        .ant-statistic-content-value {
+          font-weight: 700;
+        }
+      }
+    }
+    
+    .ant-progress {
+      .ant-progress-outer {
+        .ant-progress-inner {
+          background: rgba(255, 255, 255, 0.2) !important;
+          border-radius: 10px;
+          
+          .ant-progress-bg {
+            border-radius: 10px;
+          }
+        }
+      }
+    }
+    
+    .ant-divider {
+      margin: 24px 0;
+    }
+    
+    .ant-btn {
+      &.ant-btn-background-ghost {
+        color: white;
+        border-color: rgba(255, 255, 255, 0.4);
+        
+        &:hover {
+          background: rgba(255, 255, 255, 0.1);
+          border-color: rgba(255, 255, 255, 0.8);
+          color: white;
+        }
+      }
+    }
+  }
+  
+  .challenge-card {
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    border: 2px solid #f0f0f0;
+    
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    }
+    
+    &.completed {
+      border-color: #52c41a;
+      background: linear-gradient(135deg, #f6ffed 0%, #f0f9ff 100%);
+      
+      .ant-card-meta-title {
+        color: #52c41a !important;
+      }
+    }
+    
+    .ant-card-body {
+      padding: 16px;
+    }
+    
+    .ant-card-actions {
+      background: transparent;
+      border-top: 1px solid #f0f0f0;
+      
+      .ant-space {
+        color: #faad14;
+        font-weight: 600;
+      }
+    }
+    
+    .ant-progress {
+      margin: 8px 0;
+      
+      .ant-progress-outer {
+        .ant-progress-inner {
+          background: rgba(0, 0, 0, 0.04);
+          border-radius: 6px;
+          
+          .ant-progress-bg {
+            border-radius: 6px;
+          }
+        }
+      }
+    }
+  }
+  
+  .xp-source-card {
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+      border-color: #faad14;
+    }
+    
+    .ant-card-body {
+      padding: 16px;
+    }
+    
+    .ant-tag {
+      border-radius: 6px;
+      font-weight: 600;
+      
+      &.ant-tag-gold {
+        background: linear-gradient(135deg, #ffd666 0%, #faad14 100%);
+        color: white;
+        border: none;
+      }
+      
+      &.ant-tag-orange {
+        background: linear-gradient(135deg, #ffbb96 0%, #fa541c 100%);
+        color: white;
+        border: none;
+      }
+    }
+  }
+  
+  .level-details {
+    .ant-list-item {
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 12px;
+      border: 2px solid #f0f0f0;
+      transition: all 0.3s ease;
+      
+      &:hover {
+        border-color: #1890ff;
+        background: #f0f9ff;
+      }
+      
+      &.current-level {
+        border-color: #faad14;
+        background: linear-gradient(135deg, #fffbe6 0%, #fff7e6 100%);
+        
+        .level-icon {
+          animation: current-level-glow 2s ease-in-out infinite alternate;
+        }
+      }
+      
+      .ant-list-item-meta-avatar {
+        .level-icon {
+          width: 50px;
+          height: 50px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 24px;
+          color: white;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .ant-badge {
+          .ant-badge-count {
+            min-width: 20px;
+            height: 20px;
+            line-height: 18px;
+            font-size: 11px;
+            font-weight: 600;
+          }
+        }
+      }
+      
+      .ant-list-item-meta-content {
+        .ant-list-item-meta-title {
+          margin-bottom: 8px;
+          
+          .ant-tag {
+            border-radius: 6px;
+            font-weight: 500;
+          }
+        }
+        
+        ul {
+          color: #595959;
+          
+          li {
+            margin-bottom: 4px;
+            font-size: 13px;
+          }
+        }
+      }
+    }
+  }
+  
+  .ant-card {
+    border-radius: 16px;
+    border: 1px solid #f0f0f0;
+    
+    .ant-card-head {
+      border-bottom: 1px solid #f0f0f0;
+      
+      .ant-card-head-title {
+        font-size: 18px;
+        font-weight: 600;
+      }
+    }
+  }
+  
+  .ant-timeline {
+    .ant-timeline-item {
+      .ant-timeline-item-content {
+        padding-left: 20px;
+        
+        .ant-space-vertical {
+          width: 100%;
+        }
+      }
+    }
+  }
+  
+  // Animations
+  @keyframes current-level-glow {
+    0% {
+      box-shadow: 0 4px 12px rgba(250, 173, 20, 0.3);
+    }
+    100% {
+      box-shadow: 0 8px 20px rgba(250, 173, 20, 0.6);
+    }
+  }
+  
+  // Responsive design
+  @media (max-width: 768px) {
+    .level-card {
+      .ant-card-body {
+        padding: 20px;
+      }
+      
+      .level-display {
+        margin-bottom: 20px;
+        
+        .level-avatar {
+          width: 60px;
+          height: 60px;
+          font-size: 28px;
+        }
+      }
+      
+      .ant-row {
+        .ant-col {
+          margin-bottom: 16px;
+        }
+      }
+    }
+    
+    .challenge-card {
+      margin-bottom: 16px;
+    }
+    
+    .xp-source-card {
+      margin-bottom: 16px;
+    }
+    
+    .level-details {
+      .ant-list-item {
+        padding: 16px;
+        
+        .ant-list-item-meta-avatar {
+          .level-icon {
+            width: 40px;
+            height: 40px;
+            font-size: 20px;
+          }
+        }
+      }
+    }
+  }
+  
+  @media (max-width: 576px) {
+    .ant-row {
+      .ant-col {
+        width: 100% !important;
+        flex: none !important;
+      }
+    }
+    
+    .level-card {
+      .ant-row {
+        flex-direction: column;
+        
+        .ant-col:first-child {
+          text-align: center;
+          margin-bottom: 20px;
+        }
+      }
+    }
+  }
+}

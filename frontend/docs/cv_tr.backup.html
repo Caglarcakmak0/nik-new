@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Çağlar Çakmak - Özgeçmiş</title>
+    <style>
+      :root { --text: #111; --muted: #333; --rule: #000; }
+      * { box-sizing: border-box; }
+      html { hyphens: auto; }
+      body {
+        font-family: Georgia, "Times New Roman", serif;
+        color: var(--text);
+        margin: 28px auto;
+        max-width: 760px;
+        line-height: 1.45;
+        font-size: 15px;
+      }
+      h1 { font-size: 36px; text-align: center; margin: 0 0 6px; }
+      .header-meta { text-align: center; font-size: 13px; }
+      .header-meta a { color: inherit; text-decoration: underline; }
+
+      .section-title { font-size: 20px; margin: 20px 0 0; font-weight: 700; }
+      hr.section { border: none; border-top: 2px solid var(--rule); margin: 8px 0 12px; }
+
+      .lead { margin-top: 10px; }
+      .small { font-size: 13px; }
+      .bold { font-weight: 700; }
+      .underline { text-decoration: underline; }
+
+      .position { margin-top: 14px; }
+      .position-header { display: flex; align-items: baseline; gap: 8px; }
+      .position-title { font-weight: 700; }
+      .position-right { margin-left: auto; text-align: right; white-space: nowrap; }
+      .company-tagline { font-style: italic; color: var(--muted); margin: 2px 0 6px; }
+      ul { margin: 6px 0 0 16px; }
+      li { margin: 3px 0; }
+
+      .edu { display: flex; gap: 12px; margin-top: 8px; }
+      .edu .left { flex: 1 1 auto; }
+      .edu .right { text-align: right; white-space: nowrap; }
+
+      footer { color: var(--muted); font-size: 12px; margin-top: 18px; text-align: center; }
+
+      /* Tek sayfa A4 çıktı için sıkı print stili */
+      @page { size: A4; margin: 8mm; }
+      @media print {
+        html, body { width: 100%; max-width: none; }
+        body { margin: 0; font-size: 11.5px; line-height: 1.30; }
+        h1 { font-size: 26px; margin-bottom: 4px; }
+        .header-meta { font-size: 10.5px; }
+        .section-title { font-size: 15px; margin-top: 12px; }
+        hr.section { margin: 6px 0 10px; border-top-width: 2px; }
+        .lead { margin-top: 6px; }
+        .small { font-size: 10.5px; }
+        .position { margin-top: 8px; }
+        .company-tagline { margin: 2px 0 4px; }
+        ul { margin-top: 3px; margin-left: 12px; }
+        li { margin: 1.5px 0; }
+        .edu { margin-top: 4px; }
+        footer { display: none; }
+        a { text-decoration: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Çağlar Çakmak</h1>
+      <div class="header-meta">
+        Türkiye, İzmir • <a href="mailto:caglarcakmak0@icloud.com">caglarcakmak0@icloud.com</a> •
+        <a href="tel:+905436771863">+90 543 677 18 63</a><br />
+        <a href="https://www.linkedin.com/in/caglarcakmak0/" target="_blank" rel="noopener">LinkedIn</a>,
+        <a href="https://github.com/Caglarcakmak0/" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </header>
+
+    <p class="lead small">
+      <span class="bold">Frontend Developer</span> olarak startup’lar ve şirketlerde 3 yıllık deneyim. TypeScript,
+      React.js, Vue.js, Next.js ve Node.js konularında yetkin. Dağıtım süreçlerini optimize etme, UI geliştirme
+      akışlarını iyileştirme ve yüksek performanslı, büyük ölçekli uygulamalar geliştirme deneyimi. Karmaşık sistemleri
+      ölçeklemek için mikro‑frontend mimarileri tasarlayıp uyguladı.
+    </p>
+
+    <h2 class="section-title">Experience</h2>
+    <hr class="section" />
+
+    <div class="position">
+      <div class="position-header">
+        <div class="position-title">Frontend Developer</div>
+        <div class="position-right">İzmir<br /><span class="small">Nisan 2025 – Günümüz</span></div>
+      </div>
+      <div class="company-tagline">
+        Pixa Software – Türkiye’nin en büyük kurumsal e‑ticaret entegrasyon şirketi.
+      </div>
+      <ul>
+        <li>Vue 3, TypeScript ve SCSS ile geliştirme; performans iyileştirmeleriyle yükleme süresinde %60 azalma.</li>
+        <li>Kritik race condition’ların çözümü ve kapsamlı kod denetimleri; sistem stabilitesini artıran öncelikli düzeltmeler.</li>
+        <li>CTO ile teknolojik entegrasyon ve ölçeklenebilirliği artıran teknik inovasyonlar.</li>
+        <li>15 kişilik çevik ekipte kod kalitesi iyileştirmeleri; stratejik refaktoring ve en iyi uygulamalar.</li>
+        <li>Çoklu platformda UX metriklerini yükselten piksel hassasiyetinde, duyarlı arayüzler.</li>
+      </ul>
+    </div>
+
+    <div class="position">
+      <div class="position-header">
+        <div class="position-title">Fullstack Developer</div>
+        <div class="position-right">İzmir<br /><span class="small">Mayıs 2025 – Günümüz</span></div>
+      </div>
+      <div class="company-tagline">Nik YKS Koçluğu – Üniversite sınav koçluğu şirketi</div>
+      <ul>
+        <li>150+ öğrenciye hizmet veren platform (MERN, çalışma takibi, Pomodoro, oyunlaştırma); etkileşim %40, tamamlama %60 artış.</li>
+        <li>Kurumsal kimlik doğrulama, ölçeklenebilir veritabanı ve RAG tabanlı yapay zeka öneri sistemi; verimlilikte %35 artış.</li>
+        <li>%85 kod kapsamı ve performans optimizasyonları; yüklenme süresinde %40 azalma ve %99,5 uptime.</li>
+      </ul>
+    </div>
+
+    <div class="position">
+      <div class="position-header">
+        <div class="position-title">Freelance Frontend Developer</div>
+        <div class="position-right">İzmir<br /><span class="small">Ocak 2025 – Mart 2025</span></div>
+      </div>
+      <div class="company-tagline">Armek Mekatronik – Önde gelen mekatronik mühendislik şirketi</div>
+      <ul>
+        <li>Ürün portföyünün detaylı incelenebildiği modern, tamamen duyarlı web arayüzü.</li>
+        <li>Uygulanan çözümlerle ziyaretçi etkileşiminde %30 artış.</li>
+        <li>İçerik güncellemeyi kolaylaştıran özel yönetim paneli.</li>
+      </ul>
+    </div>
+
+    <div class="position">
+      <div class="position-header">
+        <div class="position-title underline"><a href="https://ecommerce.harunbulbul.com" target="_blank" rel="noopener">E‑commerce — Kişisel Proje</a></div>
+      </div>
+      <ul>
+        <li>Fullstack geliştirici olarak MERN tabanlı e‑ticaret platformu; çevrim içi satış ve müşteri yönetimi için ölçeklenebilir ve verimli çözüm.</li>
+      </ul>
+    </div>
+
+    <h2 class="section-title">Education</h2>
+    <hr class="section" />
+
+    <div class="edu">
+      <div class="left">
+        <div class="bold">Ege Üniversitesi</div>
+        <div>Bilgisayar Programcılığı (Önlisans)</div>
+      </div>
+      <div class="right">
+        <div>Türkiye</div>
+        <div>2024</div>
+      </div>
+    </div>
+
+    <div class="edu">
+      <div class="left">
+        <div class="bold">Stanford University</div>
+        <div><a href="#" class="underline">Supervised Machine Learning: Regression and Classification</a></div>
+        <div><a href="#" class="underline">Advanced Learning Algorithms</a></div>
+      </div>
+      <div class="right">
+        <div>2024</div>
+      </div>
+    </div>
+
+    <h2 class="section-title">Skills</h2>
+    <hr class="section" />
+    <p><span class="bold">Languages:</span> JavaScript, TypeScript, HTML, CSS, Node.js, Python</p>
+    <p><span class="bold">Tools:</span> Ant Design, Material UI, Tailwind CSS, MySQL, Firestore, Vuetify</p>
+    <p><span class="bold">Frameworks/Libraries:</span> React, Next.js, Vue.js</p>
+    <p><span class="bold">Concepts:</span> Performance Optimization, UI/UX Design, Micro Frontends, A/B Testing, CI/CD, SPA, PWA, RESTful APIs, Agile/Scrum</p>
+    <p><span class="bold">Language Skills:</span> English (Fluent), Turkish (Native), Dutch (Beginner)</p>
+
+    <footer>
+      Son güncelleme: <script>document.write(new Date().toLocaleDateString('tr-TR'))</script>
+    </footer>
+  </body>
+  </html>
+
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Çağlar Çakmak - Özgeçmiş</title>
+    <style>
+      :root { --text: #111; --muted: #333; --rule: #000; }
+      * { box-sizing: border-box; }
+      html { hyphens: auto; }
+      body {
+        font-family: Georgia, "Times New Roman", serif;
+        color: var(--text);
+        margin: 28px auto;
+        max-width: 760px;
+        line-height: 1.45;
+        font-size: 15px;
+      }
+      h1 { font-size: 36px; text-align: center; margin: 0 0 6px; }
+      .header-meta { text-align: center; font-size: 13px; }
+      .header-meta a { color: inherit; text-decoration: underline; }
+
+      .section-title { font-size: 20px; margin: 20px 0 0; font-weight: 700; }
+      hr.section { border: none; border-top: 2px solid var(--rule); margin: 8px 0 12px; }
+
+      .lead { margin-top: 10px; }
+      .small { font-size: 13px; }
+      .bold { font-weight: 700; }
+      .underline { text-decoration: underline; }
+
+      .position { margin-top: 14px; }
+      .position-header { display: flex; align-items: baseline; gap: 8px; }
+      .position-title { font-weight: 700; }
+      .position-right { margin-left: auto; text-align: right; white-space: nowrap; }
+      .company-tagline { font-style: italic; color: var(--muted); margin: 2px 0 6px; }
+      ul { margin: 6px 0 0 16px; }
+      li { margin: 3px 0; }
+
+      .edu { display: flex; gap: 12px; margin-top: 8px; }
+      .edu .left { flex: 1 1 auto; }
+      .edu .right { text-align: right; white-space: nowrap; }
+
+      footer { color: var(--muted); font-size: 12px; margin-top: 18px; text-align: center; }
+
+      /* Tek sayfa A4 çıktı için sıkı print stili */
+      @page { size: A4; margin: 10mm; }
+      @media print {
+        html, body { width: 100%; max-width: none; }
+        body { margin: 0; font-size: 12px; line-height: 1.35; }
+        h1 { font-size: 28px; margin-bottom: 4px; }
+        .header-meta { font-size: 11px; }
+        .section-title { font-size: 16px; margin-top: 14px; }
+        hr.section { margin: 6px 0 10px; border-top-width: 2px; }
+        .lead { margin-top: 8px; }
+        .small { font-size: 11px; }
+        .position { margin-top: 10px; }
+        .company-tagline { margin: 2px 0 4px; }
+        ul { margin-top: 4px; margin-left: 14px; }
+        li { margin: 2px 0; }
+        .edu { margin-top: 6px; }
+        footer { display: none; }
+        a { text-decoration: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Çağlar Çakmak</h1>
+      <div class="header-meta">
+        Türkiye, İzmir • <a href="mailto:caglarcakmak0@icloud.com">caglarcakmak0@icloud.com</a> •
+        <a href="tel:+905436771863">+90 543 677 18 63</a><br />
+        <a href="https://www.linkedin.com/in/caglarcakmak0/" target="_blank" rel="noopener">LinkedIn</a>,
+        <a href="https://github.com/Caglarcakmak0/" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </header>
+
+    <p class="lead small">
+      <span class="bold">Frontend Developer</span> olarak startup’lar ve şirketlerde 3 yıllık deneyim. TypeScript,
+      React.js, Vue.js, Next.js ve Node.js konularında yetkin. Dağıtım süreçlerini optimize etme, UI geliştirme
+      akışlarını iyileştirme ve yüksek performanslı, büyük ölçekli uygulamalar geliştirme deneyimi. Karmaşık sistemleri
+      ölçeklemek için mikro‑frontend mimarileri tasarlayıp uyguladı.
+    </p>
+
+    <h2 class="section-title">Experience</h2>
+    <hr class="section" />
+
+    <div class="position">
+      <div class="position-header">
+        <div class="position-title">Frontend Developer</div>
+        <div class="position-right">İzmir<br /><span class="small">Nisan 2025 – Günümüz</span></div>
+      </div>
+      <div class="company-tagline">
+        Pixa Software – Türkiye’nin en büyük kurumsal e‑ticaret entegrasyon şirketi.
+      </div>
+      <ul>
+        <li>Vue 3, TypeScript ve SCSS ile geliştirme; performans iyileştirmeleriyle yükleme süresinde %60 azalma.</li>
+        <li>Kritik race condition’ların çözümü ve kapsamlı kod denetimleri; sistem stabilitesini artıran öncelikli düzeltmeler.</li>
+        <li>CTO ile teknolojik entegrasyon ve ölçeklenebilirliği artıran teknik inovasyonlar.</li>
+        <li>15 kişilik çevik ekipte kod kalitesi iyileştirmeleri; stratejik refaktoring ve en iyi uygulamalar.</li>
+        <li>Çoklu platformda UX metriklerini yükselten piksel hassasiyetinde, duyarlı arayüzler.</li>
+      </ul>
+    </div>
+
+    <div class="position">
+      <div class="position-header">
+        <div class="position-title">Fullstack Developer</div>
+        <div class="position-right">İzmir<br /><span class="small">Mayıs 2025 – Günümüz</span></div>
+      </div>
+      <div class="company-tagline">Nik YKS Koçluğu – Üniversite sınav koçluğu şirketi</div>
+      <ul>
+        <li>150+ öğrenciye hizmet veren platform (MERN, çalışma takibi, Pomodoro, oyunlaştırma); etkileşim %40, tamamlama %60 artış.</li>
+        <li>Kurumsal kimlik doğrulama, ölçeklenebilir veritabanı ve RAG tabanlı yapay zeka öneri sistemi; verimlilikte %35 artış.</li>
+        <li>%85 kod kapsamı ve performans optimizasyonları; yüklenme süresinde %40 azalma ve %99,5 uptime.</li>
+      </ul>
+    </div>
+
+    <div class="position">
+      <div class="position-header">
+        <div class="position-title">Freelance Frontend Developer</div>
+        <div class="position-right">İzmir<br /><span class="small">Ocak 2025 – Mart 2025</span></div>
+      </div>
+      <div class="company-tagline">Armek Mekatronik – Önde gelen mekatronik mühendislik şirketi</div>
+      <ul>
+        <li>Ürün portföyünün detaylı incelenebildiği modern, tamamen duyarlı web arayüzü.</li>
+        <li>Uygulanan çözümlerle ziyaretçi etkileşiminde %30 artış.</li>
+        <li>İçerik güncellemeyi kolaylaştıran özel yönetim paneli.</li>
+      </ul>
+    </div>
+
+    <div class="position">
+      <div class="position-header">
+        <div class="position-title underline"><a href="https://ecommerce.harunbulbul.com" target="_blank" rel="noopener">E‑commerce — Kişisel Proje</a></div>
+      </div>
+      <ul>
+        <li>Fullstack geliştirici olarak MERN tabanlı e‑ticaret platformu; çevrim içi satış ve müşteri yönetimi için ölçeklenebilir ve verimli çözüm.</li>
+      </ul>
+    </div>
+
+    <h2 class="section-title">Education</h2>
+    <hr class="section" />
+
+    <div class="edu">
+      <div class="left">
+        <div class="bold">Ege Üniversitesi</div>
+        <div>Bilgisayar Programcılığı (Önlisans)</div>
+      </div>
+      <div class="right">
+        <div>Türkiye</div>
+        <div>2024</div>
+      </div>
+    </div>
+
+    <div class="edu">
+      <div class="left">
+        <div class="bold">Stanford University</div>
+        <div><a href="#" class="underline">Supervised Machine Learning: Regression and Classification</a></div>
+        <div><a href="#" class="underline">Advanced Learning Algorithms</a></div>
+      </div>
+      <div class="right">
+        <div>2024</div>
+      </div>
+    </div>
+
+    <h2 class="section-title">Skills</h2>
+    <hr class="section" />
+    <p><span class="bold">Languages:</span> JavaScript, TypeScript, HTML, CSS, Node.js, Python</p>
+    <p><span class="bold">Tools:</span> Ant Design, Material UI, Tailwind CSS, MySQL, Firestore, Vuetify</p>
+    <p><span class="bold">Frameworks/Libraries:</span> React, Next.js, Vue.js</p>
+    <p><span class="bold">Concepts:</span> Performance Optimization, UI/UX Design, Micro Frontends, A/B Testing, CI/CD, SPA, PWA, RESTful APIs, Agile/Scrum</p>
+    <p><span class="bold">Language Skills:</span> English (Fluent), Turkish (Native), Dutch (Beginner)</p>
+
+    <footer>
+      Son güncelleme: <script>document.write(new Date().toLocaleDateString('tr-TR'))</script>
+    </footer>
+  </body>
+  </html>
+
+

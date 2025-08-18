@@ -1,0 +1,45 @@
+@import '../../styles/variables';
+@import '../../styles/mixins';
+
+.student-programs {
+  animation: fadeInUp 0.6s ease-out;
+  
+  .ant-card {
+    animation: fadeIn 0.8s ease-out 0.2s both;
+  }
+  
+  .ant-list-item {
+    animation: fadeIn 0.6s ease-out;
+    @include hover-lift; // Hover efekti (gölge ve renk değişiklikleri)
+    
+    &:nth-child(1) { animation-delay: 0.1s; }
+    &:nth-child(2) { animation-delay: 0.2s; }
+    &:nth-child(3) { animation-delay: 0.3s; }
+    &:nth-child(4) { animation-delay: 0.4s; }
+    &:nth-child(5) { animation-delay: 0.5s; }
+    &:nth-child(6) { animation-delay: 0.6s; }
+    &:nth-child(7) { animation-delay: 0.7s; }
+    &:nth-child(8) { animation-delay: 0.8s; }
+    &:nth-child(9) { animation-delay: 0.9s; }
+    &:nth-child(10) { animation-delay: 1.0s; }
+  }
+  
+  .ant-pagination {
+    animation: fadeIn 0.8s ease-out 0.8s both;
+  }
+}
+
+// ===== RESPONSIVE DAVRANIŞ =====
+// Desktop only (1280px+)
+@media (min-width: 1280px) {
+  .student-programs {
+    // Desktop stilleri
+  }
+}
+
+// Mobile gizleme (1280px altı)
+@media (max-width: 1279px) {
+  .student-programs {
+    display: none !important;
+  }
+}

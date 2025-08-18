@@ -1,0 +1,141 @@
+@import '../../styles/variables';
+@import '../../styles/mixins';
+
+.tmx-container {
+  width: 100%;
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.tmx-scroll {
+  overflow: auto;
+}
+
+.tmx-grid {
+  display: grid;
+  grid-auto-rows: 32px;
+  gap: 6px;
+  padding: 8px;
+  background: transparent;
+  animation: fadeIn 0.8s ease-out 0.2s both;
+}
+
+.tmx-header {
+  position: sticky;
+  z-index: 2;
+  top: 0;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  @include heading-h5; // 16px font-weight: 600
+  background: var(--tmx-header-bg, rgb(244 246 250));
+  color: var(--tmx-header-text, #1f2937);
+  border-radius: 6px;
+  animation: slideInFromTop 0.5s ease-out 0.1s both;
+}
+
+.tmx-left-sticky {
+  position: sticky;
+  left: 0;
+  z-index: 3;
+  background: var(--tmx-sticky-bg, rgba(0,0,0,0.04));
+}
+
+.tmx-top-sticky {
+  top: 0;
+}
+
+.tmx-topic {
+  height: 32px;
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  background: var(--tmx-topic-bg, rgb(244 246 250));
+  color: var(--tmx-topic-text, #1f2937);
+  border-radius: 6px;
+  @include body-medium; // 14px
+}
+
+.tmx-cell {
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  border: 1px solid var(--tmx-cell-border, rgba(0,0,0,0.08));
+  cursor: pointer;
+  @include hover-lift; // Sadece translateY hover efekti
+  
+  &:hover {
+    border-color: var(--tmx-cell-border-hover, rgba(0,0,0,0.2));
+    // transform: scale(1.05); // Kaldırıldı - sadece translateY kullanılıyor
+  }
+}
+
+.tmx-cell-selected {
+  border: 2px solid #1677ff !important;
+  box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.2);
+  // transform: scale(1.05); // Kaldırıldı - sadece translateY kullanılıyor
+}
+
+.tmx-color-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 24px);
+  gap: 6px;
+}
+
+.tmx-color-swatch {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  border: 1px solid var(--tmx-swatch-border, rgba(0,0,0,0.15));
+  cursor: pointer;
+  @include hover-lift; // Sadece translateY hover efekti
+}
+
+.tmx-color-custom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  @include body-medium; // 14px
+}
+
+// Dark Mode Support
+.theme-dark {
+  --tmx-header-bg: rgba(31, 41, 55, 0.8);
+  --tmx-header-text: #f9fafb;
+  --tmx-sticky-bg: rgba(255, 255, 255, 0.05);
+  --tmx-topic-bg: rgba(31, 41, 55, 0.8);
+  --tmx-topic-text: #f9fafb;
+  --tmx-cell-border: rgba(255, 255, 255, 0.1);
+  --tmx-cell-border-hover: rgba(255, 255, 255, 0.3);
+  --tmx-swatch-border: rgba(255, 255, 255, 0.2);
+}
+
+// Light Mode (default)
+.theme-light {
+  --tmx-header-bg: rgb(244 246 250);
+  --tmx-header-text: #1f2937;
+  --tmx-sticky-bg: rgba(0, 0, 0, 0.04);
+  --tmx-topic-bg: rgb(244 246 250);
+  --tmx-topic-text: #1f2937;
+  --tmx-cell-border: rgba(0, 0, 0, 0.08);
+  --tmx-cell-border-hover: rgba(0, 0, 0, 0.2);
+  --tmx-swatch-border: rgba(0, 0, 0, 0.15);
+}
+
+// ===== RESPONSIVE DAVRANIŞ =====
+// Desktop only (1280px+)
+@media (min-width: 1280px) {
+  .tmx-container {
+    // Desktop stilleri
+  }
+}
+
+// Mobile gizleme (1280px altı)
+@media (max-width: 1279px) {
+  .tmx-container {
+    display: none !important;
+  }
+}
+
+

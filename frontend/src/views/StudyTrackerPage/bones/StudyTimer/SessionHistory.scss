@@ -1,0 +1,454 @@
+.session-history {
+  .ant-card-body {
+    padding: 16px;
+  }
+
+  .session-history-table {
+    font-size: 13px;
+
+    // Scrollbar'ı olabildiğince incelt/gizle
+    .ant-table-body {
+      -ms-overflow-style: none; // IE ve eski Edge
+      scrollbar-width: none; // Firefox
+    }
+    .ant-table-body::-webkit-scrollbar { // WebKit
+      width: 0px;
+      height: 0px;
+    }
+
+    .ant-table-thead > tr > th {
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 22px;
+      height: 64px;
+      padding: 0 16px;
+      background: #fff;
+      position: relative;
+    }
+
+    .header-with-tooltip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+
+      .header-info-icon {
+        font-size: 15px;
+        color: rgba(0, 0, 0, 0.45);
+      }
+    }
+
+    // Başlık içindeki tüm ikonlar 15px
+    .ant-table-thead .anticon {
+      font-size: 15px;
+    }
+
+    .ant-table-tbody > tr > td {
+      border-right: 1px solid #f0f0f0;
+      font-size: 13px;
+      line-height: 22px;
+      // min 50px yüksekliği sağlamak için: 22px line-height + (14px * 2) padding = 50px
+      padding: 14px 16px;
+    }
+
+    .ant-table-tbody > tr > td:last-child {
+      border-right: none;
+    }
+
+    // Sticky ilk sütun
+    .ant-table-cell-fix-left {
+      position: sticky;
+      left: 0;
+      background: #fff;
+      z-index: 2;
+      font-weight: 600;
+      line-height: 22px;
+    }
+
+    // Sıralama ikonları boyutu
+    .ant-table-column-sorter {
+      font-size: 15px;
+    }
+
+    // Tag boyutları
+    .ant-tag {
+      font-size: 13px;
+      line-height: 22px;
+      padding: 0 8px;
+      background: #fff !important; // içi beyaz
+      border-width: 1px;
+      border-style: solid;
+    }
+
+    // Preset renkler: sadece border renkli, içi beyaz
+    .ant-tag-blue { color: #1677ff !important; border-color: #1677ff !important; }
+    .ant-tag-green { color: #52c41a !important; border-color: #52c41a !important; }
+    .ant-tag-orange { color: #fa8c16 !important; border-color: #fa8c16 !important; }
+    .ant-tag-volcano { color: #fa541c !important; border-color: #fa541c !important; }
+    .ant-tag-red { color: #ff4d4f !important; border-color: #ff4d4f !important; }
+    .ant-tag-cyan { color: #13c2c2 !important; border-color: #13c2c2 !important; }
+    .ant-tag-purple { color: #722ed1 !important; border-color: #722ed1 !important; }
+
+    .ant-table-summary {
+      background: #fff;
+      .summary-cell {
+        font-weight: 600;
+        font-size: 13px;
+        line-height: 22px;
+      }
+      > tr > td {
+        padding: 14px 16px;
+      }
+    }
+
+    // Kalite göstergesi
+    .quality-cell {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .quality-indicator {
+      display: inline-flex;
+      gap: 4px;
+      .quality-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #d9d9d9;
+        display: inline-block;
+      }
+      .quality-dot.filled {
+        background: #faad14;
+      }
+    }
+  }
+
+  .pagination-wrapper {
+    margin-top: 16px;
+    display: flex;
+    justify-content: center;
+    .custom-pagination-controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      background: #fff;
+      padding: 8px 12px;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 920px;
+
+      .total-text {
+        font-size: 12px;
+      }
+
+      .page-size-select {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        .label {
+          font-size: 12px;
+        }
+      }
+    }
+
+    // Ant Pagination item boyut/ikon
+    .ant-pagination {
+      background: #fff;
+      border-radius: 20px;
+      padding: 4px 8px;
+    }
+
+    .ant-pagination .anticon {
+      font-size: 14px;
+    }
+
+    .ant-pagination-item {
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      min-width: 32px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .ant-pagination-item a {
+      font-size: 14px;
+      line-height: 22px;
+    }
+
+    .ant-pagination-item-active a {
+      font-weight: 600;
+    }
+  }
+}
+
+// Dark mode support - Force override with higher specificity
+[data-theme="dark"] .session-history,
+html[data-theme="dark"] .session-history,
+body[data-theme="dark"] .session-history,
+.theme-dark .session-history,
+.dark .session-history {
+  .ant-card {
+    border-color: #374151 !important;
+    background: #1f2937 !important;
+    
+    .ant-card-head {
+      border-bottom-color: #374151 !important;
+      background: #1f2937 !important;
+      
+      .ant-card-head-title {
+        color: #ffffff !important;
+      }
+    }
+
+    .ant-card-body {
+      background: #1f2937 !important;
+      color: #ffffff !important;
+    }
+  }
+
+  .session-history-table {
+    .ant-table {
+      background: #1f2937 !important;
+      color: #ffffff !important;
+    }
+
+    .ant-table-thead > tr > th,
+    .ant-table-thead tr th,
+    .ant-table-thead th {
+      background: #374151 !important;
+      color: #ffffff !important;
+      border-bottom-color: #4b5563 !important;
+      border-right-color: #4b5563 !important;
+    }
+
+    .header-with-tooltip {
+      .header-info-icon {
+        color: #9ca3af !important;
+      }
+    }
+
+    .ant-table-tbody > tr > td {
+      background: #1f2937 !important;
+      color: #ffffff !important;
+      border-bottom-color: #374151 !important;
+      border-right-color: #374151 !important;
+    }
+
+    .ant-table-tbody > tr:hover > td {
+      background: #374151 !important;
+    }
+
+    // Sticky ilk sütun
+    .ant-table-cell-fix-left {
+      position: sticky !important;
+      left: 0 !important;
+      background: #374151 !important;
+      color: #ffffff !important;
+      border-right-color: #4b5563 !important;
+      z-index: 2 !important;
+      font-weight: 600 !important;
+      line-height: 22px !important;
+    }
+
+    // Tag stilleri
+    .ant-tag {
+      background: #374151 !important;
+      border-color: #4b5563 !important;
+      color: #ffffff !important;
+    }
+
+    // Preset renkler dark mode
+    .ant-tag-blue { 
+      background: #1e3a8a !important; 
+      border-color: #3b82f6 !important; 
+      color: #93c5fd !important; 
+    }
+    .ant-tag-green { 
+      background: #14532d !important; 
+      border-color: #22c55e !important; 
+      color: #86efac !important; 
+    }
+    .ant-tag-orange { 
+      background: #7c2d12 !important; 
+      border-color: #f97316 !important; 
+      color: #fdba74 !important; 
+    }
+    .ant-tag-volcano { 
+      background: #7c2d12 !important; 
+      border-color: #ea580c !important; 
+      color: #fed7aa !important; 
+    }
+    .ant-tag-red { 
+      background: #7f1d1d !important; 
+      border-color: #ef4444 !important; 
+      color: #fca5a5 !important; 
+    }
+    .ant-tag-cyan { 
+      background: #164e63 !important; 
+      border-color: #06b6d4 !important; 
+      color: #67e8f9 !important; 
+    }
+    .ant-tag-purple { 
+      background: #581c87 !important; 
+      border-color: #a855f7 !important; 
+      color: #c084fc !important; 
+    }
+
+    .ant-table-summary,
+    .ant-table-summary tr,
+    .ant-table-summary td {
+      background: #374151 !important;
+      color: #ffffff !important;
+      
+      .summary-cell {
+        color: #ffffff !important;
+        font-weight: 600;
+        font-size: 13px;
+        line-height: 22px;
+      }
+      
+      > tr > td,
+      td {
+        background: #374151 !important;
+        color: #ffffff !important;
+        border-top-color: #4b5563 !important;
+        padding: 14px 16px;
+      }
+    }
+
+    // Kalite göstergesi
+    .quality-indicator {
+      .quality-dot {
+        background: #4b5563 !important;
+      }
+      .quality-dot.filled {
+        background: #f59e0b !important;
+      }
+    }
+
+    // Sıralama ikonları
+    .ant-table-column-sorter {
+      color: #9ca3af !important;
+    }
+
+    // Select dropdown
+    .ant-select {
+      .ant-select-selector {
+        background: #374151 !important;
+        border-color: #4b5563 !important;
+        color: #ffffff !important;
+      }
+      
+      .ant-select-selection-item {
+        color: #ffffff !important;
+      }
+    }
+  }
+
+  .pagination-wrapper {
+    margin-top: 16px;
+    display: flex;
+    justify-content: center;
+    
+    .custom-pagination-controls,
+    .pagination-wrapper .custom-pagination-controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      background: #374151 !important;
+      color: #ffffff !important;
+      border: 1px solid #4b5563 !important;
+      padding: 8px 12px;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 920px;
+
+      .total-text {
+        color: #d1d5db !important;
+        font-size: 12px;
+      }
+
+      .page-size-select {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        .label {
+          color: #d1d5db !important;
+          font-size: 12px;
+        }
+      }
+    }
+
+    .ant-pagination {
+      background: #374151 !important;
+      color: #ffffff !important;
+      border-radius: 20px;
+      padding: 4px 8px;
+
+      .anticon {
+        font-size: 14px;
+        color: #ffffff !important;
+      }
+
+      .ant-pagination-item {
+        background: #1f2937 !important;
+        border-color: #4b5563 !important;
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        min-width: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        
+        a {
+          color: #ffffff !important;
+          font-size: 14px;
+          line-height: 22px;
+        }
+        
+        &:hover {
+          background: #4b5563 !important;
+        }
+      }
+
+      .ant-pagination-item-active {
+        background: #3b82f6 !important;
+        border-color: #3b82f6 !important;
+        
+        a {
+          color: #ffffff !important;
+          font-weight: 600;
+        }
+      }
+
+      .ant-pagination-prev,
+      .ant-pagination-next {
+        color: #ffffff !important;
+        
+        &:hover {
+          color: #3b82f6 !important;
+        }
+        
+        .anticon {
+          font-size: 14px;
+        }
+      }
+    }
+  }
+}
+
+// Ant Design bileşenleri için genel stil ayarları
+:where([class^=css-]) .ant-cascader-picker, .ant-cascader-picker, :where([class^=css-]) .ant-mentions, .ant-mentions, :where([class^=css-]) .ant-picker, .ant-picker, :where([class^=css-]) .ant-upload, .ant-upload {
+    border-radius: 12px !important;
+    padding: 4px !important;
+}
+
+

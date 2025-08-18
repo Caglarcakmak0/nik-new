@@ -1,0 +1,119 @@
+// Colors
+// Tailwind-esque ana renkler (light)
+$primary-color: #2563eb; // blue-600
+$primary-hover: #1d4ed8; // blue-700
+$primary-active: #1e40af; // blue-800
+
+// Semantic renkler (tailwind yakınsama)
+$success-color: #16a34a; // green-600
+$warning-color: #f59e0b; // amber-500
+$error-color: #ef4444; // red-500
+$info-color: #2563eb; // blue-600
+
+// Metin renkleri
+$text-primary: #0f172a; // slate-900
+$text-secondary: #475569; // slate-600
+$text-disabled: #94a3b8; // slate-400
+
+// Arkaplanlar
+$bg-primary: #ffffff;
+$bg-secondary: #f8fafc; // slate-50
+$bg-disabled: #f1f5f9; // slate-100
+
+// Sınırlar
+$border-color: #e2e8f0; // slate-200
+$border-light: #f1f5f9; // slate-100
+
+// Glassmorphism
+$glass-blur: 12px;
+$glass-saturate: 140%;
+$glass-light-bg: rgba(255, 255, 255, 0.55);
+$glass-dark-bg: rgba(17, 25, 40, 0.55);
+$glass-light-border: rgba(255, 255, 255, 0.35);
+$glass-dark-border: rgba(255, 255, 255, 0.08);
+$glass-shadow-light: 0 8px 30px rgba(0, 0, 0, 0.06);
+$glass-shadow-dark: 0 8px 30px rgba(0, 0, 0, 0.45);
+
+// Spacing
+$spacing-xs: 4px;
+$spacing-sm: 8px;
+$spacing-md: 16px;
+$spacing-lg: 24px;
+$spacing-xl: 32px;
+
+// Border radius
+$border-radius-sm: 2px;
+$border-radius: 12px;
+$border-radius-lg: 12px;
+$border-radius-xl: 12px;
+
+// Shadows
+$box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+$box-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.03);
+$box-shadow-lg: 0 6px 16px rgba(0, 0, 0, 0.12);
+
+// ===== TİPOGRAFİ SCALE =====
+// Heading Hierarchy (Antd Title levels)
+$font-size-h1: 32px; // Title level={1} - Çok büyük başlıklar (şu anda kullanılmıyor)
+$font-size-h2: 24px; // Title level={2} - Sayfa başlıkları (Çalışma Takip Merkezi, Çalışma Programı)
+$font-size-h3: 20px; // Title level={3} - Alt bölüm başlıkları
+$font-size-h4: 18px; // Title level={4} - Kart başlıkları, modal başlıkları
+$font-size-h5: 16px; // Title level={5} - Kart içi başlıklar, liste başlıkları
+
+// Body Text Scale
+$font-size-body-large: 16px; // Ana açıklamalar, önemli metinler
+$font-size-body-medium: 14px; // Normal paragraflar, açıklamalar
+$font-size-body-small: 12px; // Meta bilgiler, etiketler, küçük açıklamalar
+$font-size-body-extra-small: 10px; // Çok küçük bilgiler, istatistikler
+
+// Özel Kullanım Alanları
+$font-size-stat-desktop: 24px; // Stat Numbers - desktop
+$font-size-stat-tablet: 20px; // Stat Numbers - tablet
+$font-size-stat-mobile: 18px; // Stat Numbers - mobile
+$font-size-button: 15px; // Button Text - genel
+$font-size-button-small: 14px; // Button Text - küçük butonlar
+$font-size-tag-desktop: 12px; // Tag Text - desktop
+$font-size-tag-mobile: 10px; // Tag Text - mobile
+$font-size-tab: 14px; // Tab Başlıkları
+
+// Font weights
+$font-weight-normal: 400;
+$font-weight-medium: 500;
+$font-weight-semibold: 600;
+$font-weight-bold: 700;
+
+// ===== ANİMASYON SİSTEMİ =====
+// Animasyon süreleri
+$transition-fast: 0.15s;    // Buton hover, input focus
+$transition-normal: 0.3s;   // Kart hover, modal açılma  
+$transition-slow: 0.5s;     // Sayfa geçişleri
+
+// Easing fonksiyonları
+$ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);  // Genel kullanım
+$ease-out: cubic-bezier(0.0, 0, 0.2, 1);     // Giriş animasyonları
+$ease-in: cubic-bezier(0.4, 0, 1, 1);        // Çıkış animasyonları
+
+// Transform değerleri
+// $transform-hover-y: translateY(-4px);         // Kaldırıldı - translateY animasyonu kullanılmıyor
+// $transform-hover-scale: scale(1.02);         // Kaldırıldı - scale animasyonu kullanılmıyor
+$transform-hover-rotate: rotate(2deg);       // Rotate (kullanım sınırlı)
+
+// Animasyon gecikmeleri
+$stagger-delay: 0.1s;
+$stagger-max-items: 6;
+
+// Hardware acceleration
+$transform-gpu: translateZ(0);
+
+// Reduced motion support - doğrudan media query kullanılacak
+
+// Focus ring
+$focus-ring-color: rgba(24, 144, 255, 0.4);
+$focus-ring-color-dark: rgba(64, 169, 255, 0.5);
+
+// Legacy font sizes (geriye uyumluluk için)
+$font-size-sm: $font-size-body-small;
+$font-size: $font-size-body-medium;
+$font-size-lg: $font-size-body-large;
+$font-size-xl: $font-size-h3;
+$font-size-xxl: $font-size-h2;

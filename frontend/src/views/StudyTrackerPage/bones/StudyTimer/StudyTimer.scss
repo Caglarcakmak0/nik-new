@@ -1,0 +1,185 @@
+.study-timer {
+  &__content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+  }
+
+  &__progress {
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+    padding: 12px;
+    background: rgba(0, 0, 0, 0.02);
+    border-radius: 8px;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+  }
+
+  &__stats {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: rgba(0, 0, 0, 0.65);
+    
+    span {
+      white-space: nowrap;
+    }
+  }
+
+  &__controls {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
+
+    .ant-btn {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      }
+
+      &.ant-btn-primary {
+        background: linear-gradient(135deg, #40a9ff, #1890ff);
+        border: none;
+        
+        &:hover {
+          background: linear-gradient(135deg, #69c0ff, #40a9ff);
+        }
+      }
+
+      &.ant-btn-danger {
+        background: linear-gradient(135deg, #ff7875, #ff4d4f);
+        border: none;
+        
+        &:hover {
+          background: linear-gradient(135deg, #ffa39e, #ff7875);
+        }
+      }
+    }
+  }
+
+  // Size variants
+  &--small {
+    .study-timer__content {
+      gap: 16px;
+    }
+
+    .study-timer__controls {
+      .ant-btn {
+        font-size: 12px;
+        height: 32px;
+        padding: 4px 12px;
+      }
+    }
+
+    .ant-card-body {
+      padding: 16px;
+    }
+  }
+
+  &--large {
+    .ant-card-head {
+      text-align: center;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+      
+      .ant-card-head-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #1890ff;
+      }
+    }
+
+    .ant-card-body {
+      padding: 24px;
+    }
+  }
+
+  // Dark mode
+  .dark & {
+    .study-timer__progress {
+      background: rgba(255, 255, 255, 0.04);
+      border-color: rgba(255, 255, 255, 0.12);
+    }
+
+    .study-timer__stats {
+      color: rgba(255, 255, 255, 0.65);
+    }
+
+    &--large .ant-card-head {
+      border-bottom-color: rgba(255, 255, 255, 0.12);
+      
+      .ant-card-head-title {
+        color: #40a9ff;
+      }
+    }
+  }
+
+  // Responsive
+  @media (max-width: 768px) {
+    &--large .study-timer__content {
+      gap: 20px;
+    }
+
+    .study-timer__controls {
+      width: 100%;
+      justify-content: center;
+      
+      .ant-btn {
+        flex: 1;
+        min-width: 0;
+        max-width: 120px;
+      }
+    }
+  }
+
+  @media (max-width: 480px) {
+    &--large .ant-card-body {
+      padding: 16px;
+    }
+
+    .study-timer__controls {
+      gap: 6px;
+      
+      .ant-btn {
+        font-size: 12px;
+        padding: 4px 8px;
+        max-width: 100px;
+        
+        .anticon {
+          font-size: 12px;
+        }
+      }
+    }
+  }
+}
+
+// Card animations
+.study-timer.ant-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  &:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  }
+}
+
+// Timer state indicators
+.study-timer[data-state="running"] {
+  border-left: 4px solid #1890ff;
+}
+
+.study-timer[data-state="break"] {
+  border-left: 4px solid #52c41a;
+}
+
+.study-timer[data-state="paused"] {
+  border-left: 4px solid #faad14;
+}
+
+.study-timer[data-state="completed"] {
+  border-left: 4px solid #722ed1;
+}

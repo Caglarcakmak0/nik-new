@@ -1,0 +1,446 @@
+@import '../../styles/variables';
+@import '../../styles/mixins';
+
+.coach-dashboard {
+  .dashboard-header {
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 24px;
+    border: 1px solid #bfdbfe;
+
+    .ant-typography h2 {
+      @include heading-h2; // 24px sayfa başlığı
+    }
+  }
+
+  // Stat Cards
+  .stat-card {
+    border-radius: 12px;
+    @include hover-lift; // Hover efekti (gölge ve renk değişiklikleri)
+    overflow: hidden;
+    
+    &:hover {
+      // transform: translateY(-2px); // Kaldırıldı - mixin içinde
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    }
+    
+    &.total {
+      background: linear-gradient(135deg, #e6f7ff 0%, #bae7ff 100%);
+      border: 2px solid #69c0ff;
+      
+      .ant-statistic-content-value {
+        background: linear-gradient(45deg, #1890ff, #40a9ff);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+    }
+    
+    &.active {
+      background: linear-gradient(135deg, #f6ffed 0%, #d9f7be 100%);
+      border: 2px solid #95de64;
+      
+      .ant-statistic-content-value {
+        background: linear-gradient(45deg, #52c41a, #73d13d);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+    }
+    
+    &.risk {
+      background: linear-gradient(135deg, #fff1f0 0%, #ffccc7 100%);
+      border: 2px solid #ff7875;
+      
+      .ant-statistic-content-value {
+        background: linear-gradient(45deg, #ff4d4f, #ff7875);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+    }
+    
+    &.average {
+      background: linear-gradient(135deg, #fffbe6 0%, #fff1b8 100%);
+      border: 2px solid #ffec3d;
+      
+      .ant-statistic-content-value {
+        background: linear-gradient(45deg, #faad14, #ffc53d);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+    }
+    
+    .ant-card-body {
+      padding: 20px;
+      text-align: center;
+    }
+    
+    .ant-statistic {
+      .ant-statistic-title {
+        @include body-medium; // 14px
+        font-weight: $font-weight-semibold; // 600
+        margin-bottom: 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      
+      .ant-statistic-content {
+        .ant-statistic-content-value {
+          font-size: 28px;
+          font-weight: $font-weight-bold; // 700
+        }
+        
+        .ant-statistic-content-prefix {
+          margin-right: 8px;
+          font-size: 20px;
+        }
+      }
+    }
+  }
+
+  // Table Enhancements
+  .ant-table {
+    border-radius: 12px;
+    overflow: hidden;
+    
+    .ant-table-thead {
+      > tr > th {
+        background: linear-gradient(135deg, #fafafa 0%, #f0f0f0 100%);
+        @include body-small; // 12px
+        font-weight: $font-weight-semibold; // 600
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border-bottom: 2px solid #e8e8e8;
+      }
+    }
+    
+    .ant-table-tbody {
+      > tr {
+        transition: all $transition-normal $ease-in-out;
+        
+        &:hover {
+          background: linear-gradient(135deg, rgba(24, 144, 255, 0.02) 0%, rgba(24, 144, 255, 0.05) 100%);
+        }
+        
+        > td {
+          padding: 16px 16px;
+          border-bottom: 1px solid #f0f0f0;
+          @include body-medium; // 14px
+          
+          .ant-avatar {
+            border: 2px solid #fff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+          }
+          
+          .ant-tag {
+            border-radius: 12px;
+            font-weight: $font-weight-medium; // 500
+            border: none;
+            @include body-small; // 12px
+          }
+          
+          .ant-btn {
+            border-radius: 6px;
+            font-weight: $font-weight-medium; // 500
+            font-size: $font-size-button-small; // 14px
+            
+            &.ant-btn-primary {
+              background: linear-gradient(135deg, #1890ff 0%, #40a9ff 100%);
+              border: none;
+              
+              &:hover {
+                background: linear-gradient(135deg, #1677ff 0%, #1890ff 100%);
+                @include hover-lift; // Hover efekti (gölge ve renk değişiklikleri)
+                box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
+              }
+            }
+            
+            &:not(.ant-btn-primary) {
+              &:hover {
+                border-color: #1890ff;
+                color: #1890ff;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // Progress Bars
+  .ant-progress {
+    .ant-progress-outer {
+      .ant-progress-inner {
+        background: rgba(0, 0, 0, 0.06);
+        border-radius: 8px;
+        
+        .ant-progress-bg {
+          border-radius: 8px;
+          transition: all $transition-slow $ease-in-out; // 0.5s
+        }
+      }
+    }
+  }
+
+  // Alert Styling
+  .ant-alert {
+    &.ant-alert-warning {
+      background: linear-gradient(135deg, #fffbe6 0%, #fff1b8 100%);
+      border: 1px solid #ffe58f;
+      border-radius: 12px;
+      
+      .ant-alert-icon {
+        font-size: 20px;
+      }
+      
+      .ant-alert-message {
+        @include heading-h5; // 16px
+        font-weight: $font-weight-semibold; // 600
+      }
+    }
+  }
+
+  // Message List Styling
+  .ant-list {
+          .ant-list-item {
+        border-radius: 8px;
+        @include hover-lift; // Hover efekti (gölge ve renk değişiklikleri)
+      
+      &:hover {
+        background: rgba(24, 144, 255, 0.02) !important;
+      }
+      
+      .ant-list-item-meta {
+        .ant-list-item-meta-avatar {
+          .ant-avatar {
+            border: 2px solid #fff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+          }
+        }
+        
+        .ant-list-item-meta-title {
+          margin-bottom: 4px;
+          
+          .ant-typography {
+            @include body-medium; // 14px
+          }
+        }
+        
+        .ant-list-item-meta-description {
+          color: #595959;
+          @include body-small; // 12px
+          line-height: 1.4;
+        }
+      }
+    }
+  }
+
+  // Tabs Styling
+  .ant-tabs {
+    .ant-tabs-tab {
+      padding: 12px 20px;
+      font-weight: $font-weight-semibold; // 600
+      border-radius: 8px 8px 0 0;
+      @include tab-title; // 14px + 500px + 5px margin
+      
+      .anticon {
+        margin-right: 8px;
+      }
+      
+      &.ant-tabs-tab-active {
+        background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+        border-bottom: 3px solid #1890ff;
+        @include tab-active-animation; // Tab active animasyonu
+      }
+    }
+    
+    .ant-tabs-content-holder {
+      padding: 24px 0;
+    }
+  }
+
+  // Modal Enhancements
+  .ant-modal {
+    .ant-modal-header {
+      border-radius: 8px 8px 0 0;
+      border-bottom: 2px solid #f0f0f0;
+      
+      .ant-modal-title {
+        @include heading-h5; // 16px
+        font-weight: $font-weight-semibold; // 600
+      }
+    }
+    
+    .ant-modal-body {
+      padding: 24px;
+    }
+    
+    .ant-modal-footer {
+      border-top: 2px solid #f0f0f0;
+      padding: 16px 24px;
+      
+      .ant-btn {
+        border-radius: 6px;
+        font-weight: $font-weight-medium; // 500
+        font-size: $font-size-button-small; // 14px
+        
+        &.ant-btn-primary {
+          background: linear-gradient(135deg, #1890ff 0%, #40a9ff 100%);
+          border: none;
+          
+          &:hover {
+            background: linear-gradient(135deg, #1677ff 0%, #1890ff 100%);
+          }
+        }
+      }
+    }
+  }
+
+  // Input Enhancements
+  .ant-input,
+  .ant-input-affix-wrapper,
+  .ant-select-selector,
+  .ant-picker {
+    border-radius: 8px;
+    border: 1px solid #d9d9d9;
+    
+    &:hover,
+    &:focus,
+    &.ant-input-focused,
+    &.ant-select-focused,
+    &.ant-picker-focused {
+      border-color: #1890ff;
+      box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
+    }
+  }
+  
+  .ant-input-search {
+    .ant-input-search-button {
+      border-radius: 0 6px 6px 0;
+      border-left: none;
+      background: linear-gradient(135deg, #1890ff 0%, #40a9ff 100%);
+      
+      &:hover {
+        background: linear-gradient(135deg, #1677ff 0%, #1890ff 100%);
+      }
+    }
+  }
+}
+
+// Dark Mode
+.dark {
+  .coach-dashboard {
+    .dashboard-header {
+      background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+      border-color: #434343;
+    }
+    
+    .stat-card {
+      &.total {
+        background: linear-gradient(135deg, #1e2a3a 0%, #2a3a4a 100%);
+        border-color: #1677ff;
+      }
+      
+      &.active {
+        background: linear-gradient(135deg, #1a2a1a 0%, #2a3a2a 100%);
+        border-color: #389e0d;
+      }
+      
+      &.risk {
+        background: linear-gradient(135deg, #3a1a1a 0%, #4a2a2a 100%);
+        border-color: #cf1322;
+      }
+      
+      &.average {
+        background: linear-gradient(135deg, #3a2a1a 0%, #4a3a2a 100%);
+        border-color: #d48806;
+      }
+    }
+    
+    .ant-table {
+      background: #262626;
+      
+      .ant-table-thead > tr > th {
+        background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+        color: #f0f0f0;
+        border-color: #434343;
+      }
+      
+      .ant-table-tbody > tr {
+        background: #262626;
+        color: #f0f0f0;
+        
+        &:hover {
+          background: linear-gradient(135deg, rgba(24, 144, 255, 0.1) 0%, rgba(24, 144, 255, 0.05) 100%);
+        }
+        
+        > td {
+          border-color: #434343;
+          color: #f0f0f0;
+        }
+      }
+    }
+  }
+}
+
+// ===== RESPONSIVE DAVRANIŞ =====
+// Desktop only (1280px+)
+@media (min-width: 1280px) {
+  .coach-dashboard {
+    padding: 24px;
+    
+    .dashboard-header {
+      padding: 20px;
+      margin-bottom: 24px;
+      
+      .ant-typography h2 {
+        font-size: $font-size-h2; // 24px
+      }
+    }
+    
+    .stat-card {
+      margin-bottom: 16px;
+      
+      .ant-card-body {
+        padding: 20px;
+      }
+      
+      .ant-statistic-content-value {
+        font-size: 28px;
+      }
+    }
+    
+    .ant-table {
+      .ant-table-thead > tr > th {
+        font-size: $font-size-body-small; // 12px
+        padding: 12px 16px;
+      }
+      
+      .ant-table-tbody > tr > td {
+        padding: 16px;
+        font-size: $font-size-body-medium; // 14px
+      }
+    }
+    
+    .ant-tabs {
+      .ant-tabs-tab {
+        padding: 12px 20px;
+        font-size: $font-size-tab; // 14px
+      }
+      
+      .ant-tabs-content-holder {
+        padding: 24px 0;
+      }
+    }
+  }
+}
+
+// Mobile gizleme (1280px altı)
+@media (max-width: 1279px) {
+  .coach-dashboard {
+    display: none !important;
+  }
+}
