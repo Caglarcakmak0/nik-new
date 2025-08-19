@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { apiRequest } from '../../../../services/api';
 import { 
   Card, 
   Row, 
@@ -80,7 +79,7 @@ interface AdvancedAnalyticsProps {
       blankAnswers: number;
       studyTime: number;
       status: 'not_started' | 'in_progress' | 'completed' | 'skipped';
-      sessionIds: string[];
+      sessionIds: any[];
     }>;
     stats: {
       totalTargetQuestions: number;
@@ -124,32 +123,29 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({ plan, selectedDat
     dayjs().subtract(7, 'day'),
     dayjs()
   ]);
-  const [studySessions, setStudySessions] = useState<StudySession[]>([]);
-  const [sessionsLoading, setSessionsLoading] = useState(false);
 
-  // Study Session verilerini çek
-  const fetchStudySessions = async () => {
+  // Plan içinden populate edilmiş session'ları çıkar (tek veri kaynağı)
+  const extractSessionsFromPlan = (): StudySession[] => {
     try {
-      setSessionsLoading(true);
-      const response = await apiRequest('/study-sessions', { method: 'GET' });
-      
-      if (response && Array.isArray(response)) {
-        setStudySessions(response);
-      } else {
-        setStudySessions([]);
-      }
-    } catch (error) {
-      console.error('Study sessions çekilemedi:', error);
-      setStudySessions([]);
-    } finally {
-      setSessionsLoading(false);
+      const all: StudySession[] = [] as any;
+      (plan?.subjects || []).forEach((subj) => {
+        (subj.sessionIds || []).forEach((sess: any) => {
+          if (sess && typeof sess === 'object' && (sess as any)._id) {
+            all.push(sess as StudySession);
+          }
+        });
+      });
+      // benzersizleştir
+      const map = new Map<string, StudySession>();
+      all.forEach((s: any) => {
+        const id = (s as any)._id || (s as any).id;
+        if (id && !map.has(id)) map.set(id, s);
+      });
+      return Array.from(map.values());
+    } catch {
+      return [];
     }
   };
-
-  // Component mount olduğunda veri çek
-  useEffect(() => {
-    fetchStudySessions();
-  }, []);
 
   // Gelişmiş Metrik Hesaplamaları
   const calculateAdvancedMetrics = () => {
@@ -174,7 +170,7 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({ plan, selectedDat
       return acc;
     }, {} as Record<string, any>);
 
-    // Study Sessions verilerinden ek metrikler
+    // Study Sessions verilerinden ek metrikler (yalnızca plan içindeki sessionlar)
     let sessionsMetrics = {
       totalStudyTime: 0,
       averageQuality: 0,
@@ -182,10 +178,11 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({ plan, selectedDat
       subjectDistribution: {} as Record<string, any>
     };
 
-    if (studySessions.length > 0) {
+    const src = extractSessionsFromPlan();
+    if (src.length > 0) {
       // Tarih filtresi uygula (son hafta)
       const weekAgo = dayjs().subtract(7, 'day');
-      const filteredSessions = studySessions.filter(session => 
+      const filteredSessions = src.filter(session => 
         dayjs(session.date).isAfter(weekAgo)
       );
 
@@ -289,7 +286,7 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({ plan, selectedDat
       map[d.format('YYYY-MM-DD')] = { minutes: 0, sessions: 0, qualitySum: 0 };
     }
 
-    const filtered = studySessions.filter(s => {
+    const filtered = extractSessionsFromPlan().filter(s => {
       const d = dayjs(s.date);
       if (!d.isValid()) return false;
       if (d.isBefore(start) || d.isAfter(dayjs().endOf('day'))) return false;
@@ -325,11 +322,11 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({ plan, selectedDat
     const start = dayjs().startOf('day').subtract(days - 1, 'day');
     const subjectToMinutes: Record<string, number> = {};
 
-    studySessions.forEach(s => {
+    const src = extractSessionsFromPlan();
+    src.forEach(s => {
       const d = dayjs(s.date);
       if (!d.isValid()) return;
       if (d.isBefore(start) || d.isAfter(dayjs().endOf('day'))) return;
-      // Seçili ders varsa tüm dersleri göster; seçili ders 'all' değilse subject chart yine tüm dağılımı gösterir
       subjectToMinutes[s.subject] = (subjectToMinutes[s.subject] || 0) + (s.duration || 0);
     });
 
@@ -347,7 +344,8 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({ plan, selectedDat
     const start = dayjs().startOf('day').subtract(days - 1, 'day');
     const techniqueToCount: Record<string, number> = {};
 
-    studySessions.forEach(s => {
+    const src = extractSessionsFromPlan();
+    src.forEach(s => {
       const d = dayjs(s.date);
       if (!d.isValid()) return;
       if (d.isBefore(start) || d.isAfter(dayjs().endOf('day'))) return;
@@ -369,7 +367,7 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({ plan, selectedDat
     const status = getMetricStatus(value);
     
     return (
-      <Card className={`metric-card ${status}`} bordered={false}>
+      <Card className={`metric-card ${status}`} variant="borderless">
         <div className="metric-content">
           <div className="metric-icon">
             {icon}
@@ -400,7 +398,7 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({ plan, selectedDat
     const efficiency = subject.efficiency || 0;
     
     return (
-      <Card key={subject.subject} className="subject-card" bordered={false}>
+      <Card key={subject.subject} className="subject-card" variant="borderless">
         <div className="subject-header">
           <BookOutlined className="subject-icon" />
           <Title level={5} className="subject-title">{subject.subject}</Title>
@@ -503,11 +501,11 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({ plan, selectedDat
         </Col>
         <Col xs={24} sm={12} lg={6}>
           {renderMetricCard(
-                         'Hız Skoru',
-             metrics.velocityScore,
-             <RiseOutlined />,
-             '/10',
-             'Genel performans ve hız değerlendirmesi'
+            'Hız Skoru',
+            metrics.velocityScore,
+            <RiseOutlined />,
+            '/10',
+            'Genel performans ve hız değerlendirmesi'
           )}
         </Col>
       </Row>
@@ -515,7 +513,7 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({ plan, selectedDat
       {/* Detaylı Analiz */}
       <Row gutter={[24, 24]} className="detailed-section">
         <Col xs={24} lg={24}>
-          <Card className="main-chart-card" bordered={false}>
+          <Card className="main-chart-card" variant="borderless">
             <div className="card-header">
               <Title level={4}>
                 <LineChartOutlined /> Konu Bazlı Performans
@@ -594,7 +592,7 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({ plan, selectedDat
       </Row>
 
       {/* Konu Detayları */}
-      <Card className="subjects-section" bordered={false}>
+      <Card className="subjects-section" variant="borderless">
         <div className="card-header">
           <Title level={4}>
             <BookOutlined /> Konu Bazlı Detaylar
@@ -655,7 +653,7 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({ plan, selectedDat
       {/* Öneriler ve Uyarılar */}
       <Row gutter={[24, 24]} className="insights-section">
         <Col xs={24} lg={12}>
-          <Card className="insights-card" bordered={false}>
+          <Card className="insights-card" variant="borderless">
             <div className="card-header">
               <Title level={4}>
                 <BulbOutlined /> Performans Önerileri
@@ -769,78 +767,90 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({ plan, selectedDat
         </Col>
         
         <Col xs={24} lg={12}>
-          <Card className="trends-card" bordered={false}>
+          <Card className="trends-card" variant="borderless">
             <div className="card-header">
-                             <Title level={4}>
-                 <RiseOutlined /> Trend Analizi
-               </Title>
+              <Title level={4}>
+                <RiseOutlined /> Trend Analizi
+              </Title>
             </div>
             
             <div className="trends-content">
-              <Timeline className="trends-timeline">
-                <Timeline.Item 
-                  className="ant-timeline-item-red"
-                  dot={<FireOutlined />}
-                >
-                  <Text strong>Günlük Hedef Performansı</Text>
-                  <div className="trend-metric">
-                    <div className="metric-icon">
-                      <AimOutlined />
-                    </div>
-                    <div className="metric-details">
-                      <div className="metric-label">Hedef vs Tamamlanan</div>
-                      <div className="metric-value">
-                        {plan.stats.totalCompletedQuestions} / {plan.stats.totalTargetQuestions}
-                      </div>
-                    </div>
-                  </div>
-                </Timeline.Item>
-                
-                <Timeline.Item 
-                  className="ant-timeline-item-orange"
-                  dot={<ClockCircleOutlined />}
-                >
-                  <Text strong>Zaman Yönetimi Analizi</Text>
-                  <div className="trend-metric">
-                    <div className="metric-details">
-                      <div className="metric-label">Toplam Süre</div>
-                      <div className="metric-value">
-                        {Math.round(plan.stats.totalStudyTime / 60)} dakika
-                      </div>
-                    </div>
-                  </div>
-                </Timeline.Item>
-                
-                <Timeline.Item 
-                  className="ant-timeline-item-green"
-                  dot={<TrophyOutlined />}
-                >
-                  <Text strong>Başarı ve Kalite Metrikleri</Text>
-                  <div className="trend-metric">
-                    <div className="metric-details">
-                      <div className="metric-label">Başarı Oranı</div>
-                      <div className="metric-value">
-                        %{plan.stats.successRate} ({plan.stats.netScore} net)
-                      </div>
-                    </div>
-                  </div>
-                </Timeline.Item>
-
-                <Timeline.Item 
-                  className="ant-timeline-item-red"
-                  dot={<RocketOutlined />}
-                >
-                  <Text strong>Verimlilik Skoru</Text>
-                  <div className="trend-metric">
-                    <div className="metric-details">
-                      <div className="metric-label">Soru/Dakika</div>
-                      <div className="metric-value">
-                        {metrics.efficiency.toFixed(1)} soru/dk
-                      </div>
-                    </div>
-                  </div>
-                </Timeline.Item>
-              </Timeline>
+              <Timeline 
+                className="trends-timeline"
+                items={[
+                  {
+                    className: "ant-timeline-item-red",
+                    dot: <FireOutlined />,
+                    children: (
+                      <>
+                        <Text strong>Günlük Hedef Performansı</Text>
+                        <div className="trend-metric">
+                          <div className="metric-icon">
+                            <AimOutlined />
+                          </div>
+                          <div className="metric-details">
+                            <div className="metric-label">Hedef vs Tamamlanan</div>
+                            <div className="metric-value">
+                              {plan.stats.totalCompletedQuestions} / {plan.stats.totalTargetQuestions}
+                            </div>
+                          </div>
+                        </div>
+                      </>
+                    )
+                  },
+                  {
+                    className: "ant-timeline-item-orange",
+                    dot: <ClockCircleOutlined />,
+                    children: (
+                      <>
+                        <Text strong>Zaman Yönetimi Analizi</Text>
+                        <div className="trend-metric">
+                          <div className="metric-details">
+                            <div className="metric-label">Toplam Süre</div>
+                            <div className="metric-value">
+                              {Math.round(plan.stats.totalStudyTime / 60)} dakika
+                            </div>
+                          </div>
+                        </div>
+                      </>
+                    )
+                  },
+                  {
+                    className: "ant-timeline-item-green",
+                    dot: <TrophyOutlined />,
+                    children: (
+                      <>
+                        <Text strong>Başarı ve Kalite Metrikleri</Text>
+                        <div className="trend-metric">
+                          <div className="metric-details">
+                            <div className="metric-label">Başarı Oranı</div>
+                            <div className="metric-value">
+                              %{plan.stats.successRate} ({plan.stats.netScore} net)
+                            </div>
+                          </div>
+                        </div>
+                      </>
+                    )
+                  },
+                  {
+                    className: "ant-timeline-item-red",
+                    dot: <RocketOutlined />,
+                    children: (
+                      <>
+                        <Text strong>Verimlilik Skoru</Text>
+                        <div className="trend-metric">
+                          <div className="metric-details">
+                            <div className="metric-label">Soru/Dakika</div>
+                            <div className="metric-value">
+                              {metrics.efficiency.toFixed(1)} soru/dk
+                            </div>
+                          </div>
+                        </div>
+                      </>
+                    )
+                  }
+                ]}
+              />
             </div>
           </Card>
         </Col>

@@ -420,13 +420,13 @@ const GamificationSystem: React.FC = () => {
         footer={null}
         width={600}
       >
-        <Timeline mode="left">
-          {xpHistory.map((entry, index) => (
-            <Timeline.Item
-              key={index}
-              color={entry.xp > 0 ? 'green' : 'red'}
-              label={dayjs(entry.date).format('HH:mm')}
-            >
+        <Timeline 
+          mode="left"
+          items={xpHistory.map((entry, index) => ({
+            key: index,
+            color: entry.xp > 0 ? 'green' : 'red',
+            label: dayjs(entry.date).format('HH:mm'),
+            children: (
               <Space direction="vertical" size={4}>
                 <Space>
                   <Text strong>{entry.action}</Text>
@@ -438,9 +438,9 @@ const GamificationSystem: React.FC = () => {
                   {entry.description}
                 </Text>
               </Space>
-            </Timeline.Item>
-          ))}
-        </Timeline>
+            )
+          }))}
+        />
       </Modal>
     </div>
   );

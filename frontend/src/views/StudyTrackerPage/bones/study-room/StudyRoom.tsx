@@ -1,12 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Card, List, Avatar, Button, Segmented, Tag, Space, message, Popconfirm, Modal, Statistic, Row, Col, Progress } from 'antd';
-import { RocketOutlined, ThunderboltOutlined, PlayCircleOutlined, HistoryOutlined, TrophyOutlined, FireOutlined } from '@ant-design/icons';
+import { Card, List, Button, Segmented, Tag, Space, Popconfirm, Statistic, Row, Col, Tabs, App } from 'antd';
+import { RocketOutlined, ThunderboltOutlined, HistoryOutlined, TrophyOutlined, FireOutlined, RiseOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import 'dayjs/locale/tr';
-import { getStudyRoomActivity, getActiveDuels, inviteDuel, respondDuel, apiRequest, type StudyRoomActivityItem, type Duel } from '../../../../services/api';
+import { getStudyRoomActivity, getActiveDuels, inviteDuel, respondDuel, apiRequest, getStudentPrograms, type StudyRoomActivityItem, type Duel } from '../../../../services/api';
 import { useAuth } from '../../../../contexts/AuthContext';
-import StudyTimer from '../StudyTimer/StudyTimer';
+import Leaderboard from '../../../StudyPlanPage/bones/Leaderboard/Leaderboard';
 
 dayjs.extend(relativeTime);
 dayjs.locale('tr');
@@ -23,21 +23,28 @@ const StudyRoom: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [activity, setActivity] = useState<StudyRoomActivityItem[]>([]);
   const [duels, setDuels] = useState<Duel[]>([]);
-  const [showStudyTimer, setShowStudyTimer] = useState(false);
   const [studyRoomSessions, setStudyRoomSessions] = useState<any[]>([]);
+  const [allSessions, setAllSessions] = useState<any[]>([]);
+  const [programDailyTime, setProgramDailyTime] = useState<number>(0);
+  const [programWeeklyTime, setProgramWeeklyTime] = useState<number>(0);
+  const [programAllTime, setProgramAllTime] = useState<number>(0);
   const { user } = useAuth();
+  const { message } = App.useApp();
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [act, activeDuels, sessions] = await Promise.all([
+      const [act, activeDuels, sessions, allSess] = await Promise.all([
         getStudyRoomActivity(period),
         getActiveDuels(),
-        fetchStudyRoomSessions()
+        fetchStudyRoomSessions(),
+        fetchAllSessions()
       ]);
       setActivity(act.data || []);
       setDuels(activeDuels.data || []);
       setStudyRoomSessions(sessions);
+      setAllSessions(allSess);
+      await fetchCoachProgramTotals();
     } catch (e: any) {
       message.error(e?.message || 'Veri alınamadı');
     } finally {
@@ -56,29 +63,43 @@ const StudyRoom: React.FC = () => {
     }
   };
 
-  // Çalışma odası timer oturumu tamamlandığında
-  const handleStudyRoomSessionComplete = async (sessionData: any) => {
+  const fetchAllSessions = async () => {
     try {
-      const studyRoomSessionData = {
-        ...sessionData,
-        location: 'study_room',
-        studyRoom: true,
-        competitiveMode: true
-      };
-      
-      const response = await apiRequest('/study-sessions', {
-        method: 'POST',
-        body: JSON.stringify(studyRoomSessionData),
-      });
-      
-              message.success('Çalışma odası oturumu kaydedildi!');
-      setShowStudyTimer(false);
-      await fetchData(); // Verileri yenile
+      const response = await apiRequest('/study-sessions', { method: 'GET' });
+      return Array.isArray(response) ? response : [];
     } catch (error) {
-      console.error('Study room session save error:', error);
-      message.error('Oturum kaydedilemedi');
+      console.error('All sessions fetch error:', error);
+      return [];
     }
   };
+
+  const fetchCoachProgramTotals = async () => {
+    try {
+      const now = dayjs();
+      const startOfToday = now.startOf('day').toDate().toISOString();
+      const endOfToday = now.endOf('day').toDate().toISOString();
+      const startOfWeek = now.startOf('week').toDate().toISOString();
+      const endOfWeek = now.endOf('week').toDate().toISOString();
+
+      const [dailyRes, weeklyRes, allRes] = await Promise.all([
+        getStudentPrograms({ from: startOfToday, to: endOfToday, limit: 500 }),
+        getStudentPrograms({ from: startOfWeek, to: endOfWeek, limit: 500 }),
+        getStudentPrograms({ from: '1970-01-01T00:00:00.000Z', to: now.endOf('day').toDate().toISOString(), limit: 1000 })
+      ]);
+
+      const sumTime = (items: Array<any>) => (items || []).reduce((sum, p) => sum + (Number(p?.stats?.totalStudyTime) || 0), 0);
+
+      setProgramDailyTime(sumTime(dailyRes?.data || []));
+      setProgramWeeklyTime(sumTime(weeklyRes?.data || []));
+      setProgramAllTime(sumTime(allRes?.data || []));
+    } catch (error) {
+      setProgramDailyTime(0);
+      setProgramWeeklyTime(0);
+      setProgramAllTime(0);
+    }
+  };
+
+  // Timer kaldırıldı: study room oturumları yalnızca geçmişten okunur
 
   useEffect(() => {
     fetchData();
@@ -95,27 +116,32 @@ const StudyRoom: React.FC = () => {
     }
   };
 
-  // Kendi study room istatistikleri
+  // Birleşik istatistikler: sol panel oturumları + koç programı toplamları (çift sayım önlenerek)
   const myStudyRoomStats = useMemo(() => {
     const today = dayjs();
-    const todaySessions = studyRoomSessions.filter(s => 
-      dayjs(s.date).isSame(today, 'day')
-    );
-    const weekSessions = studyRoomSessions.filter(s => 
-      dayjs(s.date).isSame(today, 'week')
-    );
+    const todaySessions = allSessions.filter(s => dayjs(s.date).isSame(today, 'day'));
+    const weekSessions = allSessions.filter(s => dayjs(s.date).isSame(today, 'week'));
+
+    const sumDur = (arr: any[]) => arr.reduce((sum, s) => sum + (Number(s?.duration) || 0), 0);
+    const todayLinked = todaySessions.filter(s => !!s.dailyPlanId);
+    const weekLinked = weekSessions.filter(s => !!s.dailyPlanId);
+    const allLinked = allSessions.filter(s => !!s.dailyPlanId);
+
+    const adjustedProgramDaily = Math.max(0, programDailyTime - sumDur(todayLinked));
+    const adjustedProgramWeekly = Math.max(0, programWeeklyTime - sumDur(weekLinked));
+    const adjustedProgramAll = Math.max(0, programAllTime - sumDur(allLinked));
     
     return {
-      todayTime: todaySessions.reduce((sum, s) => sum + s.duration, 0),
+      todayTime: sumDur(todaySessions) + adjustedProgramDaily,
       todayCount: todaySessions.length,
-      weekTime: weekSessions.reduce((sum, s) => sum + s.duration, 0),
+      weekTime: sumDur(weekSessions) + adjustedProgramWeekly,
       weekCount: weekSessions.length,
-      totalTime: studyRoomSessions.reduce((sum, s) => sum + s.duration, 0),
-      avgQuality: studyRoomSessions.length > 0 
-        ? studyRoomSessions.reduce((sum, s) => sum + s.quality, 0) / studyRoomSessions.length 
+      totalTime: sumDur(allSessions) + adjustedProgramAll,
+      avgQuality: allSessions.length > 0 
+        ? allSessions.reduce((sum, s) => sum + (Number(s?.quality) || 0), 0) / allSessions.length 
         : 0
     };
-  }, [studyRoomSessions]);
+  }, [allSessions, programDailyTime, programWeeklyTime, programAllTime]);
 
   return (
     <Space direction="vertical" size="large" style={{ width: '100%' }}>
@@ -125,15 +151,6 @@ const StudyRoom: React.FC = () => {
           <Space>
             <TrophyOutlined /> Benim Çalışma Odası Performansım
           </Space>
-        }
-        extra={
-          <Button 
-            type="primary" 
-            icon={<PlayCircleOutlined />}
-            onClick={() => setShowStudyTimer(true)}
-          >
-            Çalışma Başlat
-          </Button>
         }
       >
         <Row gutter={[16, 16]}>
@@ -180,11 +197,7 @@ const StudyRoom: React.FC = () => {
       </Card>
 
       <Card
-        title={
-          <Space>
-            <RocketOutlined /> Liderlik Tablosu
-          </Space>
-        }
+        title={<Space><TrophyOutlined /> Rekabet</Space>}
         extra={
           <Segmented
             options={[{ label: 'Günlük', value: 'daily' }, { label: 'Haftalık', value: 'weekly' }]}
@@ -192,68 +205,78 @@ const StudyRoom: React.FC = () => {
             onChange={(v) => setPeriod(v as any)}
           />
         }
-        loading={loading}
       >
-        <List
-          itemLayout="horizontal"
-          dataSource={activity}
-          renderItem={(item, index) => (
-            <List.Item actions={[
-              <Tag color="blue" key="rank">#{index + 1}</Tag>,
-              user?._id !== item.userId ? (
-                <Button size="small" type="primary" key="invite" onClick={() => handleInvite(item.userId)}>
-                  Düello Davet Et
-                </Button>
-              ) : null
-            ]}> 
-              <List.Item.Meta
-                avatar={<Avatar src={item.avatar || undefined}>{(item.name || 'K').charAt(0)}</Avatar>}
-                title={item.name}
-                description={
-                  <Space size="small">
-                    <Tag color="green">Süre: {formatMinutes(item.totalTime)}</Tag>
-                    <Tag>Oturum: {item.sessions}</Tag>
-                    <Tag color="default">Son: {dayjs(item.lastActivity).fromNow()}</Tag>
-                  </Space>
-                }
-              />
-            </List.Item>
-          )}
+        <Tabs
+          items={[
+            {
+              key: 'leaderboard',
+              label: <Space><RiseOutlined /> Liderlik Tablosu</Space>,
+              children: (
+                <Leaderboard
+                  enableDuelActions
+                  onInviteDuel={async (userId, duelPeriod) => {
+                    // Aynı kişiyle mevcut pending/active düello var mı kontrolü (aktif/pending listeden)
+                    const hasOngoing = duels.some(d => {
+                      const a = typeof d.challenger === 'string' ? d.challenger : d.challenger?._id;
+                      const b = typeof d.opponent === 'string' ? d.opponent : d.opponent?._id;
+                      return (
+                        ((a === user?._id && b === userId) || (a === userId && b === user?._id)) &&
+                        (d.status === 'pending' || d.status === 'active')
+                      );
+                    });
+                    if (hasOngoing) {
+                      message.warning('Bu kullanıcı ile hali hazırda bekleyen/aktif bir düello var.');
+                      return;
+                    }
+                    await inviteDuel(userId, duelPeriod);
+                    // Listeyi yenile
+                    await fetchData();
+                  }}
+                  duelPeriodResolver={(activeTab) => activeTab === 'weekly' ? 'weekly' : 'daily'}
+                />
+              )
+            },
+            {
+              key: 'duels',
+              label: <Space><ThunderboltOutlined /> Aktif Düellolar</Space>,
+              children: (
+                <List
+                  dataSource={duels}
+                  renderItem={(d) => (
+                    <List.Item
+                      actions={
+                        d.status === 'pending' && typeof d.opponent !== 'string' && d.opponent?._id === user?._id
+                          ? [
+                              <Button key="accept" size="small" type="primary" onClick={async () => { await respondDuel(d._id, true); message.success('Kabul edildi'); fetchData(); }}>Kabul Et</Button>,
+                              <Popconfirm key="decline" title="Reddet?" onConfirm={async () => { await respondDuel(d._id, false); message.info('Reddedildi'); fetchData(); }}>
+                                <Button size="small" danger>Reddet</Button>
+                              </Popconfirm>
+                            ]
+                          : undefined
+                      }
+                    >
+                      <List.Item.Meta
+                        title={`${(typeof d.challenger === 'string' ? d.challenger : d.challenger?.name) || 'Kullanıcı'} vs ${(typeof d.opponent === 'string' ? d.opponent : d.opponent?.name) || 'Kullanıcı'} (${d.period === 'daily' ? 'Günlük' : 'Haftalık'})`}
+                        description={
+                          <Space>
+                            <Tag color="purple">{formatMinutes(d.liveScores?.challengerStudyTimeMin || 0)}</Tag>
+                            <span>—</span>
+                            <Tag color="volcano">{formatMinutes(d.liveScores?.opponentStudyTimeMin || 0)}</Tag>
+                            <Tag color="default">Bitiş: {dayjs(d.endDate).fromNow()}</Tag>
+                            <Tag color={d.status === 'pending' ? 'orange' : 'green'}>{d.status.toUpperCase()}</Tag>
+                          </Space>
+                        }
+                      />
+                    </List.Item>
+                  )}
+                />
+              )
+            }
+          ]}
         />
       </Card>
 
-      <Card title={<Space><ThunderboltOutlined /> Aktif Düellolar</Space>} loading={loading}>
-        <List
-          dataSource={duels}
-          renderItem={(d) => (
-            <List.Item
-              actions={
-                d.status === 'pending' && typeof d.opponent !== 'string' && d.opponent?._id === user?._id
-                  ? [
-                      <Button key="accept" size="small" type="primary" onClick={async () => { await respondDuel(d._id, true); message.success('Kabul edildi'); fetchData(); }}>Kabul Et</Button>,
-                      <Popconfirm key="decline" title="Reddet?" onConfirm={async () => { await respondDuel(d._id, false); message.info('Reddedildi'); fetchData(); }}>
-                        <Button size="small" danger>Reddet</Button>
-                      </Popconfirm>
-                    ]
-                  : undefined
-              }
-            >
-              <List.Item.Meta
-                title={`${(typeof d.challenger === 'string' ? d.challenger : d.challenger?.name) || 'Kullanıcı'} vs ${(typeof d.opponent === 'string' ? d.opponent : d.opponent?.name) || 'Kullanıcı'} (${d.period === 'daily' ? 'Günlük' : 'Haftalık'})`}
-                description={
-                  <Space>
-                    <Tag color="purple">{formatMinutes(d.liveScores?.challengerStudyTimeMin || 0)}</Tag>
-                    <span>—</span>
-                    <Tag color="volcano">{formatMinutes(d.liveScores?.opponentStudyTimeMin || 0)}</Tag>
-                    <Tag color="default">Bitiş: {dayjs(d.endDate).fromNow()}</Tag>
-                    <Tag color={d.status === 'pending' ? 'orange' : 'green'}>{d.status.toUpperCase()}</Tag>
-                  </Space>
-                }
-              />
-            </List.Item>
-          )}
-        />
-      </Card>
+      {/* Alt kısımdaki mükerrer Aktif Düellolar kartı kaldırıldı (Rekabet sekmeleri altında gösteriliyor) */}
 
       {/* Son Çalışma Odası Oturumları */}
       {studyRoomSessions.length > 0 && (
@@ -292,34 +315,7 @@ const StudyRoom: React.FC = () => {
         </Card>
       )}
 
-      {/* Study Timer Modal */}
-      <Modal
-        title="Çalışma Odası - Rekabetçi Çalışma"
-        open={showStudyTimer}
-        onCancel={() => setShowStudyTimer(false)}
-        footer={null}
-        width={600}
-        destroyOnClose
-      >
-        <div style={{ marginBottom: 16 }}>
-          <div style={{
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            color: 'white',
-            padding: 16,
-            borderRadius: 8,
-            marginBottom: 16
-          }}>
-            <h4 style={{ color: 'white', margin: 0 }}>🚀 Rekabetçi Mod Aktif!</h4>
-            <p style={{ color: 'white', margin: '8px 0 0 0', fontSize: 13 }}>
-              Bu oturum çalışma odası leaderboard'una kaydedilecek ve diğer öğrencilerle rekabet edebileceksin.
-            </p>
-          </div>
-        </div>
-        <StudyTimer
-          size="large"
-          onSessionComplete={handleStudyRoomSessionComplete}
-        />
-      </Modal>
+      {/* Timer kaldırıldı */}
     </Space>
   );
 };

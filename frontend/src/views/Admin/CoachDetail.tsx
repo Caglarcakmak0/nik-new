@@ -53,8 +53,8 @@ const CoachDetail: React.FC = () => {
     id: string;
     title: string;
     date: Dayjs;
-    coachNotes?: string;
-    subjects: Array<{ subject?: string; description?: string; targetTime?: number; priority?: number; notes?: string }>; 
+
+    subjects: Array<{ subject?: string; description?: string; targetTime?: number; priority?: number }>; 
   }>(null);
 
   const fetchData = React.useCallback(async () => {
@@ -150,13 +150,12 @@ const CoachDetail: React.FC = () => {
                   id: d._id,
                   title: d.title || '',
                   date: d.date ? dayjs(d.date) : date,
-                  coachNotes: d.coachNotes || '',
+
                   subjects: (d.subjects || []).map((s: any) => ({
                     subject: s.subject || '',
                     description: s.description || '',
                     targetTime: typeof s.targetTime === 'number' ? s.targetTime : undefined,
-                    priority: typeof s.priority === 'number' ? s.priority : 5,
-                    notes: s.notes || ''
+                    priority: typeof s.priority === 'number' ? s.priority : 5
                   }))
                 });
                 setProgramModalOpen(true);
@@ -181,14 +180,13 @@ const CoachDetail: React.FC = () => {
                 method: 'PUT',
                 body: JSON.stringify({
                   title: editingProgram.title,
-                  coachNotes: editingProgram.coachNotes || '',
+
                   date: editingProgram.date ? editingProgram.date.format('YYYY-MM-DD') : undefined,
                   subjects: (editingProgram.subjects || []).map((s) => ({
                     subject: s.subject || 'diger',
                     description: s.description || '',
                     targetTime: typeof s.targetTime === 'number' ? s.targetTime : undefined,
-                    priority: typeof s.priority === 'number' ? s.priority : 5,
-                    notes: s.notes || ''
+                    priority: typeof s.priority === 'number' ? s.priority : 5
                   }))
                 })
               });
@@ -229,16 +227,7 @@ const CoachDetail: React.FC = () => {
                     format="DD/MM/YYYY"
                   />
                 </Form.Item>
-                <Form.Item label="Koç Notları">
-                  <Input.TextArea
-                    rows={3}
-                    value={editingProgram.coachNotes}
-                    onChange={(e) => setEditingProgram(prev => prev ? { ...prev, coachNotes: e.target.value } : prev)}
-                    placeholder="Örn: Genel hatlar / duyurular"
-                    maxLength={1000}
-                    showCount
-                  />
-                </Form.Item>
+
 
                 <Divider>Ders ve Konular</Divider>
                 {(editingProgram.subjects || []).map((subj, idx) => (

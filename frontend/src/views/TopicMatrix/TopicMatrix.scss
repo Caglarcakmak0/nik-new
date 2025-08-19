@@ -131,11 +131,6 @@
   }
 }
 
-// Mobile gizleme (1280px altı)
-@media (max-width: 1279px) {
-  .tmx-container {
-    display: none !important;
-  }
-}
+/* Mobilde tamamen gizleme kaldırıldı; küçük ekranlarda da içerik görünsün */
 
 

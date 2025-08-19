@@ -1,4 +1,14 @@
 const checkRole = (...allowedRoles) => {
+    // Hem checkRole('a','b') hem de checkRole(['a','b']) çağrılarını destekle
+    const normalizeAllowedRoles = (roles) => {
+        if (roles.length === 1 && Array.isArray(roles[0])) {
+            return roles[0];
+        }
+        return roles;
+    };
+
+    const normalizedRoles = normalizeAllowedRoles(allowedRoles);
+
     return (req, res, next) => {
         // Önce authentication kontrolü
         if (!req.user) {
@@ -10,10 +20,10 @@ const checkRole = (...allowedRoles) => {
         // Role kontrolü
         const userRole = req.user.role || 'student'; // JWT'den gelen role
         
-        if (!allowedRoles.includes(userRole)) {
+        if (!normalizedRoles.includes(userRole)) {
             return res.status(403).json({ 
                 message: "Bu işlem için yetkiniz yok",
-                requiredRoles: allowedRoles,
+                requiredRoles: normalizedRoles,
                 yourRole: userRole
             });
         }

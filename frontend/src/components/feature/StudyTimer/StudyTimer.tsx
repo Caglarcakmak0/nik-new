@@ -56,7 +56,7 @@ const StudyTimer: React.FC<StudyTimerProps> = ({
     subject: 'matematik',
     studyDuration: 25, // varsayılan 25dk
     breakDuration: 5,  // varsayılan 5dk
-    targetSessions: 4, // varsayılan 4 pomodoro
+    targetSessions: 1, // varsayılan
     ...initialConfig
   });
 
@@ -141,7 +141,11 @@ const StudyTimer: React.FC<StudyTimerProps> = ({
     }
     
     console.log('New config received:', newConfig); // Debug log
-    setConfig(newConfig);
+    // Normal mod: Kullanıcı oturum sayısını belirleyebilir; Pomodoro dışı tekniklerde mola yok
+    const nextConfig = newConfig.technique === 'Pomodoro'
+      ? newConfig
+      : { ...newConfig, breakDuration: 0 };
+    setConfig(nextConfig);
     setShowSetup(false);
             message.success(`${newConfig.technique} ayarları güncellendi!`);
   };

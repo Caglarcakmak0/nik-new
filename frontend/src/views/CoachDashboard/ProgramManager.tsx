@@ -40,7 +40,7 @@ type ProgramDetail = {
   title?: string;
   date: string;
   status?: string;
-  coachNotes?: string;
+
   subjects: ProgramDetailSubject[];
 };
 
@@ -89,7 +89,7 @@ const ProgramManager: React.FC = () => {
   // Edit modal
   const [editOpen, setEditOpen] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
-  const [editing, setEditing] = useState<{ id: string; title: string; coachNotes: string; date: Dayjs | null; subjects: ProgramDetailSubject[] } | null>(null);
+  const [editing, setEditing] = useState<{ id: string; title: string; date: Dayjs | null; subjects: ProgramDetailSubject[] } | null>(null);
   const [hideMock, setHideMock] = useState<boolean>(true);
   const [deletingMock, setDeletingMock] = useState<boolean>(false);
 
@@ -202,7 +202,7 @@ const ProgramManager: React.FC = () => {
       setEditing({
         id: row._id,
         title: detail?.title || row.title || '',
-        coachNotes: detail?.coachNotes || '',
+
         date: detail?.date ? dayjs(detail.date) : (row.date ? dayjs(row.date) : null),
         subjects: Array.isArray(detail?.subjects) ? detail.subjects : []
       });
@@ -222,14 +222,14 @@ const ProgramManager: React.FC = () => {
         method: 'PUT',
         body: JSON.stringify({
           title: editing.title,
-          coachNotes: editing.coachNotes,
+
           date: editing.date ? editing.date.format('YYYY-MM-DD') : undefined,
           subjects: (editing.subjects || []).map((s) => ({
             subject: s.subject || 'diger',
             description: s.description || '',
             targetTime: typeof s.targetTime === 'number' ? s.targetTime : undefined,
             priority: typeof s.priority === 'number' ? s.priority : 5,
-            notes: s.notes || ''
+
           }))
         })
       });
@@ -260,7 +260,7 @@ const ProgramManager: React.FC = () => {
       ...prev,
       subjects: [
         ...prev.subjects,
-        { subject: 'diger', description: '', targetTime: undefined, priority: 5, notes: '' }
+        { subject: 'diger', description: '', targetTime: undefined, priority: 5 }
       ]
     }) : prev);
   };
@@ -388,16 +388,7 @@ const ProgramManager: React.FC = () => {
                 format="DD/MM/YYYY"
               />
             </Form.Item>
-            <Form.Item label="Koç Notları">
-              <Input.TextArea
-                rows={3}
-                placeholder="Örn: Genel hatlar / duyurular"
-                value={editing.coachNotes}
-                onChange={(e) => setEditing(prev => prev ? { ...prev, coachNotes: e.target.value } : prev)}
-                maxLength={1000}
-                showCount
-              />
-            </Form.Item>
+
 
             <Divider>Ders ve Konular</Divider>
 
@@ -450,13 +441,7 @@ const ProgramManager: React.FC = () => {
                     onChange={(e) => updateSubjectField(idx, 'description', e.target.value)}
                   />
                 </Form.Item>
-                <Form.Item label="Notlar (opsiyonel)">
-                  <Input
-                    placeholder="Örn: Önce konu anlatımı, ardından 20 soru"
-                    value={s.notes}
-                    onChange={(e) => updateSubjectField(idx, 'notes', e.target.value)}
-                  />
-                </Form.Item>
+
                 {/* Kaldırma backend'de kalıcı olmadığından gizli */}
               </Card>
             ))}

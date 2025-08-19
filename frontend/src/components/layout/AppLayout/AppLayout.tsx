@@ -19,6 +19,7 @@ import { getPageTitle, getRouteMenuByRole } from '../../../routes/routeMenu';
 import { toAbsoluteUrl } from '../../../services/api';
 import { useDesign } from '../../../contexts/DesignContext';
 import OnboardingTour from '../../common/OnboardingTour';
+import logoImage from '../../../assets/logoNik.png'; // NİK logo dosyası
 import './AppLayout.scss';
 
 const { Header, Sider, Content } = Layout;
@@ -163,9 +164,22 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
         ref={siderRef as any}
       >
         {/* Logo/Brand */}
-        <div className={`sider-logo ${collapsed ? 'collapsed' : 'expanded'}`}>
+        <div 
+          className={`sider-logo ${collapsed ? 'collapsed' : 'expanded'}`}
+          onClick={() => {
+            // Kullanıcı rolüne göre dashboard'a yönlendir
+            if (user?.role === 'student') {
+              navigate('/dashboard');
+            } else if (user?.role === 'coach') {
+              navigate('/coach-dashboard');
+            } else if (user?.role === 'admin') {
+              navigate('/admin-dashboard');
+            }
+          }}
+          style={{ cursor: 'pointer' }}
+        >
           {collapsed ? (
-            <AimOutlined className="logo-icon" />
+            <img src={logoImage} alt="NİK Logo" className="logo-image" />
           ) : (
             <div className="logo-text">
               <Text strong className="brand-text">

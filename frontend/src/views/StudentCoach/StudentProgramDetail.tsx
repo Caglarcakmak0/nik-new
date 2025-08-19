@@ -51,7 +51,7 @@ const StudentProgramDetail: React.FC = () => {
           title: '🧪 Test Programı - 30 Saniye',
           date: new Date().toISOString(),
           status: 'active' as const,
-          coachNotes: 'Bu bir test programıdır. Timer test etmek için 30 saniyelik kısa çalışmalar yapın.',
+
           motivationNote: 'Test programı ile timer özelliklerini keşfet! Her konu sadece 30 saniye 🚀',
           subjects: [
             {
@@ -66,8 +66,7 @@ const StudentProgramDetail: React.FC = () => {
               blankAnswers: 0,
               status: 'not_started',
               topics: ['Test'],
-              priority: 10,
-              notes: 'Bu bir test konusudur - sadece 30 saniye'
+              priority: 10
             },
             {
               subject: 'turkce',
@@ -81,8 +80,7 @@ const StudentProgramDetail: React.FC = () => {
               blankAnswers: 0,
               status: 'not_started',
               topics: ['Test'],
-              priority: 8,
-              notes: 'Bu bir test konusudur - sadece 30 saniye'
+              priority: 8
             }
           ],
           stats: {
@@ -204,15 +202,7 @@ const StudentProgramDetail: React.FC = () => {
                   day: 'numeric' 
                 })}
               </Text>
-              {program.coachNotes && (
-                <Alert
-                  type="info"
-                  message="Koç Notu"
-                  description={program.coachNotes}
-                  showIcon
-                  style={{ marginTop: 8 }}
-                />
-              )}
+
               {program.motivationNote && (
                 <Alert
                   type="success"
@@ -362,13 +352,7 @@ const StudentProgramDetail: React.FC = () => {
                             </Space>
                           )}
 
-                          {s.notes && (
-                            <Alert 
-                              type="info" 
-                              message={s.notes} 
-                              showIcon={false}
-                            />
-                          )}
+
                         </Space>
                       }
                     />

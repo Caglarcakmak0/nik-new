@@ -1,0 +1,302 @@
+@import '../../styles/variables';
+@import '../../styles/mixins';
+
+// ===== MODERN ERROR PAGE DESIGN =====
+.error-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, $bg-secondary 0%, #e2e8f0 50%, #cbd5e1 100%);
+  padding: $spacing-lg;
+  position: relative;
+  overflow: hidden;
+
+  // Animated background elements
+  &::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.03) 0%, transparent 70%);
+    animation: float 20s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -30%;
+    right: -30%;
+    width: 60%;
+    height: 60%;
+    background: radial-gradient(circle, rgba(139, 92, 246, 0.02) 0%, transparent 70%);
+    animation: float 25s ease-in-out infinite reverse;
+    pointer-events: none;
+  }
+
+  .error-container {
+    width: 100%;
+    max-width: 600px;
+    z-index: 1;
+    position: relative;
+  }
+
+  .error-card {
+    background: linear-gradient(135deg, $bg-primary 0%, $bg-secondary 100%);
+    border: 1px solid rgba($border-color, 0.8);
+    border-radius: $border-radius-xl;
+    box-shadow: 
+      0 4px 6px -1px rgba(0, 0, 0, 0.05),
+      0 10px 15px -3px rgba(0, 0, 0, 0.03),
+      0 0 0 1px rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(10px);
+    transition: all $transition-normal $ease-in-out;
+    overflow: hidden;
+
+    &:hover {
+      box-shadow: 
+        0 10px 25px -3px rgba(0, 0, 0, 0.08),
+        0 20px 40px -5px rgba(0, 0, 0, 0.05),
+        0 0 0 1px rgba(255, 255, 255, 0.8);
+      transform: translateY(-2px);
+    }
+
+    .ant-card-body {
+      padding: $spacing-xl $spacing-lg;
+    }
+  }
+
+  .error-content {
+    text-align: center;
+    position: relative;
+
+    // Logo
+    .error-logo {
+      margin-bottom: $spacing-xl;
+      
+      .logo-image {
+        height: 120px;
+        width: auto;
+        opacity: 0.9;
+        transition: all $transition-normal $ease-in-out;
+        
+        &:hover {
+          opacity: 1;
+          transform: scale(1.05);
+        }
+      }
+    }
+
+    // Error Title
+    .error-title {
+      color: $text-primary;
+      font-weight: $font-weight-bold;
+      margin-bottom: $spacing-md;
+      font-size: $font-size-h2;
+      line-height: 1.3;
+      text-shadow: none;
+      transition: color $transition-normal $ease-in-out;
+
+      @media (max-width: 768px) {
+        font-size: $font-size-h3;
+      }
+    }
+
+    // Error Code
+    .error-code {
+      margin-bottom: $spacing-md;
+      
+      .code-text {
+        font-size: $font-size-body-small;
+        color: $text-disabled;
+        background: rgba($text-disabled, 0.1);
+        padding: $spacing-xs $spacing-sm;
+        border-radius: $border-radius;
+        font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        display: inline-block;
+        border: 1px solid rgba($text-disabled, 0.2);
+      }
+    }
+
+    // Error Message
+    .error-message {
+      color: $text-secondary;
+      font-size: $font-size-body-large;
+      line-height: 1.6;
+      margin-bottom: $spacing-xl;
+      display: block;
+      max-width: 400px;
+      margin-left: auto;
+      margin-right: auto;
+      transition: color $transition-normal $ease-in-out;
+
+      @media (max-width: 768px) {
+        font-size: $font-size-body-medium;
+      }
+    }
+
+    // Action Buttons
+    .error-actions {
+      margin-bottom: $spacing-lg;
+      flex-wrap: wrap;
+      justify-content: center;
+
+      .retry-button {
+        background: linear-gradient(135deg, $primary-color 0%, $primary-hover 100%);
+        border: none;
+        border-radius: $border-radius-lg;
+        height: 48px;
+        padding: 0 $spacing-lg;
+        font-weight: $font-weight-semibold;
+        font-size: $font-size-button;
+        box-shadow: 
+          0 4px 6px -1px rgba($primary-color, 0.2),
+          0 10px 15px -3px rgba($primary-color, 0.1);
+        transition: all $transition-normal $ease-in-out;
+
+        &:hover {
+          background: linear-gradient(135deg, $primary-hover 0%, $primary-active 100%);
+          transform: translateY(-2px);
+          box-shadow: 
+            0 8px 25px -3px rgba($primary-color, 0.3),
+            0 20px 40px -5px rgba($primary-color, 0.2);
+        }
+
+        &:active {
+          transform: translateY(0);
+        }
+
+        .anticon {
+          margin-right: $spacing-sm;
+        }
+      }
+
+      .home-button {
+        background: rgba($bg-primary, 0.9);
+        border: 1px solid rgba($border-color, 0.8);
+        border-radius: $border-radius-lg;
+        height: 48px;
+        padding: 0 $spacing-lg;
+        font-weight: $font-weight-semibold;
+        font-size: $font-size-button;
+        color: $text-secondary;
+        backdrop-filter: blur(10px);
+        transition: all $transition-normal $ease-in-out;
+
+        &:hover {
+          background: rgba($bg-primary, 1);
+          border-color: $border-color;
+          color: $text-primary;
+          transform: translateY(-2px);
+          box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        &:active {
+          transform: translateY(0);
+        }
+
+        .anticon {
+          margin-right: $spacing-sm;
+        }
+      }
+    }
+
+    // Help Text
+    .error-help {
+      .help-text {
+        font-size: $font-size-body-small;
+        color: $text-disabled;
+        line-height: 1.5;
+        transition: color $transition-normal $ease-in-out;
+      }
+    }
+  }
+}
+
+// Floating animation
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  33% {
+    transform: translateY(-20px) rotate(120deg);
+  }
+  66% {
+    transform: translateY(10px) rotate(240deg);
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .error-page {
+    padding: $spacing-md;
+
+    .error-card {
+      .ant-card-body {
+        padding: $spacing-lg $spacing-md;
+      }
+    }
+
+    .error-content {
+      .error-logo {
+        .logo-image {
+          height: 80px;
+        }
+      }
+
+      .error-actions {
+        .retry-button,
+        .home-button {
+          height: 44px;
+          padding: 0 $spacing-md;
+          font-size: $font-size-button-small;
+        }
+      }
+    }
+  }
+}
+
+// Dark mode support (if needed)
+@media (prefers-color-scheme: dark) {
+  .error-page {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+
+    .error-card {
+      background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+      border-color: rgba(51, 65, 85, 0.8);
+
+      &:hover {
+        border-color: rgba(71, 85, 105, 0.8);
+      }
+    }
+
+    .error-content {
+      .error-title {
+        color: #f1f5f9;
+      }
+
+      .error-message {
+        color: #cbd5e1;
+      }
+
+      .home-button {
+        background: rgba(51, 65, 85, 0.9);
+        border-color: rgba(71, 85, 105, 0.8);
+        color: #cbd5e1;
+
+        &:hover {
+          background: rgba(71, 85, 105, 0.9);
+          border-color: #94a3b8;
+          color: #f1f5f9;
+        }
+      }
+
+      .help-text {
+        color: #94a3b8;
+      }
+    }
+  }
+}

@@ -2,38 +2,172 @@
   min-height: 100vh;
 
   .app-sider {
-    .sider-logo {
-      height: 64px;
-      padding: 16px;
-      border-bottom: 1px solid;
-      display: flex;
+         .sider-logo {
+       height: 64px;
+       padding: 16px;
+       border-bottom: none !important;
+       display: flex;
       align-items: center;
       justify-content: center;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      border-radius: 12px;
+      margin: 8px;
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(135deg, rgba(24, 144, 255, 0.05) 0%, rgba(251, 146, 60, 0.05) 100%);
+
+      // Gradient animasyonu - sadece collapsed durumda
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(24, 144, 255, 0.2), transparent);
+        transition: left 0.6s ease;
+        opacity: 0;
+      }
+
+      // Pulse efekti - sadece collapsed durumda
+      &::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        background: rgba(24, 144, 255, 0.3);
+        transform: translate(-50%, -50%);
+        transition: all 0.6s ease;
+        opacity: 0;
+      }
 
       &.collapsed {
         justify-content: center;
+
+        // Collapsed durumda tüm animasyonları aktif et
+                 &:hover {
+           background: linear-gradient(135deg, rgba(24, 144, 255, 0.15) 0%, rgba(251, 146, 60, 0.15) 100%);
+           transform: translateY(-2px) scale(1.02);
+           box-shadow: 
+             0 8px 25px rgba(24, 144, 255, 0.3),
+             0 4px 10px rgba(0, 0, 0, 0.1),
+             inset 0 1px 0 rgba(255, 255, 255, 0.2);
+           border: none !important;
+           animation: logoGlow 2s ease-in-out infinite alternate;
+         }
+
+        &:hover::before {
+          left: 100%;
+          opacity: 1;
+        }
+
+        &:hover::after {
+          width: 100px;
+          height: 100px;
+          opacity: 1;
+          animation: pulse 1.5s infinite;
+        }
+
+        &:hover .logo-icon {
+          transform: scale(1.2) rotate(5deg);
+          color: #40a9ff;
+          filter: drop-shadow(0 4px 8px rgba(24, 144, 255, 0.5));
+        }
+
+        &:hover .logo-image {
+          transform: scale(1.1);
+          filter: drop-shadow(0 4px 8px rgba(24, 144, 255, 0.5));
+        }
+
+        &:active {
+          transform: translateY(0px) scale(0.98);
+          transition: all 0.1s ease;
+        }
       }
 
       &.expanded {
         justify-content: flex-start;
+
+        // Expanded durumda hiçbir hover efekti yok
+        &:hover {
+          // Sadece cursor pointer kalır
+        }
       }
 
       .logo-icon {
         font-size: 24px;
         color: #1890ff;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        z-index: 2;
+        filter: drop-shadow(0 2px 4px rgba(24, 144, 255, 0.3));
+      }
+
+      .logo-image {
+        width: 60px;
+        height:60px;
+        object-fit: contain;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        z-index: 2;
+        filter: drop-shadow(0 2px 4px rgba(24, 144, 255, 0.3));
       }
 
       .logo-text {
         display: flex;
         align-items: center;
         gap: 8px;
+        position: relative;
+        z-index: 2;
 
         .brand-text {
           color: #fb923c;
           font-family: 'Playfair Display';
           font-weight: 900;
           font-size: 20px;
+          transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+          text-shadow: 0 2px 4px rgba(251, 146, 60, 0.3);
+          letter-spacing: 0.5px;
         }
+      }
+
+             // Expanded durumda hiçbir hover efekti yok
+    }
+
+    // Pulse animasyonu
+    @keyframes pulse {
+      0% {
+        transform: translate(-50%, -50%) scale(0.8);
+        opacity: 0.8;
+      }
+      50% {
+        transform: translate(-50%, -50%) scale(1.2);
+        opacity: 0.4;
+      }
+      100% {
+        transform: translate(-50%, -50%) scale(0.8);
+        opacity: 0.8;
+      }
+    }
+
+    // Glow animasyonu
+    @keyframes logoGlow {
+      0% {
+        box-shadow: 
+          0 8px 25px rgba(24, 144, 255, 0.3),
+          0 4px 10px rgba(0, 0, 0, 0.1),
+          inset 0 1px 0 rgba(255, 255, 255, 0.2),
+          0 0 20px rgba(24, 144, 255, 0.2);
+      }
+      100% {
+        box-shadow: 
+          0 8px 25px rgba(24, 144, 255, 0.4),
+          0 4px 10px rgba(0, 0, 0, 0.1),
+          inset 0 1px 0 rgba(255, 255, 255, 0.2),
+          0 0 30px rgba(24, 144, 255, 0.4);
       }
     }
 
@@ -113,22 +247,78 @@
     padding: 24px;
     overflow: auto;
     backdrop-filter: blur(8px);
-    border-bottom: 1px solid #111827;
-    box-shadow: 0 0 0 1px rgba(249, 115, 22, 0.28), 0 8px 24px rgba(249, 115, 22, 0.16);
   }
 }
 
-// Dark mode için border rengi
-.app-layout.dark {
-  .app-sider .sider-logo {
-    border-bottom-color: #434343;
+ // Dark mode için border rengi ve efektler
+ .app-layout.dark {
+   .app-sider .sider-logo {
+     border-bottom: none !important;
+    background: linear-gradient(135deg, rgba(24, 144, 255, 0.08) 0%, rgba(251, 146, 60, 0.08) 100%);
+
+    &.collapsed {
+      &:hover {
+        background: linear-gradient(135deg, rgba(24, 144, 255, 0.2) 0%, rgba(251, 146, 60, 0.2) 100%);
+        box-shadow: 
+          0 8px 25px rgba(24, 144, 255, 0.4),
+          0 4px 10px rgba(0, 0, 0, 0.3),
+          inset 0 1px 0 rgba(255, 255, 255, 0.1),
+          0 0 30px rgba(24, 144, 255, 0.3);
+        border: 1px solid rgba(24, 144, 255, 0.5);
+      }
+
+      &:hover .logo-icon {
+        filter: drop-shadow(0 4px 8px rgba(24, 144, 255, 0.7));
+      }
+
+      &:hover .logo-image {
+        filter: drop-shadow(0 4px 8px rgba(24, 144, 255, 0.7));
+      }
+    }
+
+         &.expanded {
+       &:hover {
+         // Hiçbir hover efekti yok
+       }
+     }
+
+     .logo-icon {
+       filter: drop-shadow(0 2px 4px rgba(24, 144, 255, 0.5));
+     }
+
+     .brand-text {
+       text-shadow: 0 2px 4px rgba(251, 146, 60, 0.5);
+     }
   }
 }
 
-// Light mode için border rengi
-.app-layout.light {
-  .app-sider .sider-logo {
-    border-bottom-color: #f0f0f0;
+ // Light mode için border rengi ve efektler
+ .app-layout.light {
+   .app-sider .sider-logo {
+     border-bottom: none !important;
+    background: linear-gradient(135deg, rgba(24, 144, 255, 0.03) 0%, rgba(251, 146, 60, 0.03) 100%);
+
+    &.collapsed {
+      &:hover {
+        background: linear-gradient(135deg, rgba(24, 144, 255, 0.12) 0%, rgba(251, 146, 60, 0.12) 100%);
+        box-shadow: 
+          0 8px 25px rgba(24, 144, 255, 0.25),
+          0 4px 10px rgba(0, 0, 0, 0.08),
+          inset 0 1px 0 rgba(255, 255, 255, 0.3),
+          0 0 20px rgba(24, 144, 255, 0.2);
+        border: 1px solid rgba(24, 144, 255, 0.2);
+      }
+
+      &:hover .logo-icon {
+        filter: drop-shadow(0 4px 8px rgba(24, 144, 255, 0.4));
+      }
+
+      &:hover .logo-image {
+        filter: drop-shadow(0 4px 8px rgba(24, 144, 255, 0.4));
+      }
+    }
+
+  
   }
 }
 

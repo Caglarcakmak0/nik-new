@@ -23,7 +23,7 @@ import { useAuth, useIsStudent, useIsCoach } from '../../contexts/AuthContext';
 import { apiRequest } from '../../services/api';
 import DailyTable from './bones/DailyTable/DailyTable';
 import MonthlyCalendar from './bones/MonthlyCalendar/MonthlyCalendar';
-import PlanSummary from './bones/PlanSummary/PlanSummary';
+
 import CreatePlanModal from './bones/CreatePlan/CreatePlanModal';
 import AdvancedAnalytics from './bones/AdvancedAnalytics/AdvancedAnalytics';
 import StudyRecommendations from './bones/StudyRecommendations/StudyRecommendations';
@@ -84,7 +84,7 @@ const StudyPlan: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Dayjs>(dayjs());
   const [currentPlan, setCurrentPlan] = useState<DailyPlan | null>(null);
-  const [activeTab, setActiveTab] = useState<string>('analytics');
+  const [activeTab, setActiveTab] = useState<string>('daily');
   const [showCreateModal, setShowCreateModal] = useState(false);
 
   // Tour targets
@@ -93,7 +93,6 @@ const StudyPlan: React.FC = () => {
   const tabsRef = useRef<HTMLDivElement | null>(null);
   const dailyTableRef = useRef<HTMLDivElement | null>(null);
   const monthlyCalendarRef = useRef<HTMLDivElement | null>(null);
-  const summaryRef = useRef<HTMLDivElement | null>(null);
 
   // Günlük plan getir (GERÇEK API)
   const fetchDailyPlan = async (date: Dayjs) => {
@@ -263,23 +262,7 @@ const StudyPlan: React.FC = () => {
                   </div>
                 )
               },
-              {
-                key: 'stats',
-                label: (
-                  <span id="tab-stats-label" style={{ fontWeight: 500 }}>
-                    <BarChartOutlined style={{ marginRight: '5px' }} />
-                    İstatistikler
-                  </span>
-                ),
-                children: (
-                  <div ref={summaryRef as any} className="stagger-item">
-                    <PlanSummary
-                      plan={currentPlan}
-                      onRefresh={() => fetchDailyPlan(selectedDate)}
-                    />
-                  </div>
-                )
-              },
+
               {
                 key: 'monthly',
                 label: (
@@ -306,6 +289,7 @@ const StudyPlan: React.FC = () => {
                     Çalışma İstatistikleri
                   </span>
                 ),
+                forceRender: true,
                 children: (
                   <AdvancedAnalytics
                     plan={currentPlan}
@@ -430,7 +414,6 @@ const StudyPlan: React.FC = () => {
           getHeaderEl: () => (headerRef.current as any) || null,
           getDatePickerEl: () => (datePickerRef.current as any) || null,
           getDailyTabEl: () => document.getElementById('tab-daily-label') as HTMLElement | null,
-          getStatsTabEl: () => document.getElementById('tab-stats-label') as HTMLElement | null,
           getMonthlyTabEl: () => document.getElementById('tab-monthly-label') as HTMLElement | null,
           getLeaderboardTabEl: () => document.getElementById('tab-leaderboard-label') as HTMLElement | null,
         }}

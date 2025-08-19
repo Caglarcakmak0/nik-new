@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Card, Button, Typography, Carousel, Tooltip } from 'antd';
-import { PlusOutlined, PlayCircleOutlined, PauseCircleOutlined } from '@ant-design/icons';
+import { Card, Button, Typography, Carousel } from 'antd';
+import { PlusOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../../../contexts/ThemeContext';
 
@@ -29,18 +29,6 @@ const ActiveGoals: React.FC<ActiveGoalsProps> = ({ goals, loading = false }) => 
   const [autoPlay, setAutoPlay] = useState(true);
   // Slayt göstergesi kaldırıldığı için state'e gerek yok
 
-  const getPriorityColor = (priority: number) => {
-    if (priority <= 3) return '#ff4d4f';
-    if (priority <= 6) return '#faad14';
-    return '#52c41a';
-  };
-
-  const getPriorityText = (priority: number) => {
-    if (priority <= 3) return 'Yüksek';
-    if (priority <= 6) return 'Orta';
-    return 'Düşük';
-  };
-
   // Üniversiteye özel kampüs fotoğrafları (birden fazla foto için)
   const getUniversityImages = (universityName: string): string[] => {
     const universityImages: { [key: string]: string[] } = {
@@ -55,9 +43,8 @@ const ActiveGoals: React.FC<ActiveGoalsProps> = ({ goals, loading = false }) => 
         'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=1200&h=800&fit=crop'
       ],
       'Boğaziçi': [
-        'https://images.unsplash.com/photo-1571260899304-425eee4c7efc?w=1200&h=800&fit=crop',
-        'https://images.unsplash.com/photo-1580537659466-0a9bfa916a54?w=1200&h=800&fit=crop',
-        'https://images.unsplash.com/photo-1607237138185-eedd9c632b0b?w=1200&h=800&fit=crop'
+        'https://mediastore.cc.bogazici.edu.tr/web/userfiles/images/rounded-in-photoretrica%20(5).png',
+      
       ],
       'Boğaziçi Üniversitesi': [
         'https://images.unsplash.com/photo-1571260899304-425eee4c7efc?w=1200&h=800&fit=crop',
@@ -121,7 +108,12 @@ const ActiveGoals: React.FC<ActiveGoalsProps> = ({ goals, loading = false }) => 
         return images;
       }
     }
-    return ['https://images.unsplash.com/photo-1562774053-701939374585?w=1200&h=800&fit=crop'];
+
+    // Varsayılan görseller (eşleşme olmazsa)
+    return [
+      'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=1200&h=800&fit=crop',
+      'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=1200&h=800&fit=crop'
+    ];
   };
 
   const getUniversityGradient = (universityName: string) => {
@@ -284,7 +276,7 @@ const ActiveGoals: React.FC<ActiveGoalsProps> = ({ goals, loading = false }) => 
           padding: '64px 24px',
           background: isDark ? '#262626' : '#fafafa',
           borderRadius: '16px',
-          border: `2px dashed ${isDark ? '#434343' : '#d9d9d9'}`
+          border: `2px dashed ${'#434343'}`
         }}>
           <div style={{ fontSize: '64px', marginBottom: '24px' }}></div>
           <Title level={3} type="secondary" style={{ marginBottom: '16px' }}>

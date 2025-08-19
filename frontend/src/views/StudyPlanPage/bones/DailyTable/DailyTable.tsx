@@ -18,7 +18,6 @@ import {
   Alert,
   Input,
   InputNumber,
-  Slider,
   Divider,
   Pagination,
   Select
@@ -33,10 +32,11 @@ import {
   SyncOutlined,
   WifiOutlined,
   BellOutlined,
-  InfoCircleOutlined
+  InfoCircleOutlined,
+  StarOutlined,
+  BulbOutlined
 } from '@ant-design/icons';
 import { useAuth, useIsStudent } from '../../../../contexts/AuthContext';
-import SubjectEditModal from './SubjectEditModal';
 import './DailyTable.scss';
 import DailyTableTour from '../../../../components/tour/StudentTour/DailyTableTour';
 
@@ -94,7 +94,6 @@ const DailyTable: React.FC<DailyTableProps> = ({
   // Not used currently
   // const [selectedSubject, setSelectedSubject] = useState<{index: number, subject: Subject} | null>(null);
   const [previewSubjectIndex, setPreviewSubjectIndex] = useState<number | null>(null);
-  const [editingSubject, setEditingSubject] = useState<{index: number, subject: Subject} | null>(null);
   const [page, setPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
   const [sorterState, setSorterState] = useState<{ orderBy?: keyof Subject | 'completed' | 'net' | 'progress'; orderDirection?: 'ascend' | 'descend' } | undefined>();
@@ -298,24 +297,24 @@ const DailyTable: React.FC<DailyTableProps> = ({
 
   
 
-  // Handle subject edit
-  const handleSubjectEdit = (subjectIndex: number, updatedSubject: Subject) => {
-    const subjectWithDefaults = {
-      ...updatedSubject,
-      sessionIds: updatedSubject.sessionIds || []
-    };
-    
-    onSubjectUpdate(subjectIndex, subjectWithDefaults);
-    setEditingSubject(null);
-    message.success('Ders bilgileri güncellendi!');
-    
-    // Real-time sync
+  // Inline D/Y/B kaydetme yardımcıları
+  const getSubjectKey = useCallback((index: number) => String(index), []);
+
+  const saveDYBForSubject = useCallback((subjectIndex: number) => {
+    const key = getSubjectKey(subjectIndex);
+    const data = subjectInputs[key];
+    if (!data) return;
+    onSubjectUpdate(subjectIndex, {
+      correctAnswers: data.correct,
+      wrongAnswers: data.wrong,
+      blankAnswers: data.blank
+    });
     if (isOnline) {
       setLastSync(new Date());
     } else {
       setPendingUpdates(prev => prev + 1);
     }
-  };
+  }, [getSubjectKey, subjectInputs, onSubjectUpdate, isOnline]);
 
   const HeaderWithTooltip: React.FC<{ title: string; tooltip?: string }> = ({ title, tooltip }) => (
     <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -414,13 +413,15 @@ const DailyTable: React.FC<DailyTableProps> = ({
             <InputNumber
               min={0}
               max={999}
-              value={subjectInputs[record.subject]?.correct ?? correct}
+              value={subjectInputs[getSubjectKey(record.index)]?.correct ?? correct}
               onChange={(value) => {
-                const newInputs = { ...subjectInputs };
-                if (!newInputs[record.subject]) newInputs[record.subject] = { correct: 0, wrong: 0, blank: 0 };
-                newInputs[record.subject].correct = value || 0;
+                const key = getSubjectKey(record.index);
+                const newInputs = { ...subjectInputs } as typeof subjectInputs;
+                if (!newInputs[key]) newInputs[key] = { correct: 0, wrong: 0, blank: 0 };
+                newInputs[key].correct = value || 0;
                 setSubjectInputs(newInputs);
               }}
+              onBlur={() => saveDYBForSubject(record.index)}
               size="small"
               style={{ width: '60px' }}
             />
@@ -443,13 +444,15 @@ const DailyTable: React.FC<DailyTableProps> = ({
             <InputNumber
               min={0}
               max={999}
-              value={subjectInputs[record.subject]?.wrong ?? wrong}
+              value={subjectInputs[getSubjectKey(record.index)]?.wrong ?? wrong}
               onChange={(value) => {
-                const newInputs = { ...subjectInputs };
-                if (!newInputs[record.subject]) newInputs[record.subject] = { correct: 0, wrong: 0, blank: 0 };
-                newInputs[record.subject].wrong = value || 0;
+                const key = getSubjectKey(record.index);
+                const newInputs = { ...subjectInputs } as typeof subjectInputs;
+                if (!newInputs[key]) newInputs[key] = { correct: 0, wrong: 0, blank: 0 };
+                newInputs[key].wrong = value || 0;
                 setSubjectInputs(newInputs);
               }}
+              onBlur={() => saveDYBForSubject(record.index)}
               size="small"
               style={{ width: '60px' }}
             />
@@ -472,13 +475,15 @@ const DailyTable: React.FC<DailyTableProps> = ({
             <InputNumber
               min={0}
               max={999}
-              value={subjectInputs[record.subject]?.blank ?? blank}
+              value={subjectInputs[getSubjectKey(record.index)]?.blank ?? blank}
               onChange={(value) => {
-                const newInputs = { ...subjectInputs };
-                if (!newInputs[record.subject]) newInputs[record.subject] = { correct: 0, wrong: 0, blank: 0 };
-                newInputs[record.subject].blank = value || 0;
+                const key = getSubjectKey(record.index);
+                const newInputs = { ...subjectInputs } as typeof subjectInputs;
+                if (!newInputs[key]) newInputs[key] = { correct: 0, wrong: 0, blank: 0 };
+                newInputs[key].blank = value || 0;
                 setSubjectInputs(newInputs);
               }}
+              onBlur={() => saveDYBForSubject(record.index)}
               size="small"
               style={{ width: '60px' }}
             />
@@ -541,11 +546,26 @@ const DailyTable: React.FC<DailyTableProps> = ({
       title: <HeaderWithTooltip title="Durum" tooltip={columnTooltips.status} />,
       dataIndex: 'status',
       key: 'status',
-      width: 120,
-      render: (status: string) => (
-        <Tag color={getStatusColor(status)}>
-          {getStatusText(status)}
-        </Tag>
+      width: 160,
+      render: (status: string, record) => (
+        isStudent ? (
+          <Select
+            size="small"
+            value={status}
+            style={{ width: 150 }}
+            onChange={(val) => onSubjectUpdate(record.index, { status: val })}
+            options={[
+              { label: 'Başlanmadı', value: 'not_started' },
+              { label: 'Devam Ediyor', value: 'in_progress' },
+              { label: 'Tamamlandı', value: 'completed' },
+              { label: 'Atlandı', value: 'skipped' },
+            ]}
+          />
+        ) : (
+          <Tag color={getStatusColor(status)}>
+            {getStatusText(status)}
+          </Tag>
+        )
       ),
       filters: [
         { text: 'Başlanmadı', value: 'not_started' },
@@ -554,22 +574,6 @@ const DailyTable: React.FC<DailyTableProps> = ({
         { text: 'Atlandı', value: 'skipped' },
       ],
       onFilter: (value: any, record) => record.status === value,
-    },
-    {
-      title: 'İşlemler',
-      key: 'actions',
-      width: 100,
-      fixed: 'right',
-      render: (_, record) => (
-        <Space>
-          <Button
-            type="text"
-            size="small"
-            icon={<EditOutlined />}
-            onClick={() => setEditingSubject({ index: record.index, subject: record })}
-          />
-        </Space>
-      ),
     },
   ], [subjectInputs, isStudent, sorterState]);
 
@@ -645,12 +649,15 @@ const DailyTable: React.FC<DailyTableProps> = ({
       {/* Subjects Table - En üste taşındı */}
       <Card title="Günlük Ders Programı" className="subjects-table">
         {previewSubjectIndex === null && (
-          <Alert
-            type="info"
-            showIcon
-            message="Çalışacağın dersin detaylarını görmek icin tabloda ilgili satıra tıkla"
-            style={{ marginBottom: '12px' }}
-          />
+          <div className="interaction-guide">
+            <div className="guide-content">
+              <div className="guide-text">
+                <Text type="secondary" style={{ fontSize: '14px' }}>
+                  💡 Ders detaylarını görmek için satıra tıklayın
+                </Text>
+              </div>
+            </div>
+          </div>
         )}
         {/* Üst bilgi: Seçili ders açıklaması */}
         {typeof previewSubjectIndex === 'number' && plan.subjects[previewSubjectIndex] && (
@@ -659,6 +666,7 @@ const DailyTable: React.FC<DailyTableProps> = ({
               <Text strong>
                 {getSubjectDisplayName(plan.subjects[previewSubjectIndex].subject)} • Açıklama
               </Text>
+              {' '}
               <span
                 className={`priority-badge ${
                   plan.subjects[previewSubjectIndex].priority <= 3
@@ -674,7 +682,7 @@ const DailyTable: React.FC<DailyTableProps> = ({
             </div>
             <div className="subject-preview-body">
               <Text>
-                {plan.subjects[previewSubjectIndex].description || 'Sistemsel hata tespit edildi, koçunuzu bilgilendiriniz.'}
+                {plan.subjects[previewSubjectIndex].description || 'Bu ders için henüz açıklama eklenmemiş.'}
               </Text>
             </div>
           </div>
@@ -683,7 +691,7 @@ const DailyTable: React.FC<DailyTableProps> = ({
         <div className="subjects-table-content" ref={tableContainerRef as any}>
           <div className="table-info">
             <Typography.Text type="secondary">
-              {totalCount} ders listeleniyor
+              {totalCount === 0 ? 'Ders bulunamadı' : `Toplam ${totalCount} ders`}
             </Typography.Text>
           </div>
 
@@ -864,59 +872,180 @@ const DailyTable: React.FC<DailyTableProps> = ({
 
       {/* Student Feedback Section - Only visible to students */}
       {isStudent && (
-        <Card title="Günlük Değerlendirme" style={{ marginTop: '16px' }}>
-          <Row gutter={16}>
-            {/* Feedback Text Area */}
-            <Col xs={24} md={16}>
-              <div style={{ marginBottom: '16px' }}>
-                <Title level={5} style={{ marginBottom: '8px' }}>
-                  Program nasıl geçti, verimli miydi?
-                </Title>
-                <Input.TextArea
-                  value={dailyFeedback}
-                  onChange={(e) => setDailyFeedback(e.target.value)}
-                  placeholder="Bugünkü çalışma programınız hakkında düşüncelerinizi yazın..."
-                  rows={4}
-                  maxLength={500}
-                  showCount
-                  
-                />
+        <Card className="daily-evaluation-card" title={
+          <div className="evaluation-header">
+            <div className="evaluation-title">
+              <StarOutlined className="evaluation-icon" />
+              <span>Günlük Değerlendirme</span>
               </div>
-            </Col>
-
-            {/* Motivation Score */}
-            <Col xs={24} md={8}>
-              <div style={{ marginBottom: '16px' }}>
-                <Title level={5} style={{ marginBottom: '16px' }}>
-                  Bugün 10 üzerinden kaç motive hissediyorsun?
+            <div className="evaluation-subtitle">
+              Bugünkü çalışma deneyiminizi değerlendirin
+            </div>
+          </div>
+        }>
+          <div className="evaluation-content">
+            {/* Motivasyon ve Genel Durum */}
+            <div className="evaluation-section motivation-section">
+              <div className="section-header">
+                <Title level={5} className="section-title">
+                  <FireOutlined /> Motivasyon ve Genel Durum
                 </Title>
-                <div style={{ textAlign: 'center', marginBottom: '8px' }}>
-                  <Text style={{ fontSize: '24px', fontWeight: 'bold' }}>
-                    {motivationScore}/10
+                <Text type="secondary" className="section-description">
+                  Bugün kendinizi nasıl hissediyorsunuz?
                   </Text>
                 </div>
-                <Slider
-                  min={1}
-                  max={10}
-                  step={1}
-                  value={motivationScore}
-                  onChange={setMotivationScore}
-                  marks={{
-                    1: '😔',
-                    3: '😐',
-                    5: '🙂',
-                    7: '😊',
-                    10: ''
-                  }}
-                  tooltip={{ formatter: (value) => `${value}/10` }}
-                />
+              
+              <div className="motivation-quick-actions">
+                <div className="quick-action-title">
+                  <Text strong>Motivasyon Seviyesi</Text>
+                </div>
+                <div className="quick-actions-grid">
+                  {[
+                    { value: 3, emoji: '😔', label: 'Zor Gün' },
+                    { value: 5, emoji: '😐', label: 'Normal' },
+                    { value: 7, emoji: '🙂', label: 'İyi' },
+                    { value: 9, emoji: '😊', label: 'Harika' }
+                  ].map((action) => (
+                    <button
+                      key={action.value}
+                      className={`quick-action-btn ${motivationScore === action.value ? 'active' : ''}`}
+                      onClick={() => setMotivationScore(action.value)}
+                    >
+                      <span className="action-emoji">{action.emoji}</span>
+                      <span className="action-label">{action.label}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
-            </Col>
-          </Row>
+            </div>
 
-          {/* Submit Button */}
-          <Divider />
-          <div style={{ textAlign: 'center' }}>
+            {/* Detaylı Geri Bildirim */}
+            <div className="evaluation-section feedback-section">
+              <div className="section-header">
+                <Title level={5} className="section-title">
+                  <BulbOutlined /> Detaylı Geri Bildirim
+                </Title>
+                <Text type="secondary" className="section-description">
+                  Bugünkü çalışma deneyiminizi detaylandırın
+                </Text>
+              </div>
+              
+              <div className="feedback-content">
+                <div className="feedback-textarea-container">
+                  <div className="textarea-header">
+                    <Text strong className="textarea-label">Program Değerlendirmesi</Text>
+                    <div className="textarea-counter">
+                      <span className="current-count">{dailyFeedback.length}</span>
+                      <span className="max-count">/500</span>
+                    </div>
+                  </div>
+                  
+                  <Input.TextArea
+                    value={dailyFeedback}
+                    onChange={(e) => setDailyFeedback(e.target.value)}
+                    placeholder="Bugünkü çalışma programınız hakkında düşüncelerinizi yazın... Örneğin: Hangi konular zor geldi? Hangi teknikler işe yaradı? Yarın için önerileriniz neler?"
+                    rows={4}
+                    maxLength={500}
+                    className="feedback-textarea"
+                    showCount={false}
+                  />
+                </div>
+                
+                <div className="feedback-suggestions">
+                  <div className="suggestions-header">
+                    <Text type="secondary" className="suggestions-title">
+                      💡 Önerilen Konular
+                    </Text>
+                  </div>
+                  <div className="suggestions-grid">
+                    {[
+                      'Hangi konular zor geldi?',
+                      'Hangi çalışma teknikleri işe yaradı?',
+                      'Yarın için önerileriniz neler?',
+                      'Motivasyonunuzu etkileyen faktörler?'
+                    ].map((suggestion, index) => (
+                      <button
+                        key={index}
+                        className="suggestion-btn"
+                        onClick={() => {
+                          if (dailyFeedback.length < 450) {
+                            setDailyFeedback(prev => 
+                              prev + (prev ? ' ' : '') + suggestion
+                            );
+                          }
+                        }}
+                      >
+                        {suggestion}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Performans Özeti */}
+            <div className="evaluation-section performance-section">
+              <div className="section-header">
+                <Title level={5} className="section-title">
+                  <TrophyOutlined /> Bugünkü Performans Özeti
+                </Title>
+                <Text type="secondary" className="section-description">
+                  Günlük çalışma istatistikleriniz
+                </Text>
+              </div>
+              
+              <div className="performance-grid">
+                <div className="performance-card">
+                  <div className="performance-icon">
+                    <CheckCircleOutlined />
+                  </div>
+                  <div className="performance-content">
+                    <div className="performance-value">{plan.stats.completionRate}%</div>
+                    <div className="performance-label">Tamamlanma Oranı</div>
+                  </div>
+                </div>
+                
+                <div className="performance-card">
+                  <div className="performance-icon">
+                    <TrophyOutlined />
+                  </div>
+                  <div className="performance-content">
+                    <div className="performance-value">{plan.stats.successRate}%</div>
+                    <div className="performance-label">Başarı Oranı</div>
+                  </div>
+                </div>
+                
+                <div className="performance-card">
+                  <div className="performance-icon">
+                    <ClockCircleOutlined />
+                  </div>
+                  <div className="performance-content">
+                    <div className="performance-value">{Math.round(plan.stats.totalStudyTime / 60)}dk</div>
+                    <div className="performance-label">Toplam Süre</div>
+                  </div>
+                </div>
+                
+                <div className="performance-card">
+                  <div className="performance-icon">
+                    <FireOutlined />
+                  </div>
+                  <div className="performance-content">
+                    <div className="performance-value">{plan.stats.netScore.toFixed(1)}</div>
+                    <div className="performance-label">Net Puan</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Gönder Butonu */}
+            <div className="evaluation-submit">
+              <div className="submit-content">
+                <div className="submit-info">
+                  <Text type="secondary" className="submit-description">
+                    Değerlendirmeniz koçunuza gönderilecek ve gelecek programlarınızın iyileştirilmesinde kullanılacaktır.
+                  </Text>
+                </div>
+                
             <Button
               type="primary"
               size="large"
@@ -928,7 +1057,8 @@ const DailyTable: React.FC<DailyTableProps> = ({
                   
                   // Process each subject
                   plan.subjects.forEach((subject, index) => {
-                    const inputData = subjectInputs[subject.subject];
+                    const key = String(index);
+                    const inputData = subjectInputs[key];
                     if (inputData && (inputData.correct > 0 || inputData.wrong > 0 || inputData.blank > 0)) {
                       feedbackData.push({
                         subjectIndex: index,
@@ -971,36 +1101,19 @@ const DailyTable: React.FC<DailyTableProps> = ({
                   message.error(error.message || 'Feedback gönderilirken hata oluştu');
                 }
               }}
-              style={{
-                minWidth: '200px',
-                height: '40px',
-                borderRadius: '8px'
-              }}
-            >
-              Raporu Koça Gönder
+                  className="submit-button"
+                  disabled={!dailyFeedback.trim()}
+                >
+                  Değerlendirmeyi Gönder
             </Button>
+              </div>
+            </div>
           </div>
         </Card>
       )}
 
 
-      {/* Subject Edit Modal */}
-      {editingSubject && (
-        <SubjectEditModal
-          visible={true}
-          subject={editingSubject.subject}
-          onSave={(updatedSubject) => {
-            const normalized: Subject = {
-              ...editingSubject.subject,
-              ...updatedSubject,
-              description: updatedSubject.description ?? editingSubject.subject.description ?? '',
-              sessionIds: updatedSubject.sessionIds ?? editingSubject.subject.sessionIds ?? []
-            };
-            handleSubjectEdit(editingSubject.index, normalized);
-          }}
-          onCancel={() => setEditingSubject(null)}
-        />
-      )}
+      
       {/* Table specific tour */}
       <DailyTableTour
         userId={user?._id}

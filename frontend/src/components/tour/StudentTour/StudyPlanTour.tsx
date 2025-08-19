@@ -6,7 +6,6 @@ export type StudyPlanTargets = {
   getHeaderEl?: () => HTMLElement | null;
   getDatePickerEl?: () => HTMLElement | null;
   getDailyTabEl?: () => HTMLElement | null;
-  getStatsTabEl?: () => HTMLElement | null;
   getMonthlyTabEl?: () => HTMLElement | null;
   getLeaderboardTabEl?: () => HTMLElement | null;
 };
@@ -40,11 +39,6 @@ const getSteps = (targets?: StudyPlanTargets): TourProps['steps'] => {
       title: 'Günlük Tablo',
       description: 'Günlük planını tablo görünümünde düzenleyebilir ve ilerlemeyi takip edebilirsin.',
       target: resolveTarget(targets?.getDailyTabEl),
-    },
-    {
-      title: 'İstatistikler',
-      description: 'Günün performans özetini ve metrikleri burada görürsün.',
-      target: resolveTarget(targets?.getStatsTabEl),
     },
     {
       title: 'Aylık Görünüm',

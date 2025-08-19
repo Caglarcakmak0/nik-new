@@ -25,7 +25,8 @@ import {
   RiseOutlined,
   CalendarOutlined,
   TeamOutlined,
-  GiftOutlined
+  GiftOutlined,
+  CheckOutlined
 } from '@ant-design/icons';
 import { useAuth } from '../../../../contexts/AuthContext';
 import { apiRequest } from '../../../../services/api';
@@ -73,13 +74,26 @@ interface Competition {
   isActive: boolean;
 }
 
-const Leaderboard: React.FC = () => {
+type DuelPeriod = 'daily' | 'weekly';
+
+type LeaderboardProps = {
+  enableDuelActions?: boolean;
+  onInviteDuel?: (userId: string, period: DuelPeriod) => void | Promise<void>;
+  duelPeriodResolver?: (activeTab: 'overall' | 'weekly' | 'monthly') => DuelPeriod | null;
+};
+
+const Leaderboard: React.FC<LeaderboardProps> = ({
+  enableDuelActions = false,
+  onInviteDuel,
+  duelPeriodResolver,
+}) => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [leaderboardData, setLeaderboardData] = useState<UserStats[]>([]);
   const [userStats, setUserStats] = useState<UserStats | null>(null);
   const [activeTab, setActiveTab] = useState<string>('overall');
   const [competitions, setCompetitions] = useState<Competition[]>([]);
+  const [inviteStateByUserId, setInviteStateByUserId] = useState<Record<string, 'idle' | 'loading' | 'success'>>({});
 
   // Leaderboard verilerini getir
   const fetchLeaderboardData = async (period = 'overall') => {
@@ -110,6 +124,22 @@ const Leaderboard: React.FC = () => {
   useEffect(() => {
     fetchLeaderboardData(activeTab);
   }, [activeTab]);
+
+  const handleInvite = async (targetUserId: string) => {
+    if (!enableDuelActions || !onInviteDuel) return;
+    const duelPeriod = duelPeriodResolver ? duelPeriodResolver(activeTab as any) : null;
+    if (!duelPeriod) return;
+    setInviteStateByUserId((s) => ({ ...s, [targetUserId]: 'loading' }));
+    try {
+      await onInviteDuel(targetUserId, duelPeriod);
+      setInviteStateByUserId((s) => ({ ...s, [targetUserId]: 'success' }));
+      setTimeout(() => {
+        setInviteStateByUserId((s) => ({ ...s, [targetUserId]: 'idle' }));
+      }, 1800);
+    } catch {
+      setInviteStateByUserId((s) => ({ ...s, [targetUserId]: 'idle' }));
+    }
+  };
 
   // Level hesaplama
   const calculateLevelProgress = (experience: number, level: number) => {
@@ -149,6 +179,8 @@ const Leaderboard: React.FC = () => {
   const renderLeaderboardItem = (userData: UserStats, _index: number) => {
     const rankProps = getRankBadgeProps(userData.rank);
     const isCurrentUser = userData._id === user?._id;
+    const duelPeriod = duelPeriodResolver ? duelPeriodResolver(activeTab as any) : null;
+    const inviteState = inviteStateByUserId[userData._id] || 'idle';
     
     return (
       <List.Item
@@ -163,6 +195,22 @@ const Leaderboard: React.FC = () => {
               suffix={<ThunderboltOutlined />}
             />
           </Space>
+          ,
+          enableDuelActions && duelPeriod && !isCurrentUser && (
+                        <Button
+              size="small" 
+              type="primary"
+              className={`duel-invite-btn ${inviteState === 'success' ? 'success' : ''}`}
+              loading={inviteState === 'loading'}
+              onClick={() => handleInvite(userData._id)}
+            >
+              {inviteState === 'success' ? (
+                <CheckOutlined />
+              ) : (
+                'Düelloya Davet Et'
+              )}
+            </Button>
+          )
         ]}
       >
         <List.Item.Meta

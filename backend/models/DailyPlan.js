@@ -68,11 +68,7 @@ const DailyPlanSchema = mongoose.Schema({
             max: 10,
             default: 5
         },
-        notes: { 
-            type: String,
-            maxlength: [300, 'Not en fazla 300 karakter olabilir'],
-            trim: true
-        },
+
         description: { 
             type: String,
             maxlength: [1000, 'Açıklama en fazla 1000 karakter olabilir'],
@@ -153,12 +149,7 @@ const DailyPlanSchema = mongoose.Schema({
         trim: true
     },
     
-    // Koç notları
-    coachNotes: { 
-        type: String,
-        maxlength: [1000, 'Koç notu en fazla 1000 karakter olabilir'],
-        trim: true
-    },
+
     coachApproval: { type: Boolean, default: false },
     
     // Template bilgisi
@@ -268,17 +259,36 @@ DailyPlanSchema.pre('save', function(next) {
         // Toplam hedefleri hesapla
         this.stats.totalTargetQuestions = this.subjects.reduce((sum, s) => sum + (s.targetQuestions || 0), 0);
         this.stats.totalTargetTime = this.subjects.reduce((sum, s) => sum + (s.targetTime || 0), 0);
-        
+
         // Toplam tamamlananları hesapla
         this.stats.totalCompletedQuestions = this.subjects.reduce((sum, s) => sum + (s.completedQuestions || 0), 0);
         this.stats.totalStudyTime = this.subjects.reduce((sum, s) => sum + (s.studyTime || 0), 0);
-        
-        // Completion rate hesapla
-        this.stats.completionRate = this.overallCompletionRate;
-        
+
+        // Completion rate hesapla (öncelik: soru hedefi bazlı; yoksa subject tamamlama bazlı)
+        const totalTargetQ = this.stats.totalTargetQuestions || 0;
+        if (totalTargetQ > 0) {
+            const ratio = this.stats.totalCompletedQuestions / totalTargetQ;
+            this.stats.completionRate = Math.max(0, Math.min(100, Math.round(ratio * 100)));
+        } else {
+            this.stats.completionRate = this.overallCompletionRate;
+        }
+
         // Net score hesapla
         this.stats.netScore = this.totalNetScore;
-        
+
+        // Success rate (doğru cevap oranı)
+        const totals = this.subjects.reduce((acc, s) => {
+            const correct = s.correctAnswers || 0;
+            const wrong = s.wrongAnswers || 0;
+            const blank = s.blankAnswers || 0;
+            acc.correct += correct;
+            acc.attempted += correct + wrong + blank;
+            return acc;
+        }, { correct: 0, attempted: 0 });
+        this.stats.successRate = totals.attempted > 0
+            ? Math.max(0, Math.min(100, Math.round((totals.correct / totals.attempted) * 100)))
+            : 0;
+
         // Average quality hesapla (session'lardan alınacak)
         const completedSubjects = this.subjects.filter(s => s.status === 'completed');
         if (completedSubjects.length > 0) {
@@ -286,7 +296,7 @@ DailyPlanSchema.pre('save', function(next) {
             this.stats.averageQuality = 0;
         }
     }
-    
+
     next();
 });
 

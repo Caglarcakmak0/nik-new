@@ -160,7 +160,7 @@ router.put("/:id/subjects/:subjectIndex", authenticateToken, checkRole('student'
         if (blankAnswers !== undefined) subject.blankAnswers = blankAnswers;
         if (studyTime !== undefined) subject.studyTime = studyTime;
         if (status !== undefined) subject.status = status;
-        if (notes !== undefined) subject.notes = notes;
+
         
         // Toplam completed questions hesapla
         subject.completedQuestions = (correctAnswers || 0) + (wrongAnswers || 0) + (blankAnswers || 0);

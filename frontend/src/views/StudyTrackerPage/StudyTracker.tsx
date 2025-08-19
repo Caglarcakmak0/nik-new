@@ -174,7 +174,7 @@ const StudyTracker: React.FC = () => {
           title: '🧪 Test Programı - 30 Saniye',
           date: new Date().toISOString(),
           status: 'active' as const,
-          coachNotes: 'Bu bir test programıdır. Timer test etmek için 30 saniyelik kısa çalışmalar yapın.',
+
           subjects: [
             {
               subject: 'matematik',
@@ -219,7 +219,7 @@ const StudyTracker: React.FC = () => {
           title: 'Matematik Yoğunlaşma Programı',
           date: new Date(Date.now() - 86400000).toISOString(), // Dün
           status: 'active' as const,
-          coachNotes: 'Fonksiyonlara odaklan, timer kullanarak çalış',
+
           subjects: [
             {
               subject: 'matematik',
@@ -628,15 +628,7 @@ const StudyTracker: React.FC = () => {
                                 </div>
                               </div>
 
-                              {program.coachNotes && (
-                                <Alert
-                                  type="info"
-                                  message="Koç Notu"
-                                  description={program.coachNotes}
-                                  showIcon
-                                  style={{ marginBottom: 16, fontSize: '12px' }}
-                                />
-                              )}
+
 
                               <Space size="large" wrap style={{ marginBottom: 16 }}>
                                 <div>
@@ -757,15 +749,7 @@ const StudyTracker: React.FC = () => {
               description="Çalışmak istediğiniz konuyu seçin ve timer'ı başlatın"
               style={{ marginBottom: 16 }}
             />
-            {selectedProgram.coachNotes && (
-              <Alert
-                type="success"
-                message="Koç Notu"
-                description={selectedProgram.coachNotes}
-                style={{ marginBottom: 16, fontSize: '12px' }}
-                showIcon
-              />
-            )}
+
             <div style={{ display: 'grid', gap: '8px' }}>
               {selectedProgram.subjects?.map((subject, idx) => {
                 const subjectProgress = (subject.targetTime && subject.targetTime > 0) 
@@ -921,9 +905,7 @@ const StudyTracker: React.FC = () => {
                   {selectedSubjectForTimer.targetQuestions && selectedSubjectForTimer.targetQuestions > 0 && (
                     <Text>Hedef Soru: {selectedSubjectForTimer.targetQuestions} adet</Text>
                   )}
-                  {selectedProgramForTimer.coachNotes && (
-                    <Text italic>💬 Koç Notu: {selectedProgramForTimer.coachNotes}</Text>
-                  )}
+
                 </Space>
               }
               style={{ marginBottom: 16 }}
@@ -933,7 +915,8 @@ const StudyTracker: React.FC = () => {
               initialConfig={{
                 subject: selectedSubjectForTimer.subject,
                 studyDuration: selectedSubjectForTimer.targetTime || 25,
-                technique: 'Freeform'
+                technique: 'Freeform',
+                targetSessions: 1
               }}
               onSessionComplete={handleSessionComplete}
               coachMode={true}

@@ -41,6 +41,20 @@ router.post('/invite', authenticateToken, checkRole('student'), async (req, res)
         if (!opponentId || !['daily','weekly'].includes(period)) {
             return res.status(400).json({ message: 'opponentId ve period (daily|weekly) zorunlu' });
         }
+        // Aynı periyotta, aynı ikili arasında devam eden bir düello var mı? (pending/active)
+        const now = new Date();
+        const existing = await Duel.findOne({
+            $or: [
+                { challenger: challengerId, opponent: opponentId },
+                { challenger: opponentId, opponent: challengerId }
+            ],
+            period,
+            status: { $in: ['pending', 'active'] },
+            endDate: { $gt: now }
+        });
+        if (existing) {
+            return res.status(409).json({ message: 'Bu kişi ile bu dönem için zaten aktif veya bekleyen bir düello var' });
+        }
         const { start, end } = getPeriodRange(period);
         const duel = await Duel.create({
             challenger: challengerId,
@@ -73,6 +87,21 @@ router.post('/:id/respond', authenticateToken, checkRole('student'), async (req,
         }
         duel.status = accept ? 'active' : 'declined';
         await duel.save();
+
+        // Eğer kabul edildiyse, aynı ikili ve periyottaki diğer pending düelloları iptal et
+        if (accept) {
+            const now = new Date();
+            await Duel.updateMany({
+                _id: { $ne: duel._id },
+                period: duel.period,
+                endDate: { $gt: now },
+                status: 'pending',
+                $or: [
+                    { challenger: duel.challenger, opponent: duel.opponent },
+                    { challenger: duel.opponent, opponent: duel.challenger }
+                ]
+            }, { $set: { status: 'cancelled' } });
+        }
         res.status(200).json({ message: accept ? 'Düello kabul edildi' : 'Düello reddedildi', data: duel });
     } catch (error) {
         console.error('POST /duels/:id/respond error:', error);

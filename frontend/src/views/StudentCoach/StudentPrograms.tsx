@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Card, List, Tag, Typography, DatePicker, Select, Space, Button, Empty, Spin, Pagination, Progress, Badge } from 'antd';
-import { Link } from 'react-router-dom';
-import { ClockCircleOutlined, BookOutlined, CheckCircleOutlined, PlayCircleOutlined } from '@ant-design/icons';
+// Link import'u kaldırıldı - artık kullanılmıyor
+import { ClockCircleOutlined, BookOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import { getStudentPrograms, StudentProgram } from '../../services/api';
 import './StudentPrograms.scss';
 
@@ -137,21 +137,15 @@ const StudentPrograms: React.FC = () => {
                       <ClockCircleOutlined />
                       <Text type="secondary">{p.stats?.totalStudyTime || 0} dk</Text>
                     </Space>,
-                    p.status === 'active' && isToday ? (
-                      <Link key="study" to={`/student/programs/${p._id}`}>
-                        <Button type="primary" size="small" icon={<PlayCircleOutlined />}>
-                          Çalışmaya Başla
-                        </Button>
-                      </Link>
-                    ) : null
+                    // Çalışmaya başla butonu kaldırıldı
                   ].filter(Boolean)}
                 >
                   <List.Item.Meta
                     title={
                       <Space>
-                        <Link to={`/student/programs/${p._id}`}>
+                        <span style={{ color: '#1890ff', cursor: 'default' }}>
                           {p.title || 'Çalışma Programı'}
-                        </Link>
+                        </span>
                         <Badge 
                           count={isToday ? 'BUGÜN' : null} 
                           style={{ backgroundColor: '#52c41a' }}
@@ -171,11 +165,7 @@ const StudentPrograms: React.FC = () => {
                             day: 'numeric' 
                           })}
                         </Text>
-                        {p.coachNotes && (
-                          <Text type="secondary" italic>
-                            💬 Koç Notu: {p.coachNotes}
-                          </Text>
-                        )}
+
                         {totalSubjects > 0 && (
                           <div>
                             <Text type="secondary" style={{ marginRight: 8 }}>

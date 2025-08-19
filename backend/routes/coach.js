@@ -254,7 +254,7 @@ router.get('/programs/:id', async (req, res) => {
         _id: plan._id,
         title: plan.title,
         date: plan.date,
-        coachNotes: plan.coachNotes || '',
+
         status: plan.status,
         student: plan.userId ? {
           _id: plan.userId._id,
@@ -266,7 +266,7 @@ router.get('/programs/:id', async (req, res) => {
           description: s.description || '',
           targetTime: s.targetTime || 0,
           priority: s.priority || 5,
-          notes: s.notes || ''
+
         }))
       }
     });
@@ -280,7 +280,7 @@ router.get('/programs/:id', async (req, res) => {
 router.post('/programs', async (req, res) => {
   try {
     const coachId = req.user?.userId;
-    const { studentId, date, subjects, title, coachNotes } = req.body || {};
+    const { studentId, date, subjects, title } = req.body || {};
 
     // Validation
     if (!studentId || !date || !Array.isArray(subjects) || subjects.length === 0) {
@@ -327,7 +327,7 @@ router.post('/programs', async (req, res) => {
       subjects: transformedSubjects,
       source: 'coach',
       status: 'active',
-      coachNotes: coachNotes || '',
+
       coachApproval: true
     });
 
@@ -349,7 +349,7 @@ router.put('/programs/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const isAdmin = req.user.role === 'admin';
-    const { title, coachNotes, date, subjects } = req.body || {};
+    const { title, date, subjects } = req.body || {};
 
     const plan = await DailyPlan.findById(id);
     if (!plan) {
@@ -368,7 +368,7 @@ router.put('/programs/:id', async (req, res) => {
 
     // Güncellenebilir alanlar
     if (typeof title === 'string') plan.title = title;
-    if (typeof coachNotes === 'string') plan.coachNotes = coachNotes;
+
     if (date) {
       const newDate = new Date(date);
       if (!isNaN(newDate.getTime())) {
@@ -394,7 +394,7 @@ router.put('/programs/:id', async (req, res) => {
         if (typeof incoming.description === 'string' || incoming.description === null) current.description = incoming.description || '';
         if (typeof incoming.targetTime === 'number') current.targetTime = incoming.targetTime;
         if (typeof incoming.priority === 'number') current.priority = incoming.priority;
-        if (typeof incoming.notes === 'string') current.notes = incoming.notes;
+
         // İlerleme alanlarına (correctAnswers, wrongAnswers, blankAnswers, studyTime, status, sessionIds) dokunma
       }
 
@@ -407,7 +407,7 @@ router.put('/programs/:id', async (req, res) => {
             description: typeof incoming.description === 'string' ? incoming.description : '',
             targetTime: typeof incoming.targetTime === 'number' ? incoming.targetTime : undefined,
             priority: typeof incoming.priority === 'number' ? incoming.priority : 5,
-            notes: typeof incoming.notes === 'string' ? incoming.notes : '',
+
             // Progress defaults
             completedQuestions: 0,
             correctAnswers: 0,

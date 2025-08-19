@@ -9,6 +9,11 @@ export default defineConfig({
       '/api': {
         target: 'http://localhost:8000',
         changeOrigin: true,
+      },
+      // Statik yüklemeleri (avatarlar vb.) backend'e yönlendir
+      '/uploads': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
       }
     }
   },

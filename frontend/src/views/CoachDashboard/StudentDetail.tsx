@@ -39,7 +39,7 @@ type ProgramDetail = {
   title?: string;
   date: string;
   status?: string;
-  coachNotes?: string;
+
   subjects: ProgramDetailSubject[];
 };
 
@@ -215,11 +215,7 @@ const StudentDetail: React.FC = () => {
                   }
                   return (
                     <div>
-                      {d.coachNotes ? (
-                        <div style={{ marginBottom: 8 }}>
-                          <Text strong>Koç Notu:</Text> <Text>{d.coachNotes}</Text>
-                        </div>
-                      ) : null}
+
                       <List
                         header={<Text strong>Konu Listesi</Text>}
                         dataSource={d.subjects || []}

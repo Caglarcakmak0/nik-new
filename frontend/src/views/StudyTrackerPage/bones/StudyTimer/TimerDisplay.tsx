@@ -126,14 +126,7 @@ const TimerDisplay: React.FC<TimerDisplayProps> = ({
             
             {/* Running indicator */}
             {isRunning && (
-              <div className="timer-display__pulse">
-                <PlayCircleOutlined 
-                  style={{ 
-                    color: colors.primary, 
-                    fontSize: size === 'large' ? '24px' : '16px' 
-                  }} 
-                />
-              </div>
+              <div className="timer-display__pulse" />
             )}
           </div>
         ) : (

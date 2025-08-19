@@ -196,15 +196,13 @@ const CoachDashboard: React.FC = () => {
         studentId: selectedStudent?._id || values.studentId,
         date: dateObj.format('YYYY-MM-DD'),
         subjects: values.subjects,
-        title: `Günlük Program - ${dateObj.format('DD/MM/YYYY')}`,
-        coachNotes: `Toplam süre: ${totalHours} saat ${totalMinutes} dakika`
+        title: `Günlük Program - ${dateObj.format('DD/MM/YYYY')}`
       };
       
       // Send to backend (create or update)
       if (isEditMode && editingProgramId) {
         const updateData = {
           date: dateObj.format('YYYY-MM-DD'),
-          coachNotes: `Toplam süre: ${totalHours} saat ${totalMinutes} dakika`,
           subjects: values.subjects.map(s => ({ subject: s.subject, description: s.description, targetTime: s.duration, priority: 5 })),
           title: `Koç Programı - ${dateObj.format('DD/MM/YYYY')}`
         };

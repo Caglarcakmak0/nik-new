@@ -22,13 +22,14 @@ import StudentsList from "./views/CoachDashboard/StudentsList";
 import StudentDetail from "./views/CoachDashboard/StudentDetail";
 import CreateProgram from "./views/CoachDashboard/CreateProgram";
 import StudentCoachPage from "./views/StudentCoach/StudentCoachPage";
-import StudentProgramDetail from "./views/StudentCoach/StudentProgramDetail";
+// StudentProgramDetail import'u kaldırıldı
 import FeedbackDetail from "./views/Admin/FeedbackDetail";
 import AdminDashboard from "./views/AdminDashboard/AdminDashboard";
 import CoachesList from "./views/Admin/CoachesList";
 import CoachDetail from "./views/Admin/CoachDetail";
 import AssignmentManager from "./views/Admin/AssignmentManager";
 import Statistics from "./views/Admin/Statistics";
+import ErrorPage from "./components/ErrorPage/ErrorPage";
 // Routing bileşeni (tema sağlayıcıdan bağımsız)
 function ThemedApp() {
   return (
@@ -37,6 +38,13 @@ function ThemedApp() {
             <Routes>
               <Route path="/login" element={<Login />} />
               <Route path="/" element={<HomeRoute />} />
+              
+              {/* Test Error Page Routes */}
+              <Route path="/test-error" element={<ErrorPage />} />
+              <Route path="/test-error/network" element={<ErrorPage errorType="network" />} />
+              <Route path="/test-error/auth" element={<ErrorPage errorType="auth" />} />
+              <Route path="/test-error/notfound" element={<ErrorPage errorType="notFound" />} />
+              <Route path="/test-error/server" element={<ErrorPage errorType="server" errorCode="500" />} />
 
               {/* Protected Routes - AppLayout ile sarmalanır */}
               <Route
@@ -62,14 +70,7 @@ function ThemedApp() {
                             </ProtectedRoute>
                           }
                         />
-                         <Route
-                           path="/student/programs/:id"
-                           element={
-                             <ProtectedRoute allowedRoles={["student"]}>
-                               <StudentProgramDetail />
-                             </ProtectedRoute>
-                           }
-                         />
+                         {/* StudentProgramDetail route'u kaldırıldı */}
                         <Route
                           path="/student/exams"
                           element={
@@ -234,7 +235,7 @@ function ThemedApp() {
   );
 }
 
-// Basit Error Boundary
+// Modern Error Boundary
 class RootErrorBoundary extends React.Component<React.PropsWithChildren, { hasError: boolean }> {
   constructor(props: React.PropsWithChildren) {
     super(props);
@@ -249,15 +250,7 @@ class RootErrorBoundary extends React.Component<React.PropsWithChildren, { hasEr
   }
   render() {
     if (this.state.hasError) {
-      return (
-        <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-          <div style={{ maxWidth: 520, textAlign: 'center' }}>
-            <h2>Bir şeyler ters gitti</h2>
-            <p>Lütfen sayfayı yenileyin veya daha sonra tekrar deneyin.</p>
-            <button onClick={() => window.location.reload()}>Yenile</button>
-          </div>
-        </div>
-      );
+      return <ErrorPage />;
     }
     return this.props.children as React.ReactElement;
   }

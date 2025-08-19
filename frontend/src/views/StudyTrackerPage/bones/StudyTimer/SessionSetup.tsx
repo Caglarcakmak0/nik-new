@@ -112,6 +112,13 @@ const TECHNIQUE_INFO = {
 // Hızlı süre seçenekleri
 const QUICK_TIMES = [15, 20, 25, 30, 45, 60, 90];
 
+// Pomodoro şablonları (çalışma/mola)
+const POMODORO_PRESETS = [
+  { study: 25, break: 5, label: '25/5' },
+  { study: 45, break: 15, label: '45/15' },
+  { study: 50, break: 10, label: '50/10' }
+];
+
 const SessionSetup: React.FC<SessionSetupProps> = ({
   visible,
   onCancel,
@@ -137,7 +144,7 @@ const SessionSetup: React.FC<SessionSetupProps> = ({
           technique: 'Freeform', // Koç programları için genelde serbest mod
           subject: coachProgram.subject,
           studyDuration: coachProgram.duration,
-          breakDuration: 5,
+          breakDuration: 0,
           targetSessions: 1,
           longBreakInterval: 4,
           longBreakDuration: 15,
@@ -150,7 +157,7 @@ const SessionSetup: React.FC<SessionSetupProps> = ({
           subject: 'matematik',
           studyDuration: 25,
           breakDuration: 5,
-          targetSessions: 4,
+          targetSessions: 1,
           longBreakInterval: 4,
           longBreakDuration: 15,
           ...initialConfig
@@ -172,17 +179,18 @@ const SessionSetup: React.FC<SessionSetupProps> = ({
       
       form.setFieldsValue({
         studyDuration: defaults.study,
-        breakDuration: defaults.break,
-        targetSessions: defaults.sessions
+        breakDuration: technique === 'Pomodoro' ? defaults.break : 0,
+        targetSessions: 1
       });
     } else {
       // Koç modunda sadece mola ve oturum sayısını güncelle, süre koçtan geliyor
       const defaults = TECHNIQUE_INFO[technique as keyof typeof TECHNIQUE_INFO].default;
-      
-      form.setFieldsValue({
-        breakDuration: defaults.break,
-        targetSessions: defaults.sessions
-      });
+      if (technique === 'Pomodoro') {
+        // Varsayılan şablon 25/5
+        form.setFieldsValue({ studyDuration: 25, breakDuration: 5, targetSessions: 1 });
+      } else {
+        form.setFieldsValue({ breakDuration: 0, targetSessions: 1 });
+      }
     }
   };
 
@@ -208,9 +216,10 @@ const SessionSetup: React.FC<SessionSetupProps> = ({
         values = {
           technique: form.getFieldValue('technique'),
           subject: coachProgram.subject,
-          studyDuration: coachProgram.duration,
+          // Koç modunda Pomodoro seçiliyse çalışma süresi formdan alınır
+          studyDuration: form.getFieldValue('studyDuration') || 25,
           breakDuration: form.getFieldValue('breakDuration') || 5,
-          targetSessions: form.getFieldValue('targetSessions') || 1,
+          targetSessions: 1,
           longBreakInterval: form.getFieldValue('longBreakInterval') || 4,
           longBreakDuration: form.getFieldValue('longBreakDuration') || 15
         };
@@ -222,6 +231,25 @@ const SessionSetup: React.FC<SessionSetupProps> = ({
         console.log('Normal mode values:', values);
       }
       
+      // Pomodoro için oturum sayısını SADECE koç modunda toplam hedef süreden hesapla
+      if (values.technique === 'Pomodoro') {
+        if (coachMode && coachProgram) {
+          const study = Number(values.studyDuration) || 25;
+          const brk = Number(values.breakDuration) || 0;
+          const total = Number(coachProgram.duration);
+          const perCycle = Math.max(1, study + brk);
+          const sessions = Math.max(1, Math.floor(total / perCycle));
+          values.targetSessions = sessions;
+        }
+        // Normal modda kullanıcı `targetSessions`'ı ayarlayabilir; üzerine yazmayız
+      } else {
+        // Pomodoro dışı teknikler: koç modunda tek döngü ve mola yok; normal modda kullanıcı ayarını koru
+        if (coachMode) {
+          values.targetSessions = 1;
+          values.breakDuration = 0;
+        }
+      }
+
       // Teknik kontrolü
       if (!values.technique) {
         console.error('Technique is required!');
@@ -475,28 +503,64 @@ const SessionSetup: React.FC<SessionSetupProps> = ({
           <>
             {!coachMode && <Divider />}
             <Row gutter={16}>
-              {!coachMode && (
-                <Col xs={12}>
-                  <Form.Item label="🔄 Uzun Mola Aralığı" name="longBreakInterval">
-                    <InputNumber
-                      min={2}
-                      max={8}
+              {coachMode && (
+                <Col xs={24}>
+                  <Form.Item label="Pomodoro Şablonu">
+                    <Radio.Group
+                      onChange={(e) => {
+                        const preset = POMODORO_PRESETS.find(p => p.label === e.target.value);
+                        if (preset) {
+                          form.setFieldsValue({ studyDuration: preset.study, breakDuration: preset.break });
+                        }
+                      }}
+                      defaultValue={POMODORO_PRESETS[0].label}
                       style={{ width: '100%' }}
-                      placeholder="Kaç pomodoro sonra"
-                    />
+                    >
+                      <Space wrap>
+                        {POMODORO_PRESETS.map(p => (
+                          <Radio.Button key={p.label} value={p.label}>
+                            {p.label}
+                          </Radio.Button>
+                        ))}
+                      </Space>
+                    </Radio.Group>
                   </Form.Item>
                 </Col>
               )}
-              <Col xs={coachMode ? 24 : 12}>
-                <Form.Item label="Mola Süresi" name={coachMode ? 'breakDuration' : 'longBreakDuration'}>
-                  <InputNumber
-                    min={coachMode ? 1 : 10}
-                    max={coachMode ? 30 : 60}
-                    style={{ width: '100%' }}
-                    placeholder={coachMode ? 'Dakika' : 'Uzun mola dakika'}
-                  />
-                </Form.Item>
-              </Col>
+              {!coachMode && (
+                <>
+                  <Col xs={12}>
+                    <Form.Item label="☕ Mola Süresi (dakika)" name="breakDuration">
+                      <InputNumber
+                        min={1}
+                        max={30}
+                        style={{ width: '100%' }}
+                        placeholder="Dakika"
+                      />
+                    </Form.Item>
+                  </Col>
+                  <Col xs={12}>
+                    <Form.Item label="🔄 Uzun Mola Aralığı" name="longBreakInterval">
+                      <InputNumber
+                        min={2}
+                        max={8}
+                        style={{ width: '100%' }}
+                        placeholder="Kaç pomodoro sonra"
+                      />
+                    </Form.Item>
+                  </Col>
+                  <Col xs={12}>
+                    <Form.Item label="Mola Süresi" name="longBreakDuration">
+                      <InputNumber
+                        min={10}
+                        max={60}
+                        style={{ width: '100%' }}
+                        placeholder="Uzun mola dakika"
+                      />
+                    </Form.Item>
+                  </Col>
+                </>
+              )}
             </Row>
           </>
         )}

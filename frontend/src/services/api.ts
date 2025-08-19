@@ -354,7 +354,7 @@ export type StudentProgram = {
   date: string;
   status: 'draft' | 'active' | 'completed' | 'failed' | 'archived';
   subjects: StudentProgramSubject[];
-  coachNotes?: string;
+
   motivationNote?: string;
   stats?: {
     completionRate?: number;

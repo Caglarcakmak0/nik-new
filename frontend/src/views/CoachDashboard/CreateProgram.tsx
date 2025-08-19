@@ -75,7 +75,7 @@ const CreateProgram: React.FC = () => {
         date: values.date.format('YYYY-MM-DD'),
         subjects: values.subjects,
         title: `Koç Programı - ${values.date.format('DD/MM/YYYY')}`,
-        coachNotes: `Toplam süre: ${totalHours} saat ${totalMinutes} dakika`
+
       };
       await apiRequest('/coach/programs', { method: 'POST', body: JSON.stringify(payload) });
       message.success('Program oluşturuldu');
