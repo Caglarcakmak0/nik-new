@@ -481,7 +481,6 @@ const StudentExams: React.FC = () => {
                 total={totalCount}
                 pageSize={pageSize}
                 showSizeChanger={false}
-                showQuickJumper
                 onChange={(p) => setPage(p)}
                 size="small"
               />
@@ -490,7 +489,7 @@ const StudentExams: React.FC = () => {
                 <span style={{ color: '#666', fontSize: '13px' }}>Kayıt Göster:</span>
                 <Select
                   value={pageSize}
-                  onChange={(val) => {
+                  onChange={(val) => {  
                     setPageSize(val);
                     setPage(1);
                   }}

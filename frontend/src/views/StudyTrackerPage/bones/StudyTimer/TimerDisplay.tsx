@@ -139,11 +139,6 @@ const TimerDisplay: React.FC<TimerDisplayProps> = ({
                   margin: 0,
                   fontFamily: 'monospace',
                   textAlign: 'center',
-                  background: `linear-gradient(135deg, ${colors.gradient['0%']}, ${colors.gradient['30%'] || colors.gradient['50%'] || colors.gradient['100%']}, ${colors.gradient['60%'] || colors.gradient['50%'] || colors.gradient['100%']}, ${colors.gradient['100%']})`,
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
-                  backgroundSize: '200% 200%',
                   filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))'
                 }}
               >

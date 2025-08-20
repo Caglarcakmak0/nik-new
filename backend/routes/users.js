@@ -27,15 +27,45 @@ const multer = require('multer');
 const sharp = require('sharp');
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
+const nodemailer = require('nodemailer');
+const dayjs = require('dayjs');
 
 dotenv.config();
 
 
 const JWT_SECRET_KEY = process.env.JWT_KEY;
 
+// Basit e-posta gönderici (SMTP ile)
+const mailTransporter = (() => {
+    const host = process.env.SMTP_HOST;
+    const port = Number(process.env.SMTP_PORT || 587);
+    const user = process.env.SMTP_USER;
+    const pass = process.env.SMTP_PASS;
+    if (!host || !user || !pass) {
+        return null;
+    }
+    return nodemailer.createTransport({
+        host,
+        port,
+        secure: port === 465,
+        auth: { user, pass }
+    });
+})();
+
+async function sendMail(to, subject, html) {
+    if (!mailTransporter) {
+        console.warn('SMTP yapılandırılmadı, e-posta gönderilmeyecek.');
+        return;
+    }
+    const from = process.env.SMTP_FROM || process.env.SMTP_USER;
+    await mailTransporter.sendMail({ from, to, subject, html });
+}
+
 
 // Kullanıcı oluşturma - firstName/lastName ile güncellendi
-router.post("/", async (req, res) => {
+// Admin: Kullanıcı oluşturma
+router.post("/", authenticateToken, checkRole('admin'), async (req, res) => {
     try {
         const { 
             email, 
@@ -89,6 +119,106 @@ router.post("/", async (req, res) => {
     } catch (error) {
         console.log(error);
         res.status(500).json({ message: "There is an error: " + error });
+    }
+});
+
+// Public: Kayıt ol (self-register)
+router.post('/register', async (req, res) => {
+    try {
+        const { email, password, firstName, lastName } = req.body || {};
+        if (!email || !password) {
+            return res.status(400).json({ message: 'Email ve şifre zorunludur.' });
+        }
+        const lowerEmail = String(email).toLowerCase();
+
+        const existing = await Users.findOne({ email: lowerEmail });
+        if (existing) {
+            return res.status(400).json({ message: 'Bu e-posta adresi başka bir kullanıcı tarafından kullanılıyor.' });
+        }
+
+        const hashedPassword = await bcryptjs.hash(password, 10);
+
+        // E-posta doğrulaması için token üret
+        const rawToken = crypto.randomBytes(32).toString('hex');
+        const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+        const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 saat
+
+        const newUser = await Users.create({
+            email: lowerEmail,
+            password: hashedPassword,
+            firstName: firstName || '',
+            lastName: lastName || '',
+            role: 'student',
+            isEmailVerified: false,
+            emailVerificationTokenHash: tokenHash,
+            emailVerificationExpiresAt: expiresAt,
+        });
+
+        const frontendBase = process.env.FRONTEND_BASE_URL || 'http://localhost:5173';
+        const verifyUrl = `${frontendBase}/verify-email?uid=${newUser._id}&token=${rawToken}`;
+
+        // Doğrulama e-postası gönder
+        const subject = 'E-posta Doğrulama';
+        const html = `
+            <div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.6;color:#222">
+                <p>Merhaba ${((firstName || '') + ' ' + (lastName || '')).trim() || lowerEmail.split('@')[0]},</p>
+                <p>Hesabınızı doğrulamak için aşağıdaki bağlantıya tıklayın. Bu bağlantı 24 saat boyunca geçerlidir.</p>
+                <p><a href="${verifyUrl}" target="_blank" style="background:#1677ff;color:#fff;padding:10px 16px;border-radius:6px;text-decoration:none">E‑postayı Doğrula</a></p>
+                <p>Buton çalışmıyorsa bu linki tarayıcınıza yapıştırın:<br/>${verifyUrl}</p>
+            </div>
+        `;
+        try {
+            await sendMail(lowerEmail, subject, html);
+        } catch (e) {
+            console.warn('Doğrulama e-postası gönderilemedi:', e);
+        }
+
+        const safeUser = newUser.toObject();
+        delete safeUser.password;
+        delete safeUser.refreshToken;
+        delete safeUser.refreshTokenVersion;
+        delete safeUser.refreshTokenExpiresAt;
+        delete safeUser.emailVerificationTokenHash;
+        delete safeUser.emailVerificationExpiresAt;
+
+        return res.status(201).json({ message: 'Kayıt başarılı. Lütfen e‑postanızı doğrulayın.', data: safeUser });
+    } catch (error) {
+        console.error('POST /users/register error:', error);
+        return res.status(500).json({ message: 'Kayıt sırasında bir hata oluştu.' });
+    }
+});
+
+// Public: E-posta doğrula
+router.post('/verify-email', async (req, res) => {
+    try {
+        const { uid, token } = req.body || {};
+        if (!uid || !token) {
+            return res.status(400).json({ message: 'Geçersiz istek.' });
+        }
+        const user = await Users.findById(uid);
+        if (!user || !user.emailVerificationTokenHash || !user.emailVerificationExpiresAt) {
+            return res.status(400).json({ message: 'Token geçersiz veya süresi dolmuş.' });
+        }
+        if (user.emailVerificationExpiresAt.getTime() < Date.now()) {
+            await Users.findByIdAndUpdate(uid, {
+                emailVerificationTokenHash: null,
+                emailVerificationExpiresAt: null
+            });
+            return res.status(400).json({ message: 'Token süresi dolmuş.' });
+        }
+        const providedHash = crypto.createHash('sha256').update(token).digest('hex');
+        if (providedHash !== user.emailVerificationTokenHash) {
+            return res.status(400).json({ message: 'Token geçersiz.' });
+        }
+        await Users.findByIdAndUpdate(uid, {
+            isEmailVerified: true,
+            emailVerificationTokenHash: null,
+            emailVerificationExpiresAt: null
+        });
+        return res.status(200).json({ message: 'E‑posta adresiniz doğrulandı.' });
+    } catch (error) {
+        console.error('POST /users/verify-email error:', error);
+        return res.status(500).json({ message: 'E‑posta doğrulama sırasında bir hata oluştu.' });
     }
 });
 
@@ -225,6 +355,111 @@ router.post("/login", async (req, res) => {
     }
 });
 
+// Şifremi Unuttum — reset linki gönder
+router.post('/forgot-password', async (req, res) => {
+    try {
+        const { email } = req.body || {};
+        if (!email || typeof email !== 'string') {
+            return res.status(200).json({ message: 'Eğer bu e‑posta kayıtlıysa, sıfırlama bağlantısı gönderildi.' });
+        }
+
+        const lowerEmail = email.toLowerCase();
+        const user = await Users.findOne({ email: lowerEmail });
+
+        // Yanıtı uniform tut (enumeration önleme)
+        const uniformResponse = () => res.status(200).json({ message: 'Eğer bu e‑posta kayıtlıysa, sıfırlama bağlantısı gönderildi.' });
+
+        if (!user) {
+            return uniformResponse();
+        }
+
+        // Token üret ve hashle
+        const rawToken = crypto.randomBytes(32).toString('hex');
+        const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+        const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 saat
+
+        await Users.findByIdAndUpdate(user._id, {
+            passwordResetTokenHash: tokenHash,
+            passwordResetExpiresAt: expiresAt
+        });
+
+        const frontendBase = process.env.FRONTEND_BASE_URL || 'http://localhost:5173';
+        const resetUrl = `${frontendBase}/reset-password?uid=${user._id}&token=${rawToken}`;
+
+        // E-posta gönder
+        const fullName = (user.firstName || '') + ' ' + (user.lastName || '');
+        const subject = 'Şifre Sıfırlama Talebiniz';
+        const html = `
+            <div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.6;color:#222">
+                <p>Merhaba ${fullName.trim() || user.email.split('@')[0]},</p>
+                <p>Şifrenizi sıfırlamak için aşağıdaki bağlantıya tıklayın. Bu bağlantı 1 saat boyunca geçerlidir.</p>
+                <p><a href="${resetUrl}" target="_blank" style="background:#1677ff;color:#fff;padding:10px 16px;border-radius:6px;text-decoration:none">Şifremi Sıfırla</a></p>
+                <p>Buton çalışmıyorsa bu linki tarayıcınıza yapıştırın:<br/>${resetUrl}</p>
+                <p>Eğer bu talebi siz oluşturmadıysanız bu mesajı yok sayabilirsiniz.</p>
+            </div>
+        `;
+        try {
+            await sendMail(user.email, subject, html);
+        } catch (e) {
+            // E-posta gönderilemese bile enumeration koruması için success dön
+            console.warn('Şifre sıfırlama e-postası gönderilemedi:', e);
+        }
+        return uniformResponse();
+    } catch (error) {
+        console.error('POST /users/forgot-password error:', error);
+        return res.status(500).json({ message: 'İşlem sırasında bir hata oluştu.' });
+    }
+});
+
+// Şifre Sıfırla — token doğrula ve şifreyi güncelle
+router.post('/reset-password', async (req, res) => {
+    try {
+        const { uid, token, newPassword } = req.body || {};
+        if (!uid || !token || !newPassword) {
+            return res.status(400).json({ message: 'Geçersiz istek.' });
+        }
+
+        const user = await Users.findById(uid);
+        if (!user || !user.passwordResetTokenHash || !user.passwordResetExpiresAt) {
+            return res.status(400).json({ message: 'Token geçersiz veya süresi dolmuş.' });
+        }
+
+        // Süre kontrolü
+        if (user.passwordResetExpiresAt.getTime() < Date.now()) {
+            // Token alanlarını temizle
+            await Users.findByIdAndUpdate(uid, {
+                passwordResetTokenHash: null,
+                passwordResetExpiresAt: null
+            });
+            return res.status(400).json({ message: 'Token süresi dolmuş.' });
+        }
+
+        // Token hash eşleşmesi
+        const providedHash = crypto.createHash('sha256').update(token).digest('hex');
+        if (providedHash !== user.passwordResetTokenHash) {
+            return res.status(400).json({ message: 'Token geçersiz.' });
+        }
+
+        // Şifreyi güncelle
+        const hashedPassword = await bcryptjs.hash(newPassword, 10);
+        await Users.findByIdAndUpdate(uid, {
+            password: hashedPassword,
+            tokenVersion: (user.tokenVersion || 0) + 1, // Tüm mevcut access token'ları geçersiz kıl
+            // Reset token alanlarını temizle
+            passwordResetTokenHash: null,
+            passwordResetExpiresAt: null,
+            // Mevcut refresh token'ı da geçersiz kılmak isterseniz temizleyin
+            refreshToken: null,
+            refreshTokenExpiresAt: null
+        });
+
+        return res.status(200).json({ message: 'Şifreniz güncellendi. Lütfen yeni şifrenizle giriş yapın.' });
+    } catch (error) {
+        console.error('POST /users/reset-password error:', error);
+        return res.status(500).json({ message: 'Şifre güncellenirken bir hata oluştu.' });
+    }
+});
+
 // Kullanıcı güncelleme - Yeni alanlarla desteklendi
 router.put("/:id", authenticateToken, checkSameUserOrAdmin, async (req, res) => {
     try {
@@ -328,6 +563,36 @@ router.get("/profile", authenticateToken, async (req, res) => {
     } catch (error) {
         console.log(error);
         res.status(500).json({ message: "Profil getirme hatası: " + error });
+    }
+});
+
+// ==== Preferences (In-app notifications) ====
+// GET /users/preferences
+router.get('/preferences', authenticateToken, async (req, res) => {
+    try {
+        const user = await Users.findById(req.user.userId).select('preferences');
+        if (!user) return res.status(404).json({ message: 'Kullanıcı bulunamadı' });
+        return res.json({ message: 'Tercihler', data: user.preferences || {} });
+    } catch (error) {
+        console.error('GET /users/preferences error:', error);
+        return res.status(500).json({ message: error.message });
+    }
+});
+
+// PUT /users/preferences
+router.put('/preferences', authenticateToken, async (req, res) => {
+    try {
+        const updates = req.body?.preferences || req.body || {};
+        const user = await Users.findByIdAndUpdate(
+            req.user.userId,
+            { $set: Object.fromEntries(Object.entries(updates).map(([k, v]) => ([`preferences.${k}`, v]))) },
+            { new: true }
+        ).select('preferences');
+        if (!user) return res.status(404).json({ message: 'Kullanıcı bulunamadı' });
+        return res.json({ message: 'Tercihler güncellendi', data: user.preferences || {} });
+    } catch (error) {
+        console.error('PUT /users/preferences error:', error);
+        return res.status(500).json({ message: error.message });
     }
 });
 

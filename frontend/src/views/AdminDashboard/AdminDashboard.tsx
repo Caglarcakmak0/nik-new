@@ -627,7 +627,6 @@ const AdminDashboard: React.FC = () => {
                 pageSize: usersPagination.pageSize,
                 total: usersTotal,
                 showSizeChanger: true,
-                showQuickJumper: true,
                 showTotal: (total) => `Toplam ${total} kullanıcı`
               }}
               loading={loading}

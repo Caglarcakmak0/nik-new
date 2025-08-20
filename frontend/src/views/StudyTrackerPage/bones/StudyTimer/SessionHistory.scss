@@ -1,4 +1,25 @@
 .session-history {
+  // RangePicker yüksekliğini küçült
+  .ant-picker-range {
+    height: 28px !important;
+    
+    .ant-picker-input {
+      height: 28px !important;
+      
+      input {
+        height: 28px !important;
+        line-height: 28px !important;
+        padding: 4px 8px !important;
+        font-size: 12px !important;
+      }
+    }
+    
+    .ant-picker-suffix {
+      height: 28px !important;
+      line-height: 28px !important;
+    }
+  }
+
   .ant-card-body {
     padding: 16px;
   }

@@ -124,7 +124,6 @@ export const apiRequest = async (endpoint: string, options: RequestInit = {}) =>
 };
 
 // ==== Student - Coach Secret Feedback APIs ====
-
 export type CoachFeedbackCategories = {
   communication: number;
   programQuality: number;
@@ -545,26 +544,6 @@ export const getAdminStudentPrograms = async (
   return apiRequest(`/admin/students/${studentId}/programs${qs ? `?${qs}` : ''}`);
 };
 
-// ==== Admin - Maintenance ====
-export const getAdminMaintenanceStatus = async () => {
-  return apiRequest('/admin/maintenance/status');
-};
-
-export const toggleMaintenanceMode = async (enabled: boolean) => {
-  return apiRequest('/admin/maintenance/mode', {
-    method: 'POST',
-    body: JSON.stringify({ enabled })
-  });
-};
-
-export const optimizeDatabase = async () => {
-  return apiRequest('/admin/maintenance/optimize-db', { method: 'POST' });
-};
-
-export const runSecurityScan = async () => {
-  return apiRequest('/admin/maintenance/security-scan', { method: 'POST' });
-};
-
 // ==== Motivation (Public & Admin) ====
 export type Motivation = {
   text: string;
@@ -661,5 +640,27 @@ export const respondDuel = async (id: string, accept: boolean) => {
 
 export const completeDuel = async (id: string) => {
   return apiRequest(`/duels/${id}/complete`, { method: 'POST' });
+};
+
+// ==== Leaderboard - User Stats (for dashboard) ====
+export type LeaderboardUserStats = {
+  _id: string;
+  name: string;
+  totalScore: number;
+  totalQuestions: number;
+  totalStudyTime: number;
+  streak: number;
+  level: number;
+  experience: number;
+  achievements: Array<{ id: string; title: string; description?: string; icon?: string; rarity?: string; unlockedAt?: string; points?: number }>;
+  weeklyScore: number;
+  monthlyScore: number;
+  rank: number;
+  weeklyRank: number;
+  monthlyRank: number;
+};
+
+export const getLeaderboardUserStats = async (): Promise<{ message: string; data: LeaderboardUserStats }> => {
+  return apiRequest('/leaderboard/user-stats');
 };
 

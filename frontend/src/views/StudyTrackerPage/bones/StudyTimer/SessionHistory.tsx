@@ -424,7 +424,6 @@ const SessionHistory: React.FC<SessionHistoryProps> = ({ refreshTrigger = 0 }) =
               total={totalCount}
               pageSize={pageSize}
               showSizeChanger={false}
-              showQuickJumper
               onChange={(p) => setPage(p)}
             />
 

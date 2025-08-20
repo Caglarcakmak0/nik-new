@@ -348,6 +348,31 @@ const StudyStatistics: React.FC<StudyStatisticsProps> = ({ refreshTrigger = 0 })
     );
   }
 
+  // Helper functions for performance view
+  const getMoodColor = (mood: string, opacity: number = 1) => {
+    switch (mood) {
+      case 'happy': return `rgba(255, 77, 79, ${opacity})`; // Red
+      case 'focused': return `rgba(250, 173, 20, ${opacity})`; // Orange
+      case 'productive': return `rgba(82, 196, 26, ${opacity})`; // Green
+      case 'tired': return `rgba(255, 255, 255, ${opacity})`; // White
+      case 'anxious': return `rgba(255, 255, 255, ${opacity})`; // White
+      case 'distracted': return `rgba(255, 255, 255, ${opacity})`; // White
+      default: return `rgba(255, 255, 255, ${opacity})`; // Default white
+    }
+  };
+
+  const getMoodDisplayName = (mood: string) => {
+    switch (mood) {
+      case 'happy': return 'Mutlu';
+      case 'focused': return 'Odaklı';
+      case 'productive': return 'Üretken';
+      case 'tired': return 'Yorgun';
+      case 'anxious': return 'Endişeli';
+      case 'distracted': return 'Dikkat Dağınıklığı';
+      default: return mood;
+    }
+  };
+
   return (
     <div className="study-statistics">
       {/* Modern Header */}
@@ -687,91 +712,170 @@ const StudyStatistics: React.FC<StudyStatisticsProps> = ({ refreshTrigger = 0 })
 
       {/* Performance View */}
       {view === 'performance' && (
-        <div className="visualization-section">
-          <div className="chart-container">
-            <div className="chart-header">
-              <h3>Performans Analizi</h3>
-              <div className="chart-controls">
-                <Button size="small" type="text">Detaylar</Button>
+        <div className="performance-dashboard">
+          {/* Ana Performans Kartları */}
+          <div className="performance-metrics">
+            <div className="performance-card primary">
+              <div className="card-header">
+                <div className="card-icon">
+                  <TrophyOutlined />
+                </div>
+                <div className="card-trend positive">
+                  <span>↗</span>
+                  <span>+15%</span>
+                </div>
+              </div>
+              <div className="card-content">
+                <div className="card-value">{stats.averageQuality}/5</div>
+                <div className="card-label">Ortalama Kalite</div>
+                <div className="card-description">
+                  Çalışma oturumlarınızın ortalama kalite puanı
+                </div>
+              </div>
+              <div className="card-progress">
+                <Progress 
+                  percent={Math.round((stats.averageQuality / 5) * 100)} 
+                  strokeColor={{
+                    '0%': '#ff4d4f',
+                    '50%': '#faad14',
+                    '100%': '#52c41a',
+                  }}
+                  showInfo={false}
+                />
               </div>
             </div>
-            <div className="analysis-content">
-              {Object.entries(stats.moodBreakdown)
-                .sort(([,a], [,b]) => b - a)
-                .map(([mood, count]) => (
-                  <div key={mood} className="analysis-item">
-                    <div className="item-info">
-                      <div className="item-avatar" style={{ backgroundColor: '#f59e0b' }}>
-                        <SmileOutlined />
-                      </div>
-                      <div className="item-details">
-                        <div className="item-name">{mood}</div>
-                        <div className="item-description">
-                          {count} oturum
-                        </div>
-                      </div>
-                    </div>
-                    <div className="item-metrics">
-                      <div className="item-value">
-                        {Math.round((count as number / stats.sessionsCount) * 100)}%
-                      </div>
-                    </div>
-                  </div>
-                ))}
+
+            <div className="performance-card secondary">
+              <div className="card-header">
+                <div className="card-icon">
+                  <BarChartOutlined />
+                </div>
+                <div className="card-trend positive">
+                  <span>↗</span>
+                  <span>+8%</span>
+                </div>
+              </div>
+              <div className="card-content">
+                <div className="card-value">%{stats.averageEfficiency}</div>
+                <div className="card-label">Verimlilik</div>
+                <div className="card-description">
+                  Çalışma oturumlarınızın ortalama verimlilik oranı
+                </div>
+              </div>
+              <div className="card-progress">
+                <Progress 
+                  percent={stats.averageEfficiency} 
+                  strokeColor="#1890ff"
+                  showInfo={false}
+                />
+              </div>
+            </div>
+
+                      <div className="performance-card tertiary">
+            <div className="card-header">
+              <div className="card-icon">
+                <ClockCircleOutlined />
+              </div>
+              <div className="card-trend positive">
+                <span>↗</span>
+                <span>+12%</span>
+              </div>
+            </div>
+            <div className="card-content">
+              <div className="card-value">{formatTime(stats.dailyAverage)}</div>
+              <div className="card-label">Günlük Ortalama</div>
+              <div className="card-description">
+                Günlük ortalama çalışma süreniz
+              </div>
+            </div>
+            <div className="card-progress">
+              <Progress 
+                percent={Math.min(100, (stats.dailyAverage / 180) * 100)} 
+                strokeColor="#10b981"
+                showInfo={false}
+              />
             </div>
           </div>
 
-          <div className="insights-panel">
-            <div className="insights-header">
-              <h3>Performans İçgörüleri</h3>
-              <p>Çalışma performansınızın detaylı analizi</p>
-            </div>
-            
-            <div className="insight-item">
-              <div className="insight-icon" style={{ backgroundColor: '#ef4444' }}>
+          <div className="performance-card distraction">
+            <div className="card-header">
+              <div className="card-icon">
                 <PhoneOutlined />
               </div>
-              <div className="insight-content">
-                <div className="insight-title">Dikkat Dağınıklığı</div>
-                <div className="insight-value">
-                  {stats.totalDistractions} kez (oturum başına {Math.round(stats.totalDistractions / stats.sessionsCount * 10) / 10})
-                </div>
-              </div>
-              <div className="insight-trend negative">
-                -5%
+              <div className="card-trend negative">
+                <span>↘</span>
+                <span>-5%</span>
               </div>
             </div>
-
-            <div className="insight-item">
-              <div className="insight-icon" style={{ backgroundColor: '#1890ff' }}>
-                <CalendarOutlined />
-              </div>
-              <div className="insight-content">
-                <div className="insight-title">Günlük Ortalama</div>
-                <div className="insight-value">
-                  {formatTime(stats.dailyAverage)} çalışma süresi
-                </div>
-              </div>
-              <div className="insight-trend positive">
-                +12%
+            <div className="card-content">
+              <div className="card-value">{stats.totalDistractions}</div>
+              <div className="card-label">Dikkat Dağınıklığı</div>
+              <div className="card-description">
+                Toplam dikkat dağınıklığı sayısı
               </div>
             </div>
-
-            <div className="insight-item">
-              <div className="insight-icon" style={{ backgroundColor: '#10b981' }}>
-                <BarChartOutlined />
-              </div>
-              <div className="insight-content">
-                <div className="insight-title">Verimlilik</div>
-                <div className="insight-value">
-                  %{stats.averageEfficiency} ortalama
-                </div>
-              </div>
-              <div className="insight-trend positive">
-                +8%
-              </div>
+            <div className="card-progress">
+              <Progress 
+                percent={Math.min(100, (stats.totalDistractions / (stats.sessionsCount * 3)) * 100)} 
+                strokeColor="#ef4444"
+                showInfo={false}
+              />
             </div>
           </div>
+          </div>
+
+                     {/* Ruh Hali Analizi */}
+           <div className="performance-analysis">
+             <div className="analysis-main">
+               <div className="analysis-card">
+                 <div className="analysis-header">
+                   <div className="header-content">
+                     <div className="header-icon">
+                       <SmileOutlined />
+                     </div>
+                     <div className="header-text">
+                       <h3>Ruh Hali Analizi</h3>
+                       <p>Çalışma oturumlarınızdaki ruh hali dağılımı</p>
+                     </div>
+                   </div>
+                   <div className="header-actions">
+                     <Button size="small" type="text">Detaylar</Button>
+                   </div>
+                 </div>
+                 <div className="analysis-content">
+                   {Object.entries(stats.moodBreakdown)
+                     .sort(([,a], [,b]) => b - a)
+                     .map(([mood, count], index) => (
+                       <div key={mood} className="analysis-item">
+                         <div className="item-info">
+                           <div className="item-avatar" style={{ 
+                             background: `linear-gradient(135deg, ${getMoodColor(mood)} 0%, ${getMoodColor(mood, 0.8)} 100%)` 
+                           }}>
+                             <SmileOutlined />
+                           </div>
+                           <div className="item-details">
+                             <div className="item-name">{getMoodDisplayName(mood)}</div>
+                             <div className="item-description">
+                               {count} oturum • {Math.round((count as number / stats.sessionsCount) * 100)}%
+                             </div>
+                           </div>
+                         </div>
+                         <div className="item-metrics">
+                           <div className="item-progress">
+                             <Progress 
+                               percent={Math.round((count as number / stats.sessionsCount) * 100)} 
+                               size="small"
+                               strokeColor={getMoodColor(mood)}
+                               showInfo={false}
+                             />
+                           </div>
+                         </div>
+                       </div>
+                     ))}
+                 </div>
+               </div>
+             </div>
+           </div>
         </div>
       )}
     </div>

@@ -252,7 +252,6 @@ export const FeedbackList: React.FC = () => {
                 total={totalCount}
                 pageSize={pageSize}
                 showSizeChanger={false}
-                showQuickJumper
                 onChange={(p) => setPage(p)}
                 size="small"
               />

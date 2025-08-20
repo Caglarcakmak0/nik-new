@@ -29,8 +29,6 @@ import {
   ClockCircleOutlined,
   TrophyOutlined,
   FireOutlined,
-  SyncOutlined,
-  WifiOutlined,
   BellOutlined,
   InfoCircleOutlined,
   StarOutlined,
@@ -317,7 +315,7 @@ const DailyTable: React.FC<DailyTableProps> = ({
   }, [getSubjectKey, subjectInputs, onSubjectUpdate, isOnline]);
 
   const HeaderWithTooltip: React.FC<{ title: string; tooltip?: string }> = ({ title, tooltip }) => (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
       <span>{title}</span>
       {tooltip && (
         <Tooltip title={tooltip} placement="top">
@@ -341,28 +339,25 @@ const DailyTable: React.FC<DailyTableProps> = ({
   // Table columns
   const columns: ColumnsType<Subject & { index: number }> = useMemo(() => [
     {
-      title: <HeaderWithTooltip title="Ders" tooltip={columnTooltips.subject} />,
-      dataIndex: 'subject',
-      key: 'subject',
-      width: 150,
+      title: <HeaderWithTooltip title="Öncelik" tooltip="Ders öncelik seviyesi" />,
+      dataIndex: 'priority',
+      key: 'priority',
+      width: 120,
       fixed: 'left',
-      render: (subject: string, record) => (
-        <div className="subject-cell">
-          <div className="subject-name">
-            {getSubjectDisplayName(subject)}
-          </div>
+      render: (priority: number) => (
+        <div className="priority-cell">
           <span
             className={`priority-badge ${
-              record.priority <= 3 ? 'high' : record.priority <= 6 ? 'medium' : 'low'
+              priority <= 3 ? 'high' : priority <= 6 ? 'medium' : 'low'
             }`}
           >
             <span className="priority-dot" />
-            Öncelik {record.priority}
+            {priority}
           </span>
         </div>
       ),
-      sorter: (a, b) => a.subject.localeCompare(b.subject),
-      sortOrder: sorterState?.orderBy === 'subject' ? sorterState.orderDirection : undefined,
+      sorter: (a, b) => a.priority - b.priority,
+      sortOrder: sorterState?.orderBy === 'priority' ? sorterState.orderDirection : undefined,
       filters: [
         { text: 'Yüksek Öncelik (1-3)', value: 'high' },
         { text: 'Orta Öncelik (4-6)', value: 'medium' },
@@ -376,9 +371,24 @@ const DailyTable: React.FC<DailyTableProps> = ({
       },
     },
     {
+      title: <HeaderWithTooltip title="Ders" tooltip={columnTooltips.subject} />,
+      dataIndex: 'subject',
+      key: 'subject',
+      width: 150,
+      render: (subject: string) => (
+        <div className="subject-cell">
+          <div className="subject-name">
+            {getSubjectDisplayName(subject)}
+          </div>
+        </div>
+      ),
+      sorter: (a, b) => a.subject.localeCompare(b.subject),
+      sortOrder: sorterState?.orderBy === 'subject' ? sorterState.orderDirection : undefined,
+    },
+    {
       title: <HeaderWithTooltip title="Yapılan" tooltip={columnTooltips.completed} />,
       key: 'completed',
-      width: 80,
+      width: 120,
       align: 'center',
       render: (_, record) => {
         const completed = record.correctAnswers + record.wrongAnswers + record.blankAnswers;
@@ -723,7 +733,6 @@ const DailyTable: React.FC<DailyTableProps> = ({
                   total={totalCount}
                   pageSize={pageSize}
                   showSizeChanger={false}
-                  showQuickJumper
                   onChange={(p) => setPage(p)}
                   size="small"
                 />
@@ -749,55 +758,6 @@ const DailyTable: React.FC<DailyTableProps> = ({
 
       {/* Plan Summary with Real-time Status */}
       <Card className="plan-summary" size="small">
-        {/* Real-time Sync Header */}
-        <div className="sync-header">
-          <div className="sync-status">
-            <Badge 
-              status={isOnline ? 'success' : 'error'} 
-              text={isOnline ? 'Çevrimiçi' : 'Çevrimdışı'} 
-            />
-            {pendingUpdates > 0 && (
-              <Badge 
-                count={pendingUpdates} 
-                style={{ backgroundColor: '#f59e0b' }} 
-                title="Bekleyen güncelleme"
-              />
-            )}
-            <span className="sync-text">
-              {isOnline ? 'Bağlantı aktif' : 'Çevrimdışı mod'}
-            </span>
-          </div>
-          
-          <div className="sync-controls">
-            <Tooltip title={`Son güncelleme: ${lastSync.toLocaleTimeString()}`}>
-              <Text type="secondary" style={{ fontSize: '12px' }}>
-                <WifiOutlined /> {lastSync.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
-              </Text>
-            </Tooltip>
-            
-            <Tooltip title="Verileri yenile">
-              <Button
-                type="text"
-                size="small"
-                icon={<SyncOutlined spin={loading} />}
-                onClick={handleManualRefresh}
-                loading={loading}
-                disabled={!isOnline}
-              />
-            </Tooltip>
-            
-            <Tooltip title={autoRefreshEnabled ? 'Otomatik güncellemeyi durdur' : 'Otomatik güncellemeyi başlat'}>
-              <Button
-                type="text"
-                size="small"
-                icon={<WifiOutlined />}
-                onClick={toggleAutoRefresh}
-                style={{ color: autoRefreshEnabled ? '#10b981' : '#64748b' }}
-              />
-            </Tooltip>
-          </div>
-        </div>
-
         <Row gutter={16}>
           <Col xs={12} md={6}>
             <Statistic
@@ -816,58 +776,20 @@ const DailyTable: React.FC<DailyTableProps> = ({
           </Col>
           <Col xs={12} md={6}>
             <Statistic
-              title="Toplam Net"
-              value={Number(plan.stats.netScore ?? 0).toFixed(1)}
-              prefix={<FireOutlined />}
+              title="Toplam Süre"
+              value={plan.stats.totalStudyTime ?? 0}
+              suffix="dk"
+              prefix={<ClockCircleOutlined />}
             />
           </Col>
           <Col xs={12} md={6}>
             <Statistic
-              title="Süre"
-              value={`${Math.round((plan.stats.totalStudyTime ?? 0) / 60)}s`}
-              prefix={<ClockCircleOutlined />}
+              title="Tamamlanma"
+              value={Math.round(plan.stats.completionRate ?? 0)}
+              suffix="%"
             />
           </Col>
         </Row>
-        
-        <div className="overall-progress">
-          <Text strong>Genel İlerleme</Text>
-          <Progress
-            percent={plan.stats.completionRate}
-            status={plan.stats.completionRate === 100 ? 'success' : 'active'}
-          />
-        </div>
-        
-        {/* Motivational Alert */}
-        {showMotivationalAlert && (
-          <Alert
-            message="🌅 Günaydın! Yeni Gün Yeni Umutlar"
-            description="Bugünkü hedeflerinize ulaşmak için harika bir gün! Küçük adımlarla büyük başarılar elde edebilirsiniz."
-            type="info"
-            showIcon
-            closable
-            onClose={() => setShowMotivationalAlert(false)}
-            style={{ 
-              marginTop: '12px'
-            }}
-            action={
-              <Button
-                type="primary"
-                size="small"
-                onClick={() => {
-                  setShowMotivationalAlert(false);
-                  notification.success({
-                    message: 'Motivasyon Yüklendi!',
-                    description: 'Başarıya giden yolda her adım değerli!',
-                    duration: 3
-                  });
-                }}
-              >
-                Başlayalım!
-              </Button>
-            }
-          />
-        )}
       </Card>
 
       {/* Student Feedback Section - Only visible to students */}

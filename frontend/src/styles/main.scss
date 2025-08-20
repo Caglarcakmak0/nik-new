@@ -257,9 +257,9 @@ body {
   box-shadow: 6px 0 18px rgba(0, 0, 0, 0.03);
 }
 
-/* Soft LIGHT mode: sidebar yarı saydam beyaz */
+/* Soft LIGHT mode: sidebar beyaz */
 .theme-light .soft-sider {
-  background: transparent !important;
+  background: #ffffff !important;
   -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
 }

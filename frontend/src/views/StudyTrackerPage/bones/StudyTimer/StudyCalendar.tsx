@@ -609,58 +609,60 @@ const StudyCalendar: React.FC<StudyCalendarProps> = ({ refreshTrigger = 0 }) => 
             marginBottom: 24
           }}
         >
-          <Row gutter={[24, 16]}>
-            <Col xs={12} sm={6} md={3}>
-              <Statistic
-                title={
-                  <Space size="small">
-                    <ClockCircleOutlined style={{ color: '#10b981' }} />
-                    <span style={{ color: '#6b7280', fontSize: '14px' }}>Toplam Süre</span>
-                  </Space>
-                }
-                value={formatTime(stats.totalTime)}
-                valueStyle={{ fontSize: '16px', fontWeight: 600, color: '#1f2937' }}
-              />
-            </Col>
-            <Col xs={12} sm={6} md={3}>
-              <Statistic
-                title={
-                  <Space size="small">
-                    <BookOutlined style={{ color: '#8b5cf6' }} />
-                    <span style={{ color: '#6b7280', fontSize: '14px' }}>Oturum Sayısı</span>
-                  </Space>
-                }
-                value={stats.sessionsCount}
-                valueStyle={{ fontSize: '16px', fontWeight: 600, color: '#1f2937' }}
-              />
-            </Col>
-            <Col xs={12} sm={6} md={3}>
-              <Statistic
-                title={
-                  <Space size="small">
-                    <StarOutlined style={{ color: '#f59e0b' }} />
-                    <span style={{ color: '#6b7280', fontSize: '14px' }}>Ort. Kalite</span>
-                  </Space>
-                }
-                value={stats.averageQuality}
-                suffix="/5"
-                valueStyle={{ fontSize: '16px', fontWeight: 600, color: '#1f2937' }}
-              />
-            </Col>
-            <Col xs={12} sm={6} md={3}>
-              <Statistic
-                title={
-                  <Space size="small">
-                    <EyeOutlined style={{ color: '#3b82f6' }} />
-                    <span style={{ color: '#6b7280', fontSize: '14px' }}>Ort. Verimlilik</span>
-                  </Space>
-                }
-                value={stats.averageEfficiency}
-                suffix="%"
-                valueStyle={{ fontSize: '16px', fontWeight: 600, color: '#1f2937' }}
-              />
-            </Col>
-          </Row>
+          <Card style={{ width: '100%', marginBottom: 16 }}>
+            <Row gutter={[24, 16]}>
+              <Col xs={12} sm={12} md={6}>
+                <Statistic
+                  title={
+                    <Space size="small">
+                      <ClockCircleOutlined style={{ color: '#10b981' }} />
+                      <span style={{ color: '#6b7280', fontSize: '14px' }}>Toplam Süre</span>
+                    </Space>
+                  }
+                  value={formatTime(stats.totalTime)}
+                  valueStyle={{ fontSize: '16px', fontWeight: 600, color: '#1f2937' }}
+                />
+              </Col>
+              <Col xs={12} sm={12} md={6}>
+                <Statistic
+                  title={
+                    <Space size="small">
+                      <BookOutlined style={{ color: '#8b5cf6' }} />
+                      <span style={{ color: '#6b7280', fontSize: '14px' }}>Oturum Sayısı</span>
+                    </Space>
+                  }
+                  value={stats.sessionsCount}
+                  valueStyle={{ fontSize: '16px', fontWeight: 600, color: '#1f2937' }}
+                />
+              </Col>
+              <Col xs={12} sm={12} md={6  }> 
+                <Statistic
+                  title={
+                    <Space size="small">
+                      <StarOutlined style={{ color: '#f59e0b' }} />
+                      <span style={{ color: '#6b7280', fontSize: '14px' }}>Ort. Kalite</span>
+                    </Space>
+                  }
+                  value={stats.averageQuality}
+                  suffix="/5"
+                  valueStyle={{ fontSize: '16px', fontWeight: 600, color: '#1f2937' }}
+                />
+              </Col>
+              <Col xs={12} sm={12} md={6}>
+                <Statistic
+                  title={
+                    <Space size="small">
+                      <EyeOutlined style={{ color: '#3b82f6' }} />
+                      <span style={{ color: '#6b7280', fontSize: '14px' }}>Ort. Verimlilik</span>
+                    </Space>
+                  }
+                  value={stats.averageEfficiency}
+                  suffix="%"
+                  valueStyle={{ fontSize: '16px', fontWeight: 600, color: '#1f2937' }}
+                />
+              </Col>
+            </Row>
+          </Card>
 
           {/* Haftalık Hedef Progress - Sadece hafta seçiliyse göster */}
           {periodType === 'week' && (

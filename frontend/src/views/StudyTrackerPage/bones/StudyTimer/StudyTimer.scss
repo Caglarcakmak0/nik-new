@@ -44,20 +44,20 @@
       }
 
       &.ant-btn-primary {
-        background: linear-gradient(135deg, #40a9ff, #1890ff);
+        background: #1890ff;
         border: none;
         
         &:hover {
-          background: linear-gradient(135deg, #69c0ff, #40a9ff);
+          background: #40a9ff;
         }
       }
 
       &.ant-btn-danger {
-        background: linear-gradient(135deg, #ff7875, #ff4d4f);
+        background: #ff4d4f;
         border: none;
         
         &:hover {
-          background: linear-gradient(135deg, #ffa39e, #ff7875);
+          background: #ff7875;
         }
       }
     }

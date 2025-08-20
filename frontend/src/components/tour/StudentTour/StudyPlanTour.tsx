@@ -7,7 +7,6 @@ export type StudyPlanTargets = {
   getDatePickerEl?: () => HTMLElement | null;
   getDailyTabEl?: () => HTMLElement | null;
   getMonthlyTabEl?: () => HTMLElement | null;
-  getLeaderboardTabEl?: () => HTMLElement | null;
 };
 
 interface StudyPlanTourProps {
@@ -44,11 +43,6 @@ const getSteps = (targets?: StudyPlanTargets): TourProps['steps'] => {
       title: 'Aylık Görünüm',
       description: 'Aylık takvim üzerinden planlarını büyük resimde takip et.',
       target: resolveTarget(targets?.getMonthlyTabEl),
-    },
-    {
-      title: 'Liderlik',
-      description: 'Sıralamadaki yerini ve topluluk aktivitelerini burada takip et.',
-      target: resolveTarget(targets?.getLeaderboardTabEl),
     },
   ];
 

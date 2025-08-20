@@ -17,6 +17,8 @@ const NotificationSchema = new mongoose.Schema({
 // Sık kullanılan sorgular için indeksler
 NotificationSchema.index({ userId: 1, readAt: 1, createdAt: -1 });
 NotificationSchema.index({ createdAt: -1 });
+// Dedupe: aynı kullanıcı + aynı dedupeKey bir kez
+NotificationSchema.index({ userId: 1, dedupeKey: 1 }, { unique: true, partialFilterExpression: { dedupeKey: { $type: 'string' } } });
 
 module.exports = mongoose.model('Notification', NotificationSchema);
 

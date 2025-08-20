@@ -14,7 +14,6 @@ import {
   Modal,
   InputNumber,
   Popconfirm,
-  Upload,
   Avatar,
   Spin,
   App
@@ -25,10 +24,7 @@ import {
   SaveOutlined, 
   PlusOutlined,
   DeleteOutlined,
-  StarOutlined,
-  UploadOutlined,
-  CameraOutlined,
-  LoadingOutlined
+  StarOutlined
 } from '@ant-design/icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { apiRequest, API_BASE_URL } from '../../services/api';
@@ -58,8 +54,6 @@ const Goals: React.FC = () => {
   const [goalsData, setGoalsData] = useState<GoalsData>({ targetUniversities: [] });
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingGoal, setEditingGoal] = useState<TargetUniversity | null>(null);
-  const [uploadingImage, setUploadingImage] = useState(false);
-  const [currentImageUrl, setCurrentImageUrl] = useState<string>('');
   const baseURL = API_BASE_URL;
 
   // Popüler üniversiteler listesi
@@ -228,15 +222,9 @@ const Goals: React.FC = () => {
   const openModal = (goal?: TargetUniversity) => {
     if (goal) {
       setEditingGoal(goal);
-      // Image URL'ini tam URL'ye çevir (eğer relative ise)
-      const imageUrl = goal.image ? 
-        (goal.image.startsWith('http') ? goal.image : `${baseURL}${goal.image}`) 
-        : '';
-      setCurrentImageUrl(imageUrl);
-      form.setFieldsValue({...goal, image: imageUrl});
+      form.setFieldsValue(goal);
     } else {
       setEditingGoal(null);
-      setCurrentImageUrl('');
       form.resetFields();
     }
     setIsModalVisible(true);
@@ -245,79 +233,10 @@ const Goals: React.FC = () => {
   const closeModal = () => {
     setIsModalVisible(false);
     setEditingGoal(null);
-    setCurrentImageUrl('');
     form.resetFields();
   };
 
-  // Image upload handler
-  const handleImageUpload = async (file: File) => {
-    try {
-      setUploadingImage(true);
 
-      const token = localStorage.getItem('token');
-      console.log('Token:', token ? 'exists' : 'not found');
-
-      const formData = new FormData();
-      formData.append('universityImage', file);
-
-      console.log('Uploading to:', `${baseURL}/image/university-upload`);
-
-      const response = await fetch(`${baseURL}/image/university-upload`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: formData
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const result = await response.json();
-      
-      if (!result.data || !result.data.imageUrl) {
-        throw new Error('Invalid response format');
-      }
-
-      const fullImageUrl = `${baseURL}${result.data.imageUrl}`;
-      setCurrentImageUrl(fullImageUrl);
-      form.setFieldValue('image', fullImageUrl);
-      message.success('Fotoğraf başarıyla yüklendi!');
-
-      return fullImageUrl;
-
-    } catch (error) {
-      console.error('Image upload error:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Bilinmeyen hata';
-      message.error(`Fotoğraf yüklenirken hata oluştu: ${errorMessage}`);
-      return false;
-    } finally {
-      setUploadingImage(false);
-    }
-  };
-
-  // Upload component props
-  const uploadProps = {
-    name: 'universityImage',
-    showUploadList: false,
-    beforeUpload: (file: File) => {
-      const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png' || file.type === 'image/webp';
-      if (!isJpgOrPng) {
-        message.error('Sadece JPG, PNG, WEBP formatında dosyalar yükleyebilirsiniz!');
-        return false;
-      }
-      const isLt5M = file.size / 1024 / 1024 < 5;
-      if (!isLt5M) {
-        message.error('Dosya boyutu 5MB\'dan küçük olmalıdır!');
-        return false;
-      }
-      
-      handleImageUpload(file);
-      return false; // Prevent default upload
-    },
-  };
 
   const getPriorityColor = (priority: number) => {
     if (priority <= 3) return 'red';
@@ -542,54 +461,7 @@ const Goals: React.FC = () => {
             />
           </Form.Item>
 
-          {/* Üniversite Fotoğrafı */}
-          <Form.Item
-            label="Üniversite Fotoğrafı"
-            name="image"
-            help="Opsiyonel - Dashboard'da gösterilecek üniversite görseli (Max 5MB)"
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-              {/* Mevcut fotoğraf preview */}
-              {currentImageUrl && (
-                <Avatar 
-                  size={80} 
-                  src={currentImageUrl} 
-                  style={{ 
-                    borderRadius: '8px',
-                    border: '2px solid #d9d9d9'
-                  }}
-                />
-              )}
-              
-              {/* Upload area */}
-              <div style={{ flex: 1 }}>
-                <Upload {...uploadProps}>
-                  <Button 
-                    icon={uploadingImage ? <LoadingOutlined /> : <CameraOutlined />}
-                    loading={uploadingImage}
-                    style={{ width: '100%' }}
-                  >
-                    {currentImageUrl ? 'Fotoğrafı Değiştir' : 'Fotoğraf Yükle'}
-                  </Button>
-                </Upload>
-                
-                {currentImageUrl && (
-                  <Button 
-                    type="link" 
-                    danger 
-                    size="small"
-                    onClick={() => {
-                      setCurrentImageUrl('');
-                      form.setFieldValue('image', '');
-                    }}
-                    style={{ padding: '4px 0', height: 'auto' }}
-                  >
-                    Fotoğrafı Kaldır
-                  </Button>
-                )}
-              </div>
-            </div>
-          </Form.Item>
+
 
           <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
             <Button onClick={closeModal}>İptal</Button>

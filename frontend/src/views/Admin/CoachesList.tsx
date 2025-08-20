@@ -208,7 +208,6 @@ const CoachesList: React.FC = () => {
                 total={total}
                 pageSize={limit}
                 showSizeChanger={false}
-                showQuickJumper
                 onChange={(p, ps) => {
                   setPage(p);
                   if (ps) setLimit(ps);

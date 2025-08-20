@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Card, Select, InputNumber, Space, Button, Typography, Popover, Tooltip, Divider, message, Spin } from 'antd';
+const { Option } = Select;
 import { HighlightOutlined } from '@ant-design/icons';
 import { SUBJECT_TOPIC_BANK } from '../../constants/subjectTopics';
 import { useAuth, useIsCoach, useIsStudent, useIsAdmin } from '../../contexts/AuthContext';
@@ -526,20 +527,24 @@ const TopicMatrix: React.FC = () => {
             <Select
               showSearch
               optionFilterProp="label"
-              style={{ width: 260 }}
+              style={{ width: 200 }}
               value={subject}
               options={subjectOptions}
               onChange={(v) => setSubject(v as SubjectKey)}
               disabled={!canEdit}
             />
-            <InputNumber
-              min={1}
-              max={60}
+            <Select
+              style={{ width: 200 }}
               value={dayCount}
               onChange={(v) => setDayCount(Number(v || 30))}
-              addonBefore="Gün"
               disabled={!canEdit}
-            />
+              placeholder="Gün seçin"
+            >
+              <Option value={28}>28 Gün</Option>
+              <Option value={30}>30 Gün</Option>
+              <Option value={31}>31 Gün</Option>
+            </Select>
+
             {canEdit && (
               <Button onClick={() => { clear(); clearColumnColors(); clearTopicColors(); }}>Temizle</Button>
             )}
@@ -632,80 +637,78 @@ const TopicMatrix: React.FC = () => {
               <div key={`h-${d}`} className="tmx-header tmx-top-sticky" style={{ backgroundColor: columnColors[d] || (isDark ? 'rgba(31, 41, 55, 0.8)' : 'rgb(244, 246, 250)') }}>
                 <Space direction="vertical" size={4} style={{ alignItems: 'center' }}>
                   <Text strong>{d}</Text>
-                  {canEdit && (
-                    <Popover
-                      trigger="click"
-                      content={
-                        <div className="tmx-color-grid">
-                          {(isDark ? PRESET_COLORS_DARK : PRESET_COLORS).map((c) => (
-                            <button 
-                              key={c} 
-                              className="tmx-color-swatch" 
-                              style={{ backgroundColor: c }} 
-                              onClick={() => setColumnColor(d, c)} 
-                            />
-                          ))}
-                          <Divider style={{ margin: '6px 0' }} />
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                            {(isDark ? PRESET_COLORS_DARK : PRESET_COLORS).slice(0, 4).map((c) => (
-                              <button
-                                key={`fill-${c}`}
-                                className="tmx-color-swatch"
-                                style={{ backgroundColor: c, width: '100%' }}
-                                onClick={() => handleFillColumn(d, c)}
-                                title="Sütunu doldur"
-                              />
-                            ))}
-                          </div>
-                        </div>
-                      }
-                      overlayStyle={{ width: 220 }}
-                    >
-                      <Button size="small" icon={<HighlightOutlined />} />
-                    </Popover>
-                  )}
                 </Space>
               </div>
             ))}
 
             {topics.map((topic, rowIndex) => (
               <React.Fragment key={`r-${rowIndex}`}>
-                <div className="tmx-topic tmx-left-sticky" style={{ backgroundColor: topicColors[rowIndex], display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div 
+                  className="tmx-topic tmx-left-sticky" 
+                  style={{ 
+                    backgroundColor: topicColors[rowIndex], 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center',
+                    cursor: canEdit ? 'pointer' : 'default'
+                  }}
+                  onClick={canEdit ? () => {
+                    // Konu rengi seçimi için popover açılacak
+                    const popover = document.createElement('div');
+                    popover.className = 'tmx-color-popover';
+                    popover.style.cssText = `
+                      position: fixed;
+                      top: 50%;
+                      left: 50%;
+                      transform: translate(-50%, -50%);
+                      background: white;
+                      border: 1px solid #ccc;
+                      border-radius: 8px;
+                      padding: 16px;
+                      z-index: 1000;
+                      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                    `;
+                    
+                    const colorGrid = document.createElement('div');
+                    colorGrid.className = 'tmx-color-grid';
+                    colorGrid.style.cssText = `
+                      display: grid;
+                      grid-template-columns: repeat(3, 1fr);
+                      gap: 8px;
+                    `;
+                    
+                    (isDark ? PRESET_COLORS_DARK : PRESET_COLORS).forEach((c) => {
+                      const button = document.createElement('button');
+                      button.className = 'tmx-color-swatch';
+                      button.style.cssText = `
+                        width: 32px;
+                        height: 32px;
+                        border: 1px solid #ccc;
+                        border-radius: 4px;
+                        background-color: ${c};
+                        cursor: pointer;
+                      `;
+                      button.onclick = () => {
+                        setTopicColor(rowIndex, c);
+                        document.body.removeChild(popover);
+                      };
+                      colorGrid.appendChild(button);
+                    });
+                    
+                    popover.appendChild(colorGrid);
+                    document.body.appendChild(popover);
+                    
+                    // Popover dışına tıklandığında kapat
+                    const closePopover = (e: MouseEvent) => {
+                      if (!popover.contains(e.target as Node)) {
+                        document.body.removeChild(popover);
+                        document.removeEventListener('click', closePopover);
+                      }
+                    };
+                    setTimeout(() => document.addEventListener('click', closePopover), 100);
+                  } : undefined}
+                >
                   <Text>{topic}</Text>
-                  {canEdit && (
-                    <Space direction="vertical" size={2}>
-                      <Popover
-                        trigger="click"
-                        content={
-                          <div className="tmx-color-grid">
-                            {(isDark ? PRESET_COLORS_DARK : PRESET_COLORS).map((c) => (
-                              <button key={c} className="tmx-color-swatch" style={{ backgroundColor: c }} onClick={() => handleFillRow(rowIndex, c)} />
-                            ))}
-                          </div>
-                        }
-                      >
-                        <Button size="small" icon={<HighlightOutlined />} title="Satırı doldur" />
-                      </Popover>
-                      <Popover
-                        trigger="click"
-                        content={
-                          <div className="tmx-color-grid">
-                            {(isDark ? PRESET_COLORS_DARK : PRESET_COLORS).map((c) => (
-                              <button 
-                                key={c} 
-                                className="tmx-color-swatch" 
-                                style={{ backgroundColor: c }} 
-                                onClick={() => setTopicColor(rowIndex, c)} 
-                              />
-                            ))}
-                          </div>
-                        }
-                        overlayStyle={{ width: 220 }}
-                      > 
-                        <Button size="small" icon={<HighlightOutlined />} title="Konu rengi" />
-                      </Popover>
-                    </Space>
-                  )}
                 </div>
                 {days.map((d) => (
                   <ColorCell

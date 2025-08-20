@@ -26,6 +26,30 @@ const UsersSchema = mongoose.Schema({
         required: false, 
         default: null 
     },
+
+    // Şifre Sıfırlama (Forgot Password) alanları
+    passwordResetTokenHash: {
+        type: String,
+        required: false,
+        default: null
+    },
+    passwordResetExpiresAt: {
+        type: Date,
+        required: false,
+        default: null
+    },
+
+    // E-posta doğrulama için (opsiyonel)
+    emailVerificationTokenHash: {
+        type: String,
+        required: false,
+        default: null
+    },
+    emailVerificationExpiresAt: {
+        type: Date,
+        required: false,
+        default: null
+    },
     
     // Temel Kişisel Bilgiler
     firstName: { 
@@ -118,6 +142,17 @@ const UsersSchema = mongoose.Schema({
         emailNotifications: { type: Boolean, default: true },
         studyReminders: { type: Boolean, default: true },
         weeklyReports: { type: Boolean, default: true },
+        // In-app bildirim gelişmiş ayarları
+        quietHours: {
+            start: { type: String, default: '22:00' },
+            end: { type: String, default: '08:00' }
+        },
+        dailyReminderTime: { type: String, default: '09:00' },
+        maxNotificationsPerDay: { type: Number, default: 10, min: 1, max: 100 },
+        notificationThresholds: {
+            morningCompletion: { type: Number, default: 25, min: 0, max: 100 },
+            eveningCompletion: { type: Number, default: 75, min: 0, max: 100 }
+        },
         theme: { 
             type: String, 
             enum: ['light', 'dark', 'auto'],

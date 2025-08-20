@@ -4,6 +4,7 @@ const authenticateToken = require('../auth.js');
 const { checkRole } = require('../authRoles.js');
 const DailyPlan = require("../models/DailyPlan.js");
 const StudySession = require("../models/StudySession.js");
+const Notification = require('../models/Notification');
 
 // GET - Kullanıcının günlük planları
 router.get("/", authenticateToken, checkRole('student'), async (req, res) => {
@@ -349,6 +350,24 @@ router.post("/coach-create", authenticateToken, checkRole('coach', 'admin'), asy
         
         await newPlan.save();
         
+        // In-app notification: Coach program created for student
+        try {
+            const dateParam = planDate.toISOString().slice(0,10);
+            await Notification.create({
+                userId: studentId,
+                category: 'coach',
+                type: 'coach_program_created',
+                title: 'Koç programın hazır',
+                body: `${planDate.toLocaleDateString('tr-TR')} tarihli koç programın yayınlandı. Hadi başlayalım!`,
+                actionUrl: `/study-plan?date=${dateParam}`,
+                importance: 'high',
+                dedupeKey: `coach_program_created:${studentId}:${dateParam}`,
+                meta: { dailyPlanId: String(newPlan._id), coachId: String(coachId), date: dateParam }
+            });
+        } catch (e) {
+            console.error('Coach program notification error:', e);
+        }
+
         res.status(201).json({
             message: "Program başarıyla oluşturuldu ve öğrenciye atandı",
             data: newPlan

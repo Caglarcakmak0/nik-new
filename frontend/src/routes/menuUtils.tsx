@@ -6,7 +6,14 @@ import {
   CalendarOutlined,
   ProfileOutlined,
   TeamOutlined,
-  FileTextOutlined
+  FileTextOutlined,
+  BookOutlined,
+  ExperimentOutlined,
+  BulbOutlined,
+  GlobalOutlined,
+  QuestionCircleOutlined,
+  CompassOutlined,
+  TrophyOutlined
 } from "@ant-design/icons";
 import type { MenuItemEx, Role } from "./menuTypes";
 
@@ -69,31 +76,31 @@ export const allMenuItems: MenuItemEx[] = [
   // Öğrenciye özel sayfalar
   {
     key: "/study-tracker",
-    icon: <ClockCircleOutlined />,
+    icon: <ExperimentOutlined />,
     label: "Çalışma Tracker",
     roles: ["student"],
   },
   {
     key: "/study-plan",
-    icon: <CalendarOutlined />,
+    icon: <BookOutlined />,
     label: "Çalışma Programı",
     roles: ["student"],
   },
   {
     key: "/topic-matrix",
-    icon: <CalendarOutlined />,
+    icon: <CompassOutlined />,
     label: "Konu Matrisi",
     roles: ["student", "coach"],
   },
   {
     key: "/student/exams",
-    icon: <FileTextOutlined />,
+    icon: <TrophyOutlined />,
     label: "Denemelerim",
     roles: ["student"],
   },
   {
     key: "/student/coach",
-    icon: <ProfileOutlined />,
+    icon: <BulbOutlined />,
     label: "Koçum",
     roles: ["student"],
   },
@@ -121,7 +128,7 @@ export const allMenuItems: MenuItemEx[] = [
   },
   {
     key: "/admin/statistics",
-    icon: <BarChartOutlined />,
+    icon: <QuestionCircleOutlined />,
     label: "Feedbackler",
     roles: ["admin"],
     disabled: false

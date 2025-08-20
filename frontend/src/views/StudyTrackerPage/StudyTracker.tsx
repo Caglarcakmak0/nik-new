@@ -33,7 +33,7 @@ import {
 } from "@ant-design/icons";
 import { StudyTimer, StudyCalendar, SessionHistory, StudyRoom, StudyStatistics } from "./bones";
 import { apiRequest, getStudentPrograms, StudentProgram } from "../../services/api";
-import dayjs from "dayjs";
+import dayjs from "dayjs";  
 import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/tr"; // Türkçe locale
 
@@ -890,7 +890,7 @@ const StudyTracker: React.FC = () => {
         }}
         footer={null}
         width={600}
-        destroyOnClose
+        destroyOnHidden
       >
         {selectedProgramForTimer && selectedSubjectForTimer && (
           <div>

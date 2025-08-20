@@ -111,7 +111,7 @@ const SessionFeedback: React.FC<SessionFeedbackProps> = ({
             width: '60px',
             height: '60px',
             borderRadius: '50%',
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            background: '#667eea',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -171,7 +171,7 @@ const SessionFeedback: React.FC<SessionFeedbackProps> = ({
               borderRadius: '12px',
               height: '44px',
               padding: '0 32px',
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              background: '#667eea',
               border: 'none',
               fontWeight: '600',
               boxShadow: '0 4px 12px rgba(102, 126, 234, 0.3)'
@@ -185,9 +185,11 @@ const SessionFeedback: React.FC<SessionFeedbackProps> = ({
       centered
       maskClosable={false}
       style={{ top: 20 }}
-      bodyStyle={{ 
-        padding: '0 24px 24px 24px',
-        background: 'linear-gradient(135deg, #f8f9ff 0%, #f0f2ff 100%)'
+      styles={{ 
+        body: { 
+          padding: '0 24px 24px 24px',
+          background: '#f8f9ff'
+        }
       }}
     >
       <div className="session-feedback">

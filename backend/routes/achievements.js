@@ -3,6 +3,7 @@ const router = express.Router();
 const authenticateToken = require("../auth.js");
 const { checkRole } = require("../authRoles.js");
 const Achievement = require("../models/Achievement.js");
+const Notification = require('../models/Notification');
 
 // GET /achievements/user - Kullanıcının achievement'larını getir
 router.get("/user", authenticateToken, async (req, res) => {
@@ -143,6 +144,23 @@ router.post("/unlock", authenticateToken, async (req, res) => {
             await userStats.save();
         }
         
+        // In-app notification: achievement unlocked
+        try {
+            await Notification.create({
+                userId,
+                category: 'gamification',
+                type: 'achievement_unlocked',
+                title: `Yeni rozet: ${achievement.title}`,
+                body: `Tebrikler! ${achievement.points} XP kazandın.`,
+                actionUrl: '/study-plan/achievements',
+                importance: 'normal',
+                dedupeKey: `achievement_unlocked:${userId}:${achievement._id}`,
+                meta: { achievementId: String(achievement._id), points: achievement.points }
+            });
+        } catch (e) {
+            console.error('Achievement notification error:', e);
+        }
+
         res.status(200).json({
             message: "Achievement başarıyla unlock edildi!",
             data: {

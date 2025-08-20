@@ -1,0 +1,232 @@
+@import '../../../../styles/variables';
+@import '../../../../styles/mixins';
+
+// ===== ACTIVE GOALS CAROUSEL STYLES =====
+.active-goals-carousel {
+  border-radius: 16px !important;
+  overflow: hidden !important;
+  
+  .slick-slider {
+    border-radius: 16px !important;
+    overflow: hidden !important;
+  }
+  
+  .slick-list {
+    border-radius: 16px !important;
+    overflow: hidden !important;
+  }
+  
+  .slick-track {
+    border-radius: 16px !important;
+  }
+  
+  .slick-slide {
+    border-radius: 16px !important;
+    overflow: hidden !important;
+    
+    > div {
+      border-radius: 16px !important;
+      overflow: hidden !important;
+      
+      > div {
+        border-radius: 16px !important;
+        overflow: hidden !important;
+      }
+    }
+  }
+}
+
+// ===== CAROUSEL DOTS STYLES =====
+.ant-carousel {
+  .ant-carousel-dots {
+    bottom: -30px !important;
+    
+    li {
+      margin: 0 4px !important;
+      
+      button {
+        background-color: #d9d9d9 !important;
+        border-radius: 50% !important;
+        width: 8px !important;
+        height: 8px !important;
+        transition: all 0.3s ease !important;
+        
+        &:hover {
+          background-color: #bfbfbf !important;
+        }
+      }
+      
+      &.ant-carousel-dot-active {
+        button {
+          background-color: #1890ff !important;
+          
+          &:hover {
+            background-color: #40a9ff !important;
+          }
+        }
+      }
+    }
+  }
+  
+  // Dark theme dots
+  .dark-theme & {
+    .ant-carousel-dots {
+      li {
+        button {
+          background-color: #434343 !important;
+          
+          &:hover {
+            background-color: #595959 !important;
+          }
+        }
+        
+        &.ant-carousel-dot-active {
+          button {
+            background-color: #1890ff !important;
+            
+            &:hover {
+              background-color: #40a9ff !important;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+// ===== GOAL CARD STYLES =====
+.goal-card {
+  height: 320px;
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+  cursor: pointer;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  
+  // Dark theme
+  .dark-theme & {
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  }
+}
+
+// ===== GRADIENT OVERLAY =====
+.gradient-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.7) 100%);
+  z-index: 1;
+}
+
+// ===== CONTENT STYLES =====
+.goal-content {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 24px;
+  color: white;
+  z-index: 2;
+}
+
+.goal-department {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 16px;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.goal-university {
+  color: #ffffff !important;
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 16px;
+}
+
+// ===== EMPTY STATE STYLES =====
+.empty-state {
+  text-align: center;
+  padding: 64px 24px;
+  background: #fafafa;
+  border-radius: 16px;
+  border: 2px dashed #d9d9d9;
+  
+  .dark-theme & {
+    background: #262626;
+    border-color: #434343;
+  }
+}
+
+.empty-state-icon {
+  font-size: 64px;
+  margin-bottom: 24px;
+  opacity: 0.5;
+}
+
+.empty-state-title {
+  margin-bottom: 16px;
+}
+
+.empty-state-description {
+  margin-bottom: 32px;
+  display: block;
+  font-size: 16px;
+  max-width: 400px;
+  margin: 0 auto 32px;
+}
+
+.empty-state-button {
+  height: 48px;
+  padding-left: 24px;
+  padding-right: 24px;
+  font-size: 16px;
+}
+
+// ===== RESPONSIVE DESIGN =====
+@media (max-width: 768px) {
+  .goal-card {
+    height: 280px;
+  }
+  
+  .goal-university {
+    font-size: 24px;
+  }
+  
+  .goal-department {
+    font-size: 14px;
+  }
+  
+  .goal-content {
+    padding: 20px;
+  }
+  
+  .empty-state {
+    padding: 48px 20px;
+  }
+  
+  .empty-state-description {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .goal-card {
+    height: 240px;
+  }
+  
+  .goal-university {
+    font-size: 20px;
+  }
+  
+  .goal-department {
+    font-size: 12px;
+  }
+  
+  .goal-content {
+    padding: 16px;
+  }
+}

@@ -16,7 +16,6 @@ import {
   BarChartOutlined,
   PlusOutlined,
   BulbOutlined,
-  TrophyOutlined,
   GiftOutlined
 } from '@ant-design/icons';
 import { useAuth, useIsStudent, useIsCoach } from '../../contexts/AuthContext';
@@ -27,7 +26,6 @@ import MonthlyCalendar from './bones/MonthlyCalendar/MonthlyCalendar';
 import CreatePlanModal from './bones/CreatePlan/CreatePlanModal';
 import AdvancedAnalytics from './bones/AdvancedAnalytics/AdvancedAnalytics';
 import StudyRecommendations from './bones/StudyRecommendations/StudyRecommendations';
-import Leaderboard from './bones/Leaderboard/Leaderboard';
 import Achievements from './bones/Achievements/Achievements';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
@@ -318,16 +316,7 @@ const StudyPlan: React.FC = () => {
                   />
                 )
               },
-              {
-                key: 'leaderboard',
-                label: (
-                  <span id="tab-leaderboard-label" style={{ fontWeight: 500 }}>
-                    <TrophyOutlined style={{ marginRight: '5px' }} />
-                    Liderlik Tablosu
-                  </span>
-                ),
-                children: <Leaderboard />
-              },
+
               {
                 key: 'achievements',
                 label: (
@@ -415,7 +404,6 @@ const StudyPlan: React.FC = () => {
           getDatePickerEl: () => (datePickerRef.current as any) || null,
           getDailyTabEl: () => document.getElementById('tab-daily-label') as HTMLElement | null,
           getMonthlyTabEl: () => document.getElementById('tab-monthly-label') as HTMLElement | null,
-          getLeaderboardTabEl: () => document.getElementById('tab-leaderboard-label') as HTMLElement | null,
         }}
       />
     </div>

@@ -58,7 +58,7 @@ import {
   Cell
 } from 'recharts';
 
-const { Title, Text, Paragraph } = Typography;
+const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
 const { Option } = Select;
 

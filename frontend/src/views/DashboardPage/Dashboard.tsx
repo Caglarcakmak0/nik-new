@@ -9,14 +9,15 @@ import {
   Progress
 } from 'antd';
 import { 
-  ClockCircleOutlined,
   FireOutlined,
-  TrophyOutlined,
-  LineChartOutlined
+  ThunderboltOutlined
 } from '@ant-design/icons';
 import { useAuth } from '../../contexts/AuthContext';
-import { apiRequest } from '../../services/api';
+import { apiRequest, getLeaderboardUserStats } from '../../services/api';
+import type { LeaderboardUserStats } from '../../services/api';
 import { ActiveGoals } from './bones';
+import { StudyStatistics } from '../StudyTrackerPage/bones';
+import dayjs from 'dayjs';
 
 
 const { Title, Text } = Typography;
@@ -58,6 +59,8 @@ const Dashboard: React.FC = () => {
   const { user } = useAuth();
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [userLeaderboard, setUserLeaderboard] = useState<LeaderboardUserStats | null>(null);
+  const [computedStreak, setComputedStreak] = useState<number | null>(null);
 
   // Dashboard verilerini al
   const fetchDashboardData = async () => {
@@ -93,14 +96,39 @@ const Dashboard: React.FC = () => {
 
   useEffect(() => {
     fetchDashboardData();
+    // Liderlik kullanıcı istatistikleri
+    (async () => {
+      try {
+        const res = await getLeaderboardUserStats();
+        setUserLeaderboard(res.data);
+      } catch (err) {
+        // Sessizce geç; dashboard minimum verilerle yüklenebilir
+      }
+    })();
+    // Study Tracker ile aynı sistem: /study-sessions üzerinden hesapla
+    (async () => {
+      try {
+        const sessions: Array<{ date: string | Date; duration: number; quality: number; efficiency: number }> = await apiRequest('/study-sessions');
+        // Streak hesapla (Study Tracker mantığı)
+        const uniqueDates = Array.from(new Set(sessions.map(s => dayjs(s.date).format('YYYY-MM-DD')))).sort().reverse();
+        let streak = 0;
+        const today = dayjs().format('YYYY-MM-DD');
+        const yesterday = dayjs().subtract(1, 'day').format('YYYY-MM-DD');
+        if (uniqueDates[0] === today || uniqueDates[0] === yesterday) {
+          streak = 1;
+          for (let i = 1; i < uniqueDates.length; i++) {
+            const prev = dayjs(uniqueDates[i - 1]);
+            const curr = dayjs(uniqueDates[i]);
+            if (prev.diff(curr, 'day') === 1) streak++;
+            else break;
+          }
+        }
+        setComputedStreak(streak);
+      } catch (e) {
+        setComputedStreak(0);
+      }
+    })();
   }, []);
-
-  const formatTime = (minutes: number) => {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return hours > 0 ? `${hours}s ${mins}d` : `${mins}d`;
-  };
-
 
   return (
     <div>
@@ -121,97 +149,61 @@ const Dashboard: React.FC = () => {
       ) : (
         <Space direction="vertical" size="large" style={{ width: '100%' }}>
           
-          {/* Aktif Hedefler - Okul Kartları */}
-          <ActiveGoals 
-            goals={dashboardData?.goalsOverview || []}
-            loading={loading}
-          />
-          {/* Ana İstatistik Kartları */}
+          {/* Üst bölüm: %80 ActiveGoals | %20 sağ kolon */}
           <Row gutter={[16, 16]}>
-            <Col xs={24} sm={12} lg={6}>
-              <Card>
-                <Statistic
-                  title="Toplam Çalışma"
-                  value={dashboardData?.overview.totalStudyTime || 0}
-                  formatter={value => formatTime(Number(value))}
-                  prefix={<ClockCircleOutlined style={{ color: '#1890ff' }} />}
-                />
-              </Card>
+            <Col xs={24} lg={19}>
+              <ActiveGoals 
+                goals={dashboardData?.goalsOverview || []}
+                loading={loading}
+              />
             </Col>
-            <Col xs={24} sm={12} lg={6}>
-              <Card>
-                <Statistic
-                  title="Mevcut Seri"
-                  value={dashboardData?.overview.currentStreak || 0}
-                  suffix="gün"
-                  prefix={<FireOutlined style={{ color: '#ff4d4f' }} />}
-                />
-              </Card>
-            </Col>
-            <Col xs={24} sm={12} lg={6}>
-              <Card>
-                <Statistic
-                  title="Aktif Hedefler"
-                  value={dashboardData?.overview.activeGoals || 0}
-                  prefix={<TrophyOutlined style={{ color: '#faad14' }} />}
-                />
-              </Card>
-            </Col>
-            <Col xs={24} sm={12} lg={6}>
-              <Card>
-                <div>
-                  <Text type="secondary">Profil Tamamlanma</Text>
-                  <br />
-                  <Progress 
-                    percent={dashboardData?.overview.profileCompleteness || 0}
-                    size="small"
-                    status={
-                      (dashboardData?.overview.profileCompleteness || 0) < 50 ? 'exception' : 'normal'
-                    }
-                  />
-                </div>
-              </Card>
+            <Col xs={24} lg={5}>
+              <div style={{  display: 'flex', flexDirection: 'column', paddingTop: '22px' }}>
+                <Space direction="vertical" size={5} style={{ width: '100%', flex: 1 }}>
+                  {/* Leaderboard Card */}
+                  <Card style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                      <Space direction="vertical" style={{ width: '100%' }} size={12}>
+                        <Statistic
+                          title="Mevcut Seri"
+                          value={computedStreak ?? 0}
+                          suffix="gün"
+                          prefix={<FireOutlined style={{ color: '#ff4d4f' }} />}
+                        />
+                        <div>
+                          <Statistic
+                            title="Liderlik Puanın"
+                            value={userLeaderboard?.totalScore || 0}
+                            prefix={<ThunderboltOutlined style={{ color: '#722ed1' }} />}
+                          />
+                          {userLeaderboard && (
+                            <Text type="secondary">#{userLeaderboard.rank} sırada</Text>
+                          )}
+                        </div>
+                      </Space>
+                    </div>
+                  </Card>
+                  
+                  {/* Profil Tamamlama Card */}
+                  <Card style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                      <Text type="secondary">Profil Tamamlanma</Text>
+                      <br />
+                      <Progress 
+                        percent={dashboardData?.overview.profileCompleteness || 0}
+                        size="small"
+                        status={
+                          (dashboardData?.overview.profileCompleteness || 0) < 50 ? 'exception' : 'normal'
+                        }
+                      />
+                    </div>
+                  </Card>
+                </Space>
+              </div>
             </Col>
           </Row>
-
-
-          {/* Haftalık Trend */}
-          {dashboardData?.weeklyTrend && (
-            <Card title="Bu Hafta" extra={<LineChartOutlined />}>
-              <Row gutter={16}>
-                <Col xs={12} md={6}>
-                  <Statistic
-                    title="Çalışma Süresi"
-                    value={formatTime(dashboardData.weeklyTrend.totalTime)}
-                    valueStyle={{ fontSize: '16px' }}
-                  />
-                </Col>
-                <Col xs={12} md={6}>
-                  <Statistic
-                    title="Oturum Sayısı"
-                    value={dashboardData.weeklyTrend.sessionCount}
-                    valueStyle={{ fontSize: '16px' }}
-                  />
-                </Col>
-                <Col xs={12} md={6}>
-                  <Statistic
-                    title="Ortalama Kalite"
-                    value={dashboardData.weeklyTrend.averageQuality.toFixed(1)}
-                    suffix="/5"
-                    valueStyle={{ fontSize: '16px' }}
-                  />
-                </Col>
-                <Col xs={12} md={6}>
-                  <Statistic
-                    title="Verimlilik"
-                    value={Math.round(dashboardData.weeklyTrend.averageEfficiency)}
-                    suffix="%"
-                    valueStyle={{ fontSize: '16px' }}
-                  />
-                </Col>
-              </Row>
-            </Card>
-          )}
+          {/* Study Tracker İstatistikler Sekmesi */}
+          <StudyStatistics />
         </Space>
       )}
     </div>
