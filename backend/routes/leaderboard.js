@@ -124,52 +124,6 @@ router.get("/user-stats", authenticateToken, async (req, res) => {
     }
 });
 
-// Competitions endpoint
-router.get("/competitions/active", authenticateToken, async (req, res) => {
-    try {
-        const userId = req.user?.userId;
-        
-        if (!userId) {
-            return res.status(401).json({ message: 'User ID not found in token' });
-        }
-        
-        const Competition = require('../models/Competition');
-        
-        // Aktif yarışmaları getir
-        const competitions = await Competition.find({ 
-            status: 'active',
-            endDate: { $gt: new Date() }
-        }).populate('createdBy', 'name');
-        
-        const formattedCompetitions = competitions.map(comp => ({
-            id: comp._id.toString(),
-            title: comp.title,
-            description: comp.description,
-            type: comp.type,
-            startDate: comp.startDate,
-            endDate: comp.endDate,
-            participants: comp.participants.length,
-            prizes: comp.prizes.map(prize => ({
-                position: 1,
-                title: prize.name,
-                description: prize.description,
-                points: parseInt(prize.value) || 100
-            })),
-            isActive: comp.status === 'active',
-            isJoined: comp.participants.includes(userId)
-        }));
-        
-        res.status(200).json({
-            message: "Aktif yarışmalar başarıyla getirildi",
-            data: formattedCompetitions
-        });
-        
-    } catch (error) {
-        console.error('GET /leaderboard/competitions/active error:', error);
-        res.status(500).json({ message: error.message });
-    }
-});
-
 // GET /leaderboard/:period - Liderlik tablosu getir
 router.get("/:period", authenticateToken, async (req, res) => {
     try {

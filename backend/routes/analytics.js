@@ -118,96 +118,17 @@ router.get("/dashboard", authenticateToken, async (req, res) => {
     }
 });
 
-// Detaylı İstatistikler
-router.get("/detailed", authenticateToken, async (req, res) => {
-    try {
-        const userId = req.user.userId;
-        const { period = '30', subject } = req.query;
-        
-        // Tarih aralığını belirle
-        const daysAgo = new Date();
-        daysAgo.setDate(daysAgo.getDate() - parseInt(period));
-        
-        // Query oluştur
-        const query = {
-            userId: userId,
-            date: { $gte: daysAgo }
-        };
-        
-        if (subject && subject !== 'all') {
-            query.subject = subject;
-        }
+// UNUSED: Detaylı İstatistikler (devre dışı)
+// router.get("/detailed", authenticateToken, async (req, res) => {
+//   // disabled
+//   return res.status(410).json({ message: 'Endpoint devre dışı' });
+// });
 
-        const sessions = await StudySession.find(query).sort({ date: -1 });
-        
-        // Detaylı analiz
-        const analysis = {
-            totalSessions: sessions.length,
-            totalTime: sessions.reduce((sum, s) => sum + s.duration, 0),
-            averageDuration: sessions.length > 0 ? sessions.reduce((sum, s) => sum + s.duration, 0) / sessions.length : 0,
-            averageQuality: sessions.length > 0 ? sessions.reduce((sum, s) => sum + s.quality, 0) / sessions.length : 0,
-            averageEfficiency: sessions.length > 0 ? sessions.reduce((sum, s) => sum + s.efficiency, 0) / sessions.length : 0,
-            totalDistractions: sessions.reduce((sum, s) => sum + s.distractions, 0),
-            
-            // Haftalık breakdown
-            weeklyBreakdown: generateWeeklyBreakdown(sessions),
-            
-            // En iyi ve en kötü günler
-            bestDay: getBestDay(sessions),
-            worstDay: getWorstDay(sessions),
-            
-            // Trend analizi
-            trendAnalysis: calculateTrend(sessions)
-        };
-
-        res.status(200).json({
-            message: "Detaylı istatistikler başarıyla getirildi",
-            data: analysis
-        });
-
-    } catch (error) {
-        console.error('Detailed analytics error:', error);
-        res.status(500).json({ message: "Detaylı istatistikler alınamadı: " + error.message });
-    }
-});
-
-// Hedef İlerlemesi
-router.get("/goals-progress", authenticateToken, async (req, res) => {
-    try {
-        const userId = req.user.userId;
-        
-        const goals = await StudyGoal.find({ userId: userId }).sort({ createdAt: -1 });
-        
-        const goalsWithProgress = await Promise.all(goals.map(async (goal) => {
-            // Bu hedef için son çalışmaları al
-            const sessions = await StudySession.find({
-                userId: userId,
-                subject: goal.subject,
-                date: { $gte: goal.startDate, $lte: goal.endDate }
-            });
-            
-            const totalStudied = sessions.reduce((sum, s) => sum + s.duration, 0);
-            const expectedTotal = goal.dailyTarget * goal.daysRemaining;
-            
-            return {
-                ...goal.toObject(),
-                actualProgress: totalStudied,
-                expectedProgress: expectedTotal,
-                isOnTrack: totalStudied >= expectedTotal * 0.8, // %80 tolerance
-                recentSessions: sessions.slice(-5)
-            };
-        }));
-
-        res.status(200).json({
-            message: "Hedef ilerlemeleri başarıyla getirildi",
-            data: goalsWithProgress
-        });
-
-    } catch (error) {
-        console.error('Goals progress error:', error);
-        res.status(500).json({ message: "Hedef ilerlemeleri alınamadı: " + error.message });
-    }
-});
+// UNUSED: Hedef İlerlemesi (devre dışı)
+// router.get("/goals-progress", authenticateToken, async (req, res) => {
+//   // disabled
+//   return res.status(410).json({ message: 'Endpoint devre dışı' });
+// });
 
 // Helper Functions
 function generateDailyDistribution(sessions) {
@@ -262,111 +183,6 @@ function generateSubjectDistribution(sessions) {
     });
     
     return subjectData;
-}
-
-function generateWeeklyBreakdown(sessions) {
-    // Son 4 haftanın verilerini hesapla
-    const weeks = [];
-    const today = new Date();
-    
-    for (let i = 3; i >= 0; i--) {
-        const weekStart = new Date(today);
-        weekStart.setDate(today.getDate() - (i * 7) - today.getDay());
-        
-        const weekEnd = new Date(weekStart);
-        weekEnd.setDate(weekStart.getDate() + 6);
-        
-        const weekSessions = sessions.filter(s => 
-            s.date >= weekStart && s.date <= weekEnd
-        );
-        
-        weeks.push({
-            week: `${weekStart.getMonth() + 1}/${weekStart.getDate()}`,
-            totalTime: weekSessions.reduce((sum, s) => sum + s.duration, 0),
-            sessionCount: weekSessions.length,
-            averageQuality: weekSessions.length > 0 
-                ? weekSessions.reduce((sum, s) => sum + s.quality, 0) / weekSessions.length 
-                : 0
-        });
-    }
-    
-    return weeks;
-}
-
-function getBestDay(sessions) {
-    if (sessions.length === 0) return null;
-    
-    const dailyTotals = {};
-    sessions.forEach(session => {
-        const dateStr = session.date.toISOString().split('T')[0];
-        if (!dailyTotals[dateStr]) {
-            dailyTotals[dateStr] = { totalTime: 0, totalQuality: 0, count: 0 };
-        }
-        dailyTotals[dateStr].totalTime += session.duration;
-        dailyTotals[dateStr].totalQuality += session.quality;
-        dailyTotals[dateStr].count += 1;
-    });
-    
-    let bestDay = null;
-    let bestScore = 0;
-    
-    Object.keys(dailyTotals).forEach(date => {
-        const data = dailyTotals[date];
-        const score = data.totalTime * (data.totalQuality / data.count);
-        if (score > bestScore) {
-            bestScore = score;
-            bestDay = { date, ...data, averageQuality: data.totalQuality / data.count };
-        }
-    });
-    
-    return bestDay;
-}
-
-function getWorstDay(sessions) {
-    if (sessions.length === 0) return null;
-    
-    const dailyTotals = {};
-    sessions.forEach(session => {
-        const dateStr = session.date.toISOString().split('T')[0];
-        if (!dailyTotals[dateStr]) {
-            dailyTotals[dateStr] = { totalTime: 0, totalQuality: 0, count: 0 };
-        }
-        dailyTotals[dateStr].totalTime += session.duration;
-        dailyTotals[dateStr].totalQuality += session.quality;
-        dailyTotals[dateStr].count += 1;
-    });
-    
-    let worstDay = null;
-    let worstScore = Infinity;
-    
-    Object.keys(dailyTotals).forEach(date => {
-        const data = dailyTotals[date];
-        const score = data.totalTime * (data.totalQuality / data.count);
-        if (score < worstScore) {
-            worstScore = score;
-            worstDay = { date, ...data, averageQuality: data.totalQuality / data.count };
-        }
-    });
-    
-    return worstDay;
-}
-
-function calculateTrend(sessions) {
-    if (sessions.length < 2) return { direction: 'stable', percentage: 0 };
-    
-    const mid = Math.floor(sessions.length / 2);
-    const firstHalf = sessions.slice(0, mid);
-    const secondHalf = sessions.slice(mid);
-    
-    const firstAvg = firstHalf.reduce((sum, s) => sum + s.duration, 0) / firstHalf.length;
-    const secondAvg = secondHalf.reduce((sum, s) => sum + s.duration, 0) / secondHalf.length;
-    
-    const change = ((secondAvg - firstAvg) / firstAvg) * 100;
-    
-    return {
-        direction: change > 5 ? 'increasing' : change < -5 ? 'decreasing' : 'stable',
-        percentage: Math.abs(change).toFixed(1)
-    };
 }
 
 module.exports = router;
