@@ -1,0 +1,28 @@
+<div class="wrapper">
+  <div class="container">
+    <div class="header">
+      {{#if logoUrl}}
+        <img src="{{logoUrl}}" alt="Logo" width="28" height="28" style="display:block;border-radius:6px;" />
+      {{/if}}
+      <div class="brand">{{brandName}}</div>
+    </div>
+
+    <div class="content">
+      <h2 style="margin-top:0;">E‑posta Doğrulama</h2>
+      <p>Merhaba {{displayName}},</p>
+      <p>Hesabınızı doğrulamak için aşağıdaki butona tıklayın. Bu bağlantı 24 saat içinde geçerlidir.</p>
+
+      <p style="margin:20px 0;">
+        <a class="btn" href="{{verifyUrl}}" target="_blank">E‑postayı Doğrula</a>
+      </p>
+      <p class="muted">Buton çalışmıyorsa bu linki kopyalayıp yapıştırın:<br/>{{verifyUrl}}</p>
+    </div>
+
+    <div class="footer">
+      © {{year}} {{brandName}} — Tüm hakları saklıdır.
+    </div>
+  </div>
+  <div style="height:24px"></div>
+</div>
+
+

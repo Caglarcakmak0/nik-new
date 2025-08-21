@@ -27,6 +27,26 @@ const UsersSchema = mongoose.Schema({
         default: null 
     },
 
+    // Ürün Katmanı / Plan Bilgileri
+    plan: {
+        tier: { type: String, enum: ['free', 'premium'], default: 'free' },
+        status: { type: String, enum: ['active', 'expired', 'cancelled'], default: 'active' },
+        startedAt: { type: Date, default: Date.now },
+        expiresAt: { type: Date, required: false, default: null }
+    },
+    // Esnek özellik açma/kapama (opsiyonel)
+    entitlements: { type: [String], default: [] },
+    // Limitler ve kullanım sayaçları (basit başlangıç)
+    limits: {
+        activePlansMax: { type: Number, default: 1 },
+        studySessionsPerDay: { type: Number, default: 5 },
+        examsPerMonth: { type: Number, default: 2 }
+    },
+    usage: {
+        studySessionsToday: { type: Number, default: 0 },
+        examsThisMonth: { type: Number, default: 0 }
+    },
+
     // Şifre Sıfırlama (Forgot Password) alanları
     passwordResetTokenHash: {
         type: String,

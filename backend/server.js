@@ -81,12 +81,17 @@ const { startCoachPerformanceJob } = require('./jobs/coachPerformance');
 const { startPerformanceNotificationsJob } = require('./jobs/performanceNotifications');
 const { startLeaderboardNotificationsJob } = require('./jobs/leaderboardNotifications');
 
-app.listen(port, () => {
-    connect();
-    console.log(`Server is running at port ${port}.`);
-    // Başlat: periyodik hesaplama (env ile override edilebilir)
-    startCoachPerformanceJob();
-    // Başlat: performans bildirimleri (öğle/akşam)
-    startPerformanceNotificationsJob();
-    startLeaderboardNotificationsJob();
+app.listen(port, async () => {
+    try {
+        await connect();
+        console.log(`Server is running at port ${port}.`);
+        // Başlat: periyodik hesaplama (env ile override edilebilir)
+        startCoachPerformanceJob();
+        // Başlat: performans bildirimleri (öğle/akşam)
+        startPerformanceNotificationsJob();
+        startLeaderboardNotificationsJob();
+    } catch (error) {
+        console.error('MongoDB connection error:', error);
+        process.exit(1);
+    }
 })

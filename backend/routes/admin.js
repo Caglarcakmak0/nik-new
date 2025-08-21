@@ -9,6 +9,23 @@ const CoachPerformance = require('../models/CoachPerformance');
 const DailyPlan = require('../models/DailyPlan');
 const Motivation = require('../models/Motivation');
 
+// Plan/limit varsayılanları
+function getDefaultLimitsForTier(tier) {
+  if (tier === 'premium') {
+    return {
+      activePlansMax: 50,
+      studySessionsPerDay: 100,
+      examsPerMonth: 100
+    };
+  }
+  // free
+  return {
+    activePlansMax: 1,
+    studySessionsPerDay: 5,
+    examsPerMonth: 2
+  };
+}
+
 // Basit bakım durumu (in-memory). Prod için kalıcı depolama (DB) önerilir.
 let maintenanceState = {
   maintenanceMode: false,
@@ -87,6 +104,91 @@ router.get('/users', async (req, res) => {
     });
   } catch (error) {
     console.error('GET /admin/users error:', error);
+    return res.status(500).json({ message: error.message });
+  }
+});
+
+// ========= Plan Yönetimi =========
+// GET /api/admin/users/:id/plan
+router.get('/users/:id/plan', async (req, res) => {
+  try {
+    const user = await Users.findById(req.params.id).select('plan entitlements limits email firstName lastName');
+    if (!user) return res.status(404).json({ message: 'Kullanıcı bulunamadı' });
+    return res.json({ message: 'Plan bilgisi', data: user });
+  } catch (error) {
+    console.error('GET /admin/users/:id/plan error:', error);
+    return res.status(500).json({ message: error.message });
+  }
+});
+
+// PUT /api/admin/users/:id/plan { tier, status?, expiresAt? , resetLimits?: boolean }
+router.put('/users/:id/plan', async (req, res) => {
+  try {
+    const { tier, status, expiresAt, resetLimits } = req.body || {};
+    if (tier && !['free', 'premium'].includes(String(tier))) {
+      return res.status(400).json({ message: 'Geçersiz tier' });
+    }
+
+    const user = await Users.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: 'Kullanıcı bulunamadı' });
+
+    // Plan güncelle
+    if (!user.plan) user.plan = { tier: 'free', status: 'active', startedAt: new Date(), expiresAt: null };
+    if (tier) user.plan.tier = tier;
+    if (status) user.plan.status = status;
+    if (expiresAt) {
+      const d = new Date(expiresAt);
+      if (!isNaN(d.getTime())) user.plan.expiresAt = d;
+    }
+
+    // Limitleri varsayılana reset
+    if (resetLimits || tier) {
+      user.limits = getDefaultLimitsForTier(user.plan.tier);
+    }
+
+    // Plan değişimi: tokenVersion artır → mevcut tokenlar düşsün
+    user.tokenVersion = (user.tokenVersion || 0) + 1;
+    await user.save();
+
+    const safe = user.toObject();
+    delete safe.password;
+    delete safe.refreshToken;
+    delete safe.refreshTokenVersion;
+    delete safe.refreshTokenExpiresAt;
+    return res.json({ message: 'Plan güncellendi', data: safe });
+  } catch (error) {
+    console.error('PUT /admin/users/:id/plan error:', error);
+    return res.status(500).json({ message: error.message });
+  }
+});
+
+// PUT /api/admin/users/:id/limits { activePlansMax?, studySessionsPerDay?, examsPerMonth? }
+router.put('/users/:id/limits', async (req, res) => {
+  try {
+    const updates = req.body || {};
+    const user = await Users.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: 'Kullanıcı bulunamadı' });
+    user.limits = { ...(user.limits || {}), ...updates };
+    await user.save();
+    return res.json({ message: 'Limitler güncellendi', data: user.limits });
+  } catch (error) {
+    console.error('PUT /admin/users/:id/limits error:', error);
+    return res.status(500).json({ message: error.message });
+  }
+});
+
+// PUT /api/admin/users/:id/entitlements { entitlements: string[] }
+router.put('/users/:id/entitlements', async (req, res) => {
+  try {
+    const ents = Array.isArray(req.body?.entitlements) ? req.body.entitlements : null;
+    if (!ents) return res.status(400).json({ message: 'entitlements array gereklidir' });
+    const user = await Users.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: 'Kullanıcı bulunamadı' });
+    user.entitlements = ents;
+    await user.save();
+    return res.json({ message: 'Entitlements güncellendi', data: user.entitlements });
+  } catch (error) {
+    console.error('PUT /admin/users/:id/entitlements error:', error);
     return res.status(500).json({ message: error.message });
   }
 });

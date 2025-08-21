@@ -29,7 +29,7 @@ const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
-const dayjs = require('dayjs');
+const { sendTemplatedMail } = require('../services/mailer');
 
 dotenv.config();
 
@@ -157,18 +157,21 @@ router.post('/register', async (req, res) => {
         const frontendBase = process.env.FRONTEND_BASE_URL || 'http://localhost:5173';
         const verifyUrl = `${frontendBase}/verify-email?uid=${newUser._id}&token=${rawToken}`;
 
-        // Doğrulama e-postası gönder
-        const subject = 'E-posta Doğrulama';
-        const html = `
-            <div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.6;color:#222">
-                <p>Merhaba ${((firstName || '') + ' ' + (lastName || '')).trim() || lowerEmail.split('@')[0]},</p>
-                <p>Hesabınızı doğrulamak için aşağıdaki bağlantıya tıklayın. Bu bağlantı 24 saat boyunca geçerlidir.</p>
-                <p><a href="${verifyUrl}" target="_blank" style="background:#1677ff;color:#fff;padding:10px 16px;border-radius:6px;text-decoration:none">E‑postayı Doğrula</a></p>
-                <p>Buton çalışmıyorsa bu linki tarayıcınıza yapıştırın:<br/>${verifyUrl}</p>
-            </div>
-        `;
+        // Doğrulama e-postası gönder (templated)
         try {
-            await sendMail(lowerEmail, subject, html);
+            const logoUrl = process.env.LOGO_PUBLIC_URL || `${process.env.API_PUBLIC_URL || ''}/uploads/logoNik.png`;
+            await sendTemplatedMail({
+                to: lowerEmail,
+                subject: 'E‑posta Doğrulama',
+                template: 'verifyEmail',
+                data: {
+                    brandName: 'Nik',
+                    displayName: `${(firstName || '') + ' ' + (lastName || '')}`.trim() || lowerEmail.split('@')[0],
+                    verifyUrl,
+                    logoUrl,
+                    year: new Date().getFullYear()
+                }
+            });
         } catch (e) {
             console.warn('Doğrulama e-postası gönderilemedi:', e);
         }
@@ -385,24 +388,34 @@ router.post('/forgot-password', async (req, res) => {
 
         const frontendBase = process.env.FRONTEND_BASE_URL || 'http://localhost:5173';
         const resetUrl = `${frontendBase}/reset-password?uid=${user._id}&token=${rawToken}`;
+        if (process.env.NODE_ENV !== 'production') {
+            console.log('Password reset link:', resetUrl);
+        }
 
-        // E-posta gönder
-        const fullName = (user.firstName || '') + ' ' + (user.lastName || '');
-        const subject = 'Şifre Sıfırlama Talebiniz';
-        const html = `
-            <div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.6;color:#222">
-                <p>Merhaba ${fullName.trim() || user.email.split('@')[0]},</p>
-                <p>Şifrenizi sıfırlamak için aşağıdaki bağlantıya tıklayın. Bu bağlantı 1 saat boyunca geçerlidir.</p>
-                <p><a href="${resetUrl}" target="_blank" style="background:#1677ff;color:#fff;padding:10px 16px;border-radius:6px;text-decoration:none">Şifremi Sıfırla</a></p>
-                <p>Buton çalışmıyorsa bu linki tarayıcınıza yapıştırın:<br/>${resetUrl}</p>
-                <p>Eğer bu talebi siz oluşturmadıysanız bu mesajı yok sayabilirsiniz.</p>
-            </div>
-        `;
+        // Templated e-posta gönder
         try {
-            await sendMail(user.email, subject, html);
+            const logoUrl = process.env.LOGO_PUBLIC_URL || `${process.env.API_PUBLIC_URL || ''}/uploads/logoNik.png`;
+            const asciiSubject = String(process.env.EMAIL_ASCII_SUBJECT || '').toLowerCase() === 'true';
+            const subject = asciiSubject ? 'Sifre sifirlama talebiniz' : 'Şifre Sıfırlama Talebiniz';
+            await sendTemplatedMail({
+                to: user.email,
+                subject,
+                template: 'passwordReset',
+                data: {
+                    brandName: 'Nik',
+                    displayName: `${(user.firstName || '') + ' ' + (user.lastName || '')}`.trim() || user.email.split('@')[0],
+                    resetUrl,
+                    logoUrl,
+                    year: new Date().getFullYear()
+                }
+            });
         } catch (e) {
             // E-posta gönderilemese bile enumeration koruması için success dön
             console.warn('Şifre sıfırlama e-postası gönderilemedi:', e);
+        }
+        // Dev ortamında debug linki response içine koy (prod'da asla koyma)
+        if (process.env.NODE_ENV !== 'production' || String(process.env.EMAIL_DEBUG_LINK || '').toLowerCase() === 'true') {
+            return res.status(200).json({ message: 'Eğer bu e‑posta kayıtlıysa, sıfırlama bağlantısı gönderildi.', debugResetUrl: resetUrl });
         }
         return uniformResponse();
     } catch (error) {

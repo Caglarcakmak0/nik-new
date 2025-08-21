@@ -5,6 +5,8 @@ const { checkRole } = require('../authRoles.js');
 const DailyPlan = require("../models/DailyPlan.js");
 const StudySession = require("../models/StudySession.js");
 const Notification = require('../models/Notification');
+const Users = require('../models/Users');
+const { requirePlan } = require('../middlewares/plan');
 
 // GET - Kullanıcının günlük planları
 router.get("/", authenticateToken, checkRole('student'), async (req, res) => {
@@ -300,12 +302,17 @@ router.post("/coach-create", authenticateToken, checkRole('coach', 'admin'), asy
         }
         
         // Check if student exists and is actually a student
-        const Users = require('../models/Users');
-        const student = await Users.findById(studentId);
+        const student = await Users.findById(studentId).select('role plan');
         if (!student || student.role !== 'student') {
             return res.status(400).json({ 
                 message: 'Invalid student ID' 
             });
+        }
+
+        // Öğrencinin planı premium mu?
+        const tier = student.plan?.tier || 'free';
+        if (tier !== 'premium') {
+            return res.status(403).json({ message: 'Öğrencinin planı ücretsiz. Koç programı oluşturulamaz.' });
         }
         
         // Create plan date
@@ -357,8 +364,8 @@ router.post("/coach-create", authenticateToken, checkRole('coach', 'admin'), asy
                 userId: studentId,
                 category: 'coach',
                 type: 'coach_program_created',
-                title: 'Koç programın hazır',
-                body: `${planDate.toLocaleDateString('tr-TR')} tarihli koç programın yayınlandı. Hadi başlayalım!`,
+                title: 'Koçun programını hazırladı!',
+                body: `${planDate.toLocaleDateString('tr-TR')} tarihli programınız yayınlandı. Hadi başlayalım!`,
                 actionUrl: `/study-plan?date=${dateParam}`,
                 importance: 'high',
                 dedupeKey: `coach_program_created:${studentId}:${dateParam}`,

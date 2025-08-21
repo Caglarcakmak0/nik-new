@@ -3,6 +3,7 @@ const router = express.Router();
 const authenticateToken = require('../auth');
 const { checkRole } = require('../authRoles');
 const Users = require('../models/Users');
+const { requirePlan } = require('../middlewares/plan');
 const CoachStudent = require('../models/CoachStudent');
 const DailyPlan = require('../models/DailyPlan');
 const StudyProgram = require('../models/StudyProgram');
@@ -288,9 +289,13 @@ router.post('/programs', async (req, res) => {
     }
 
     // Check if student exists and is actually a student
-    const student = await Users.findById(studentId);
+    const student = await Users.findById(studentId).select('role plan');
     if (!student || student.role !== 'student') {
       return res.status(400).json({ message: 'Invalid student ID' });
+    }
+
+    if ((student.plan?.tier || 'free') !== 'premium') {
+      return res.status(403).json({ message: 'Öğrencinin planı ücretsiz. Koç programı oluşturulamaz.' });
     }
 
     // Create plan date
@@ -364,6 +369,12 @@ router.put('/programs/:id', async (req, res) => {
 
     if (plan.source !== 'coach') {
       return res.status(400).json({ message: 'Bu program koç tarafından oluşturulmamış' });
+    }
+
+    // Öğrencinin planı premium mu?
+    const student = await Users.findById(plan.userId).select('plan');
+    if ((student?.plan?.tier || 'free') !== 'premium') {
+      return res.status(403).json({ message: 'Öğrencinin planı ücretsiz. Koç programı güncellenemez.' });
     }
 
     // Güncellenebilir alanlar
@@ -463,6 +474,10 @@ router.delete('/programs/:id', async (req, res) => {
     if (!plan) return res.status(404).json({ message: 'Program bulunamadı' });
     if (plan.source !== 'coach') {
       return res.status(400).json({ message: 'Bu program koç tarafından oluşturulmamış' });
+    }
+    const student = await Users.findById(plan.userId).select('plan');
+    if ((student?.plan?.tier || 'free') !== 'premium') {
+      return res.status(403).json({ message: 'Öğrencinin planı ücretsiz. Koç programı silinemez.' });
     }
     if (!isAdmin && String(plan.coachId) !== String(req.user.userId)) {
       return res.status(403).json({ message: 'Bu programı silme yetkiniz yok' });

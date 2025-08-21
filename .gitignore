@@ -31,3 +31,4 @@ Thumbs.db
 
 # Misc tools
 .turbo/
+backend/.env
