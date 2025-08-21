@@ -7,6 +7,10 @@ import { DesignProvider } from "./contexts/DesignContext";
 import { AntdThemeProvider } from "./contexts/AntdThemeProvider";
 import { ProtectedRoute, HomeRoute } from "./components/layout";
 import Login from "./views/LoginPage/Login";
+import ForgotPassword from "./views/LoginPage/ForgotPassword";
+import ResetPassword from "./views/LoginPage/ResetPassword";
+import Register from "./views/LoginPage/Register";
+import VerifyEmail from "./views/LoginPage/VerifyEmail";
 import Dashboard from "./views/DashboardPage/Dashboard";
 import Profile from "./views/ProfilePage/Profile";
 import EducationInfo from "./views/EducationInfo";
@@ -37,6 +41,10 @@ function ThemedApp() {
       <Router>
             <Routes>
               <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/verify-email" element={<VerifyEmail />} />
               <Route path="/" element={<HomeRoute />} />
               
               {/* Test Error Page Routes */}

@@ -2,6 +2,7 @@ import React from 'react';
 import { Card, Button, Space, Typography, Avatar } from 'antd';
 import { toAbsoluteUrl } from '../../services/api';
 import './CoachProfile.scss';
+import FeatureGate from '../../components/FeatureGate';
 
 type Props = {
   coachName?: string;
@@ -34,7 +35,9 @@ export const CoachProfile: React.FC<Props> = ({ coachName, coachEmail, coachAvat
           <Text type="secondary" className="coach-assignment-date">Atama Tarihi: {new Date(assignedAt).toLocaleDateString('tr-TR')}</Text>
         )}
         <div className="feedback-button">
-          <Button type="primary" onClick={onOpenFeedback}>Gizli Değerlendirme Gönder</Button>
+          <FeatureGate requiredPlan="premium" fallbackMode="banner">
+            <Button type="primary" onClick={onOpenFeedback}>Gizli Değerlendirme Gönder</Button>
+          </FeatureGate>
         </div>
       </Space>
     </Card>

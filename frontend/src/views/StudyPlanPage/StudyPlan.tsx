@@ -8,7 +8,8 @@ import {
   Button,
   DatePicker,
   Tabs,
-  message
+  message,
+  Modal
 } from 'antd';
 import { 
   CalendarOutlined,
@@ -77,6 +78,7 @@ interface DailyPlan {
 
 const StudyPlan: React.FC = () => {
   const { user: _user } = useAuth();
+  const isFree = (_user?.plan?.tier as any) === 'free';
   const isStudent = useIsStudent();
   const isCoach = useIsCoach();
   const [loading, setLoading] = useState(false);
@@ -193,6 +195,20 @@ const StudyPlan: React.FC = () => {
 
   return (
     <div className="study-plan-page">
+      <Modal
+        open={!!isFree}
+        closable={false}
+        maskClosable={false}
+        getContainer={() => (document.querySelector('.app-content') as HTMLElement) || document.body}
+        footer={[
+          <Button key="upgrade" type="primary" onClick={() => { window.location.href = 'https://nikykskoclugu.com.tr/#iletisim'; }}>
+            Premium’a Yükselt
+          </Button>
+        ]}
+      >
+        <Title level={4}>Çalışma Programı</Title>
+        <Text>Bu sayfa, öğrencinin günlük çalışma programını planlama ve takibini içerir. Premium üyelik ile koç yönlendirmeleri ve düzenleme özellikleri aktif olur.</Text>
+      </Modal>
       {/* Header */}
       <div className="page-header" ref={headerRef as any}>
         <Row justify="space-between" align="middle">

@@ -2,10 +2,12 @@
 import { useState, useEffect } from 'react' // useEffect hook'unu ekle
 import { Form, Input, Button, Card, Typography, message, Spin, Checkbox } from 'antd' // Checkbox ekle
 import { UserOutlined, LockOutlined } from '@ant-design/icons'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import { rememberMeService } from '../../services/rememberMe' // Remember Me servisini import et
 import { getCurrentMotivation, type Motivation as MotivationType } from '../../services/api'
+import logoNik from '../../assets/logoNik.png'
+import backgroundImage from '../../assets/UpscaleImage_2_20250710.dd4061c9.jpeg'
 
 const { Title, Text } = Typography
 
@@ -110,12 +112,29 @@ const Login = () => {
       display: 'flex', 
       alignItems: 'center', 
       justifyContent: 'center',
-      backgroundColor: '#f0f2f5'
+      backgroundImage: `url(${backgroundImage})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundRepeat: 'no-repeat',
+      fontFamily: "'Playfair Display', serif"
     }}>
-      <Card style={{ width: 400, padding: '20px' }}>
+      <Card style={{ 
+        width: 400, 
+        padding: '20px',
+        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+        backdropFilter: 'blur(10px)',
+        border: '1px solid rgba(255, 255, 255, 0.2)',
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
+      }}>
         <div style={{ textAlign: 'center', marginBottom: '30px' }}>
-          <Title level={2}>YKS Öğrenci Takip Portalı</Title>
-          <Text type="secondary">Hesabınıza giriş yapın</Text>
+          <div style={{ marginBottom: '20px' }}>
+            <img src={logoNik} alt="NİK Logo" style={{ width: '190px', height: '150px', marginBottom: '10px' }} />
+          </div>
+          <div style={{ marginBottom: '10px' }}>
+            <span style={{ color: '#ff8c00', fontSize: '32px', fontWeight: 'bold', fontFamily: "'Playfair Display', serif" }}>NİK YKS</span>
+            <span style={{ color: '#000000', fontSize: '32px', fontWeight: 'bold', marginLeft: '8px', fontFamily: "'Playfair Display', serif" }}>PORTAL</span>
+          </div>
+          <Text type="secondary" style={{ fontFamily: "'Playfair Display', serif" }}>Hesabınıza giriş yapın</Text>
           {motivation?.text && (
             <div style={{ marginTop: 12, padding: '12px', background: '#fafafa', borderRadius: 8, border: '1px solid #f0f0f0', textAlign: 'left' }}>
               <Text italic>"{motivation.text}"</Text>
@@ -192,6 +211,10 @@ const Login = () => {
             </Button>
           </Form.Item>
         </Form>
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+          <Link to="/forgot-password">Şifremi Unuttum</Link>
+          <Link to="/register">Kayıt Ol</Link>
+        </div>
       </Card>
     </div>
   )

@@ -32,6 +32,7 @@ import {
   UserOutlined,
 } from "@ant-design/icons";
 import { StudyTimer, StudyCalendar, SessionHistory, StudyRoom, StudyStatistics } from "./bones";
+import { useAuth } from "../../contexts/AuthContext";
 import { apiRequest, getStudentPrograms, StudentProgram } from "../../services/api";
 import dayjs from "dayjs";  
 import relativeTime from "dayjs/plugin/relativeTime";
@@ -67,6 +68,8 @@ interface StudyStats {
 }
 
 const StudyTracker: React.FC = () => {
+  const { user } = useAuth();
+  const isFree = (user?.plan?.tier as any) === 'free';
   const [loading, setLoading] = useState(true);
   const [sessions, setSessions] = useState<StudySession[]>([]);
   const [stats, setStats] = useState<StudyStats | null>(null);
@@ -161,90 +164,18 @@ const StudyTracker: React.FC = () => {
   const fetchCoachPrograms = async () => {
     try {
       setProgramsLoading(true);
+      // Free plan için koç programı göstermeyelim
+      if (isFree) {
+        setCoachPrograms([]);
+        return;
+      }
       const response = await getStudentPrograms({
         status: 'active',
         limit: 5
       });
       
-      // Demo data ekleme - gerçek veriler yoksa
       const apiData = response.data || [];
-      const demoData = apiData.length === 0 ? [
-        {
-          _id: 'demo1',
-          title: '🧪 Test Programı - 30 Saniye',
-          date: new Date().toISOString(),
-          status: 'active' as const,
-
-          subjects: [
-            {
-              subject: 'matematik',
-              description: 'Test - Matematik 30 saniye',
-              targetTime: 0.5, // 30 saniye = 0.5 dakika
-              targetQuestions: 1,
-              studyTime: 0,
-              completedQuestions: 0,
-              correctAnswers: 0,
-              wrongAnswers: 0,
-              blankAnswers: 0,
-              status: 'not_started',
-              topics: ['Test'],
-              priority: 10
-            },
-            {
-              subject: 'turkce',
-              description: 'Test - Türkçe 30 saniye', 
-              targetTime: 0.5, // 30 saniye = 0.5 dakika
-              targetQuestions: 1,
-              studyTime: 0,
-              completedQuestions: 0,
-              correctAnswers: 0,
-              wrongAnswers: 0,
-              blankAnswers: 0,
-              status: 'not_started',
-              topics: ['Test'],
-              priority: 8
-            }
-          ],
-          stats: {
-            completionRate: 0,
-            totalStudyTime: 0,
-            totalTargetTime: 1, // 2 x 0.5 dakika
-            totalCompletedQuestions: 0,
-            totalTargetQuestions: 2,
-            netScore: 0
-          }
-        },
-        {
-          _id: 'demo2',
-          title: 'Matematik Yoğunlaşma Programı',
-          date: new Date(Date.now() - 86400000).toISOString(), // Dün
-          status: 'active' as const,
-
-          subjects: [
-            {
-              subject: 'matematik',
-              description: 'Fonksiyonlar ve Türev',
-              targetTime: 120,
-              studyTime: 45,
-              status: 'in_progress'
-            },
-            {
-              subject: 'kimya', 
-              description: 'Organik Kimya',
-              targetTime: 90,
-              studyTime: 90,
-              status: 'completed'
-            }
-          ],
-          stats: {
-            completionRate: 65,
-            totalStudyTime: 135,
-            totalTargetTime: 210
-          }
-        }
-      ] : apiData;
-      
-      setCoachPrograms(demoData);
+      setCoachPrograms(apiData);
     } catch (error) {
       console.error('Coach programs fetch error:', error);
     } finally {
@@ -586,143 +517,155 @@ const StudyTracker: React.FC = () => {
                 label: (
                   <span>
                     <UserOutlined />
-                    Koç Programları
+                    {isFree ? 'Günlük Programlar' : 'Koç Programları'}
                   </span>
                 ),
                 children: (
-                  <Card title="Koç Programlarım" loading={programsLoading}>
-                    {coachPrograms.length === 0 ? (
+                  isFree ? (
+                    <Card>
                       <div style={{ textAlign: 'center', padding: '40px 0' }}>
+                        <Title level={4} style={{ marginBottom: 8 }}>Günlük Programlar</Title>
                         <Text type="secondary">
-                          Koçunuz henüz size program ataması yapmamış.
+                          Bu bölüm, koçunuzun hazırladığı günlük programların takibi içindir. Premium üyelik ile koç programları ve yönlendirmeleri aktif olur.
                         </Text>
+                        <div style={{ marginTop: 16 }}>
+                          <Button type="primary" onClick={() => { window.location.href = 'https://nikykskoclugu.com.tr/#iletisim'; }}>Premium’a Yükselt</Button>
+                        </div>
                       </div>
-                    ) : (
-                      <Space direction="vertical" size="large" style={{ width: '100%' }}>
-                        {coachPrograms.map((program) => {
-                          const isToday = new Date(program.date).toDateString() === new Date().toDateString();
-                          const completionRate = program.stats?.completionRate || 0;
-                          const totalSubjects = program.subjects?.length || 0;
-                          const completedSubjects = program.subjects?.filter(s => s.status === 'completed')?.length || 0;
-                          
-                          return (
-                            <Card key={program._id} size="small" style={{ border: isToday ? '2px solid #52c41a' : undefined }}>
-                              <div style={{ marginBottom: 16 }}>
-                                <Space>
-                                  <Text strong>{program.title}</Text>
-                                  {isToday && (
-                                    <Badge 
-                                      count="BUGÜN" 
-                                      style={{ backgroundColor: '#52c41a' }}
-                                    />
-                                  )}
-                                </Space>
-                                <div style={{ marginTop: 4 }}>
-                                  <Text type="secondary" style={{ fontSize: '12px' }}>
-                                    📅 {new Date(program.date).toLocaleDateString('tr-TR', { 
-                                      weekday: 'long', 
-                                      day: 'numeric', 
-                                      month: 'long' 
-                                    })}
-                                  </Text>
-                                </div>
-                              </div>
-
-
-
-                              <Space size="large" wrap style={{ marginBottom: 16 }}>
-                                <div>
-                                  <Text type="secondary" style={{ display: 'block', fontSize: '12px' }}>İlerleme</Text>
-                                  <Progress 
-                                    type="circle" 
-                                    percent={completionRate} 
-                                    size={50}
-                                    strokeColor="#52c41a"
-                                  />
-                                </div>
-                                <div>
-                                  <Text type="secondary" style={{ display: 'block', fontSize: '12px' }}>Konular</Text>
-                                  <Text strong style={{ fontSize: '16px' }}>
-                                    <BookOutlined /> {completedSubjects}/{totalSubjects}
-                                  </Text>
-                                </div>
-                                <div>
-                                  <Text type="secondary" style={{ display: 'block', fontSize: '12px' }}>Çalışma Süresi</Text>
-                                  <Text strong style={{ fontSize: '16px' }}>
-                                    <ClockCircleOutlined /> {program.stats?.totalStudyTime || 0} dk
-                                  </Text>
-                                </div>
-                              </Space>
-
-                              {program.subjects && program.subjects.length > 0 && (
-                                <div>
-                                  <Text type="secondary" style={{ fontSize: '12px', marginBottom: 8, display: 'block' }}>Konu Detayları:</Text>
-                                  <Space direction="vertical" size="small" style={{ width: '100%' }}>
-                                    {program.subjects.map((subject, idx) => {
-                                      const subjectProgress = (subject.targetTime && subject.targetTime > 0) 
-                                        ? Math.round(((subject.studyTime || 0) / subject.targetTime) * 100) 
-                                        : 0;
-                                      
-                                      return (
-                                        <div key={idx} style={{ 
-                                          padding: '6px 8px', 
-                                          background: '#fafafa', 
-                                          borderRadius: '4px',
-                                          fontSize: '12px'
-                                        }}>
-                                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                            <div>
-                                              <Text strong>{subject.subject?.charAt(0).toUpperCase() + subject.subject?.slice(1)}</Text>
-                                              {subject.description && (
-                                                <div>
-                                                  <Text type="secondary" style={{ fontSize: '11px' }}>
-                                                    {subject.description}
-                                                  </Text>
-                                                </div>
-                                              )}
-                                            </div>
-                                            <Tag 
-                                              color={
-                                                subject.status === 'completed' ? 'success' : 
-                                                subject.status === 'in_progress' ? 'processing' : 'default'
-                                              }
-                                            >
-                                              {subject.status === 'completed' ? 'Tamamlandı' : 
-                                               subject.status === 'in_progress' ? 'Devam Ediyor' : 'Başlanmadı'}
-                                            </Tag>
-                                          </div>
-                                          <Progress 
-                                            percent={Math.min(subjectProgress, 100)} 
-                                            size="small" 
-                                            strokeColor={subjectProgress >= 100 ? '#52c41a' : '#1890ff'}
-                                            style={{ marginTop: 4 }}
-                                          />
-                                        </div>
-                                      );
-                                    })}
+                    </Card>
+                  ) : (
+                    <Card title="Koç Programlarım" loading={programsLoading}>
+                      {coachPrograms.length === 0 ? (
+                        <div style={{ textAlign: 'center', padding: '40px 0' }}>
+                          <Text type="secondary">
+                            Koçunuz henüz size program ataması yapmamış.
+                          </Text>
+                        </div>
+                      ) : (
+                        <Space direction="vertical" size="large" style={{ width: '100%' }}>
+                          {coachPrograms.map((program) => {
+                            const isToday = new Date(program.date).toDateString() === new Date().toDateString();
+                            const completionRate = program.stats?.completionRate || 0;
+                            const totalSubjects = program.subjects?.length || 0;
+                            const completedSubjects = program.subjects?.filter(s => s.status === 'completed')?.length || 0;
+                            
+                            return (
+                              <Card key={program._id} size="small" style={{ border: isToday ? '2px solid #52c41a' : undefined }}>
+                                <div style={{ marginBottom: 16 }}>
+                                  <Space>
+                                    <Text strong>{program.title}</Text>
+                                    {isToday && (
+                                      <Badge 
+                                        count="BUGÜN" 
+                                        style={{ backgroundColor: '#52c41a' }}
+                                      />
+                                    )}
                                   </Space>
+                                  <div style={{ marginTop: 4 }}>
+                                    <Text type="secondary" style={{ fontSize: '12px' }}>
+                                      📅 {new Date(program.date).toLocaleDateString('tr-TR', { 
+                                        weekday: 'long', 
+                                        day: 'numeric', 
+                                        month: 'long' 
+                                      })}
+                                    </Text>
+                                  </div>
                                 </div>
-                              )}
 
-                              <div style={{ marginTop: 16, textAlign: 'right' }}>
-                                <Button 
-                                  type="primary" 
-                                  icon={<PlayCircleOutlined />}
-                                  onClick={() => {
-                                    setSelectedProgram(program);
-                                    setShowProgramModal(true);
-                                  }}
-                                  disabled={completionRate === 100}
-                                >
-                                  {completionRate === 100 ? 'Tamamlandı' : 'Konu Seç ve Başla'}
-                                </Button>
-                              </div>
-                            </Card>
-                          );
-                        })}
-                      </Space>
-                    )}
-                  </Card>
+                                <Space size="large" wrap style={{ marginBottom: 16 }}>
+                                  <div>
+                                    <Text type="secondary" style={{ display: 'block', fontSize: '12px' }}>İlerleme</Text>
+                                    <Progress 
+                                      type="circle" 
+                                      percent={completionRate} 
+                                      size={50}
+                                      strokeColor="#52c41a"
+                                    />
+                                  </div>
+                                  <div>
+                                    <Text type="secondary" style={{ display: 'block', fontSize: '12px' }}>Konular</Text>
+                                    <Text strong style={{ fontSize: '16px' }}>
+                                      <BookOutlined /> {completedSubjects}/{totalSubjects}
+                                    </Text>
+                                  </div>
+                                  <div>
+                                    <Text type="secondary" style={{ display: 'block', fontSize: '12px' }}>Çalışma Süresi</Text>
+                                    <Text strong style={{ fontSize: '16px' }}>
+                                      <ClockCircleOutlined /> {program.stats?.totalStudyTime || 0} dk
+                                    </Text>
+                                  </div>
+                                </Space>
+
+                                {program.subjects && program.subjects.length > 0 && (
+                                  <div>
+                                    <Text type="secondary" style={{ fontSize: '12px', marginBottom: 8, display: 'block' }}>Konu Detayları:</Text>
+                                    <Space direction="vertical" size="small" style={{ width: '100%' }}>
+                                      {program.subjects.map((subject, idx) => {
+                                        const subjectProgress = (subject.targetTime && subject.targetTime > 0) 
+                                          ? Math.round(((subject.studyTime || 0) / subject.targetTime) * 100) 
+                                          : 0;
+                                        
+                                        return (
+                                          <div key={idx} style={{ 
+                                            padding: '6px 8px', 
+                                            background: '#fafafa', 
+                                            borderRadius: '4px',
+                                            fontSize: '12px'
+                                          }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                              <div>
+                                                <Text strong>{subject.subject?.charAt(0).toUpperCase() + subject.subject?.slice(1)}</Text>
+                                                {subject.description && (
+                                                  <div>
+                                                    <Text type="secondary" style={{ fontSize: '11px' }}>
+                                                      {subject.description}
+                                                    </Text>
+                                                  </div>
+                                                )}
+                                              </div>
+                                              <Tag 
+                                                color={
+                                                  subject.status === 'completed' ? 'success' : 
+                                                  subject.status === 'in_progress' ? 'processing' : 'default'
+                                                }
+                                              >
+                                                {subject.status === 'completed' ? 'Tamamlandı' : 
+                                                 subject.status === 'in_progress' ? 'Devam Ediyor' : 'Başlanmadı'}
+                                              </Tag>
+                                            </div>
+                                            <Progress 
+                                              percent={Math.min(subjectProgress, 100)} 
+                                              size="small" 
+                                              strokeColor={subjectProgress >= 100 ? '#52c41a' : '#1890ff'}
+                                              style={{ marginTop: 4 }}
+                                            />
+                                          </div>
+                                        );
+                                      })}
+                                    </Space>
+                                  </div>
+                                )}
+
+                                <div style={{ marginTop: 16, textAlign: 'right' }}>
+                                  <Button 
+                                    type="primary" 
+                                    icon={<PlayCircleOutlined />}
+                                    onClick={() => {
+                                      setSelectedProgram(program);
+                                      setShowProgramModal(true);
+                                    }}
+                                    disabled={completionRate === 100}
+                                  >
+                                    {completionRate === 100 ? 'Tamamlandı' : 'Konu Seç ve Başla'}
+                                  </Button>
+                                </div>
+                              </Card>
+                            );
+                          })}
+                        </Space>
+                      )}
+                    </Card>
+                  )
                 ),
               },
             ]}

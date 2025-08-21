@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { Layout, Menu, Button, Avatar, Typography, Dropdown, Badge, Tooltip, Segmented } from 'antd';
+import { Layout, Menu, Button, Avatar, Typography, Dropdown, Badge, Tooltip, Segmented, List } from 'antd';
 import {
   AimOutlined,
   SettingOutlined,
@@ -10,17 +10,23 @@ import {
   UserOutlined,
   SunOutlined,
   MoonOutlined,
-  
+  DashboardOutlined,
+  BookOutlined,
+  TrophyOutlined,
+  BarChartOutlined,
+  TeamOutlined,
+  CalendarOutlined
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useTheme } from '../../../contexts/ThemeContext';
 import { getPageTitle, getRouteMenuByRole } from '../../../routes/routeMenu';
-import { toAbsoluteUrl } from '../../../services/api';
+import { toAbsoluteUrl, getNotifications, markNotificationRead, markAllNotificationsRead, AppNotification } from '../../../services/api';
 import { useDesign } from '../../../contexts/DesignContext';
 import OnboardingTour from '../../common/OnboardingTour';
 import logoImage from '../../../assets/logoNik.png'; // NİK logo dosyası
 import './AppLayout.scss';
+import NotificationCenter from '../../notifications/NotificationCenter';
 
 const { Header, Sider, Content } = Layout;
 const { Text } = Typography;
@@ -43,12 +49,20 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
 
   // Turu yeniden başlatmak için state (menüden tetiklenecek)
   const [forceOpenKey, setForceOpenKey] = useState<number>(0);
+  const [notifications, setNotifications] = useState<AppNotification[]>([]);
+  const [notifHasMore, setNotifHasMore] = useState<boolean>(false);
+  const [notifNextCursor, setNotifNextCursor] = useState<string | null | undefined>(null);
+  const [notifLoading, setNotifLoading] = useState<boolean>(false);
+  const [unreadCount, setUnreadCount] = useState<number>(0);
+  const [notificationCenterVisible, setNotificationCenterVisible] = useState(false);
+  const [loadingNotifications, setLoadingNotifications] = useState(false);
   const { themeMode, isDark, toggleTheme } = useTheme();
   const { designMode, setDesignMode } = useDesign();
   const isDevEnv = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
   
   // Get role-based menu items
   const menuItems = getRouteMenuByRole(user?.role);
+  const planLabel = user?.role === 'student' ? ((user?.plan?.tier as any) === 'premium' ? 'Premium' : 'Free') : null;
 
   // Menu click handler
   const handleMenuClick = ({ key }: { key: string }) => {
@@ -116,6 +130,53 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
     }
   }, [location.pathname]);
 
+  // Bildirimleri yükle
+  const loadNotifications = async (unreadOnly = false, cursor?: string) => {
+    try {
+      setLoadingNotifications(true);
+      const response = await getNotifications({ 
+        unreadOnly, 
+        limit: 10, 
+        cursor 
+      });
+      
+      if (cursor) {
+        setNotifications(prev => [...prev, ...response.data]);
+      } else {
+        setNotifications(response.data);
+      }
+      
+      setNotifHasMore(response.paging.hasMore);
+      setNotifNextCursor(response.paging.nextCursor || null);
+      
+      // Okunmamış sayısını güncelle
+      const unread = response.data.filter(n => !n.readAt).length;
+      setUnreadCount(unread);
+    } catch (error) {
+      console.error('Bildirimler yüklenemedi:', error);
+    } finally {
+      setLoadingNotifications(false);
+    }
+  };
+
+  // Bildirim sayısını güncelle
+  const updateUnreadCount = (count: number) => {
+    setUnreadCount(count);
+  };
+
+  // Periyodik bildirim kontrolü
+  React.useEffect(() => {
+    loadNotifications(true); // Sadece okunmamışları yükle
+    
+    const interval = setInterval(() => {
+      loadNotifications(true);
+    }, 45000); // 45 saniyede bir
+
+    return () => clearInterval(interval);
+  }, []);
+
+
+
 
 
   const headerClassName = React.useMemo(() => {
@@ -152,6 +213,8 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
     }
   }, [designMode]);
 
+
+
   return (
     <Layout className={`app-layout ${isDark ? 'dark' : 'light'}`}>
       {/* Sidebar */}
@@ -183,7 +246,11 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
           ) : (
             <div className="logo-text">
               <Text strong className="brand-text">
-                NİK YKS
+                NİK YKS{planLabel ? (
+                  <>
+                    {' '}<span style={{ color: '#000' }}>{String(planLabel).toUpperCase()}</span>
+                  </>
+                ) : null}
               </Text>
             </div>
           )}
@@ -290,15 +357,14 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
               </>
             )}
 
-            {/* Notifications */}
-            {/* Gizli değerlendirme bekleniyor rozeti - sadece öğrenci için opsiyonel */}
-            <Badge count={user?.role === 'student' ? 1 : 0} size="small">
+            {/* Notifications Button */}
+            <Badge count={unreadCount} size="small">
               <Button
                 type="text"
                 icon={<BellOutlined />}
                 className="notification-button"
                 aria-label="Bildirimler"
-                // İleride tıklayınca /student/coach sayfasına yönlendirilebilir
+                onClick={() => setNotificationCenterVisible(true)}
               />
             </Badge>
 
@@ -348,6 +414,14 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
           />
         </Content>
       </Layout>
+
+      {/* Bildirim Merkezi */}
+      <NotificationCenter
+        visible={notificationCenterVisible}
+        onClose={() => setNotificationCenterVisible(false)}
+        unreadCount={unreadCount}
+        onUnreadCountChange={updateUnreadCount}
+      />
     </Layout>
   );
 };

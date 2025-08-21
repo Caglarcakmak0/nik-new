@@ -42,7 +42,7 @@ import {
 } from '@ant-design/icons';
 import { ReloadOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
-import { getAdminUsers, updateUser, deleteUser, getAdminFeedbackSummary, getAdminCoachesStatistics,  type FeedbackSummary, createUser, getAdminMotivation, updateAdminMotivation } from '../../services/api';
+import { getAdminUsers, updateUser, deleteUser, getAdminFeedbackSummary, getAdminCoachesStatistics,  type FeedbackSummary, createUser, getAdminMotivation, updateAdminMotivation, getAdminUserPlan, updateAdminUserPlan, updateAdminUserLimits } from '../../services/api';
 import { CoachesStatsList } from '../../components/admin';
 import {
   ResponsiveContainer,
@@ -124,6 +124,8 @@ const AdminDashboard: React.FC = () => {
   const [motivationText, setMotivationText] = useState<string>('');
   const [motivationAuthor, setMotivationAuthor] = useState<string>('');
   const [savingMotivation, setSavingMotivation] = useState<boolean>(false);
+  const [userPlan, setUserPlan] = useState<any | null>(null);
+  const [loadingPlan, setLoadingPlan] = useState(false);
 
 
   // Role colors and text
@@ -801,6 +803,19 @@ const AdminDashboard: React.FC = () => {
           setSelectedUser(null);
         }}
         open={userDrawer}
+        afterOpenChange={async (open) => {
+          if (open && selectedUser) {
+            try {
+              setLoadingPlan(true);
+              const res = await getAdminUserPlan(selectedUser._id);
+              setUserPlan(res?.data || res);
+            } catch (_) {
+              setUserPlan(null);
+            } finally {
+              setLoadingPlan(false);
+            }
+          }
+        }}
       >
         {selectedUser && (
           <Space direction="vertical" style={{ width: '100%' }} size="large">
@@ -890,6 +905,69 @@ const AdminDashboard: React.FC = () => {
                   Hesabı Askıya Al
                 </Button>
               </Space>
+            </Card>
+            <Card title="Plan Yönetimi" size="small" loading={loadingPlan}>
+              {userPlan ? (
+                <>
+                  <Space direction="vertical" style={{ width: '100%' }}>
+                    <Space>
+                      <Text>Plan:</Text>
+                      <Tag color={userPlan.plan?.tier === 'premium' ? 'gold' : 'default'}>
+                        {userPlan.plan?.tier || 'free'}
+                      </Tag>
+                      <Text type="secondary">Durum:</Text>
+                      <Tag>{userPlan.plan?.status || 'active'}</Tag>
+                    </Space>
+                    <Space>
+                      <Button
+                        type={userPlan.plan?.tier === 'premium' ? 'default' : 'primary'}
+                        onClick={async () => {
+                          try {
+                            await updateAdminUserPlan(selectedUser!._id, { tier: 'premium', resetLimits: true });
+                            message.success('Kullanıcı premium yapıldı');
+                            const res = await getAdminUserPlan(selectedUser!._id);
+                            setUserPlan(res?.data || res);
+                          } catch (e: any) { message.error(e?.message || 'Hata'); }
+                        }}
+                      >
+                        Premium Yap
+                      </Button>
+                      <Button
+                        danger={userPlan.plan?.tier === 'premium'}
+                        onClick={async () => {
+                          try {
+                            await updateAdminUserPlan(selectedUser!._id, { tier: 'free', resetLimits: true });
+                            message.success('Kullanıcı free yapıldı');
+                            const res = await getAdminUserPlan(selectedUser!._id);
+                            setUserPlan(res?.data || res);
+                          } catch (e: any) { message.error(e?.message || 'Hata'); }
+                        }}
+                      >
+                        Free Yap
+                      </Button>
+                    </Space>
+                    <Space direction="vertical" style={{ width: '100%' }}>
+                      <Text strong>Limitler</Text>
+                      <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+                        <Button size="small" onClick={async () => {
+                          try { await updateAdminUserLimits(selectedUser!._id, { activePlansMax: 1 }); message.success('Limit güncellendi'); } catch(e:any){ message.error(e?.message||'Hata'); }
+                        }}>Plan: 1</Button>
+                        <Button size="small" onClick={async () => {
+                          try { await updateAdminUserLimits(selectedUser!._id, { activePlansMax: 5 }); message.success('Limit güncellendi'); } catch(e:any){ message.error(e?.message||'Hata'); }
+                        }}>Plan: 5</Button>
+                        <Button size="small" onClick={async () => {
+                          try { await updateAdminUserLimits(selectedUser!._id, { examsPerMonth: 2 }); message.success('Limit güncellendi'); } catch(e:any){ message.error(e?.message||'Hata'); }
+                        }}>Aylık Deneme: 2</Button>
+                        <Button size="small" onClick={async () => {
+                          try { await updateAdminUserLimits(selectedUser!._id, { examsPerMonth: 20 }); message.success('Limit güncellendi'); } catch(e:any){ message.error(e?.message||'Hata'); }
+                        }}>Aylık Deneme: 20</Button>
+                      </div>
+                    </Space>
+                  </Space>
+                </>
+              ) : (
+                <Text type="secondary">Plan bilgisi yüklenemedi</Text>
+              )}
             </Card>
           </Space>
         )}

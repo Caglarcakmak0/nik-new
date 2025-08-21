@@ -1,0 +1,315 @@
+// Notification Center Styles
+.notification-list {
+  .notification-item {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    padding: 16px;
+    margin-bottom: 12px;
+    background: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid #f0f0f0;
+
+    &:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      transform: translateY(-1px);
+    }
+
+    &.unread {
+      background: #f8fffe;
+      border-color: #b7eb8f;
+      box-shadow: 0 2px 8px rgba(82, 196, 26, 0.1);
+    }
+
+    // Sol yeşil şerit
+    .notification-accent {
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: linear-gradient(180deg, #52c41a 0%, #73d13d 100%);
+      border-radius: 8px 0 0 8px;
+    }
+
+    // Başarı ikonu
+    .notification-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      background: #52c41a;
+      border-radius: 50%;
+      margin-right: 12px;
+      flex-shrink: 0;
+
+      .anticon {
+        color: #ffffff;
+        font-size: 16px;
+      }
+    }
+
+    // İçerik alanı
+    .notification-content {
+      flex: 1;
+      min-width: 0;
+
+             .notification-header {
+         display: flex;
+         justify-content: space-between;
+         align-items: flex-start;
+         margin-bottom: 8px;
+
+         .notification-title {
+           flex: 1;
+           font-size: 14px;
+           font-weight: 600;
+           color: #262626;
+           line-height: 1.4;
+           margin-right: 8px;
+
+           .ant-typography {
+             margin: 0;
+           }
+         }
+
+         .notification-actions {
+           display: flex;
+           align-items: center;
+           gap: 8px;
+
+           .notification-time {
+             font-size: 11px;
+             color: #8c8c8c;
+             white-space: nowrap;
+
+             .anticon {
+               font-size: 10px;
+             }
+           }
+
+           .notification-close {
+             padding: 4px;
+             height: auto;
+             border: none;
+             background: transparent;
+             color: #8c8c8c;
+             transition: color 0.2s ease;
+
+             &:hover {
+               color: #262626;
+               background: rgba(0, 0, 0, 0.04);
+             }
+
+             .anticon {
+               font-size: 12px;
+             }
+           }
+         }
+       }
+
+      .notification-body {
+        font-size: 13px;
+        color: #595959;
+        line-height: 1.5;
+        margin-bottom: 8px;
+        display: block;
+
+        .ant-typography {
+          margin: 0;
+        }
+      }
+
+      
+    }
+  }
+}
+
+// Dark theme desteği
+.ant-layout.dark {
+  .notification-list {
+    .notification-item {
+      background: #1f1f1f;
+      border-color: #303030;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+
+      &:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+      }
+
+      &.unread {
+        background: #162312;
+        border-color: #49aa19;
+        box-shadow: 0 2px 8px rgba(82, 196, 26, 0.2);
+      }
+
+      .notification-content {
+        .notification-header {
+          .notification-title {
+            color: #ffffff;
+          }
+
+          .notification-actions {
+            .notification-time {
+              color: #a6a6a6;
+            }
+
+            .notification-close {
+              color: #a6a6a6;
+
+              &:hover {
+                color: #ffffff;
+                background: rgba(255, 255, 255, 0.08);
+              }
+            }
+          }
+        }
+
+        .notification-body {
+          color: #a6a6a6;
+        }
+      }
+    }
+  }
+}
+
+// Neon theme desteği
+.app-layout.neon {
+  .notification-list {
+    .notification-item {
+      background: rgba(255, 255, 255, 0.95);
+      border: 1px solid rgba(82, 196, 26, 0.3);
+      box-shadow: 
+        0 2px 8px rgba(0, 0, 0, 0.1),
+        0 0 0 1px rgba(82, 196, 26, 0.1);
+
+      &:hover {
+        box-shadow: 
+          0 4px 12px rgba(0, 0, 0, 0.15),
+          0 0 0 1px rgba(82, 196, 26, 0.2);
+      }
+
+      &.unread {
+        background: rgba(248, 255, 254, 0.95);
+        border-color: #52c41a;
+        box-shadow: 
+          0 2px 8px rgba(82, 196, 26, 0.2),
+          0 0 0 1px rgba(82, 196, 26, 0.2);
+      }
+
+      .notification-accent {
+        background: linear-gradient(180deg, #52c41a 0%, #73d13d 100%);
+        box-shadow: 0 0 8px rgba(82, 196, 26, 0.5);
+      }
+
+      .notification-icon {
+        background: #52c41a;
+        box-shadow: 0 0 8px rgba(82, 196, 26, 0.5);
+      }
+    }
+  }
+}
+
+// Soft theme desteği
+.app-layout.soft {
+  .notification-list {
+    .notification-item {
+      background: #ffffff;
+      border: 1px solid #e8f5e8;
+      box-shadow: 0 2px 12px rgba(82, 196, 26, 0.08);
+
+      &:hover {
+        box-shadow: 0 4px 16px rgba(82, 196, 26, 0.12);
+      }
+
+      &.unread {
+        background: #f6ffed;
+        border-color: #b7eb8f;
+        box-shadow: 0 2px 12px rgba(82, 196, 26, 0.15);
+      }
+
+      .notification-accent {
+        background: linear-gradient(180deg, #52c41a 0%, #73d13d 100%);
+      }
+
+      .notification-icon {
+        background: linear-gradient(135deg, #52c41a 0%, #73d13d 100%);
+      }
+    }
+  }
+}
+
+// Responsive tasarım
+@media (max-width: 768px) {
+  .notification-list {
+    .notification-item {
+      padding: 12px;
+      margin-bottom: 8px;
+
+      .notification-icon {
+        width: 28px;
+        height: 28px;
+        margin-right: 10px;
+
+        .anticon {
+          font-size: 14px;
+        }
+      }
+
+      .notification-content {
+        .notification-header {
+          .notification-title {
+            font-size: 13px;
+          }
+        }
+
+        .notification-body {
+          font-size: 12px;
+        }
+
+        .notification-footer {
+          .notification-time {
+            font-size: 10px;
+          }
+        }
+      }
+    }
+  }
+}
+
+// Animasyonlar
+.notification-item {
+  animation: slideIn 0.3s ease-out;
+
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateX(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+}
+
+// Loading durumu
+.notification-list-loading {
+  text-align: center;
+  padding: 40px 0;
+}
+
+// Boş durum
+.notification-empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: #8c8c8c;
+
+  .ant-empty-description {
+    color: #8c8c8c;
+  }
+}

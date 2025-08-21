@@ -26,6 +26,34 @@ export const authService = {
     });
   },
 
+  register: async (payload: { email: string; password: string; firstName?: string; lastName?: string }) => {
+    return apiRequest('/users/register', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  },
+
+  verifyEmail: async (params: { uid: string; token: string }) => {
+    return apiRequest('/users/verify-email', {
+      method: 'POST',
+      body: JSON.stringify(params),
+    });
+  },
+
+  requestPasswordReset: async (email: string) => {
+    return apiRequest('/users/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
+  },
+
+  resetPassword: async (params: { uid: string; token: string; newPassword: string }) => {
+    return apiRequest('/users/reset-password', {
+      method: 'POST',
+      body: JSON.stringify(params),
+    });
+  },
+
   logout: () => {
     localStorage.removeItem('token');
     localStorage.removeItem('refreshToken'); // Refresh token'ı da sil

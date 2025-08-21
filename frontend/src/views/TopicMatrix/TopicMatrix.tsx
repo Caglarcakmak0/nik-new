@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Card, Select, InputNumber, Space, Button, Typography, Popover, Tooltip, Divider, message, Spin } from 'antd';
+import { Card, Select, InputNumber, Space, Button, Typography, Popover, Tooltip, Divider, message, Spin, Modal } from 'antd';
 const { Option } = Select;
 import { HighlightOutlined } from '@ant-design/icons';
 import { SUBJECT_TOPIC_BANK } from '../../constants/subjectTopics';
@@ -200,6 +200,7 @@ const TopicMatrix: React.FC = () => {
   const isStudent = useIsStudent();
   const isAdmin = useIsAdmin();
   const canEdit = isCoach || isAdmin;
+  const isFree = (user?.plan?.tier as any) === 'free';
   
   const subjectOptions = useMemo(() => buildSubjectOptions(), []);
   const [subject, setSubject] = useState<SubjectKey>('matematik');
@@ -504,6 +505,22 @@ const TopicMatrix: React.FC = () => {
 
   return (
     <div className="tmx-container">
+      <Modal
+        open={isFree}
+        closable={false}
+        maskClosable={false}
+        getContainer={() => (document.querySelector('.app-content') as HTMLElement) || document.body}
+        footer={[
+          <Button key="upgrade" type="primary" onClick={() => { window.location.href = 'https://nikykskoclugu.com.tr/#iletisim'; }}>
+            Premium’a Yükselt
+          </Button>
+        ]}
+      >
+        <Title level={4}>Konu Matrisi (Aylık Takip)</Title>
+        <Text>
+          Bu sayfa, öğrencinin her derste aylık konu takibini yapmak için kullanılır. Premium üyelik ile düzenleme ve koç yönlendirmeleri aktif olur.
+        </Text>
+      </Modal>
       <Card
         extra={
           <Space wrap>

@@ -664,3 +664,51 @@ export const getLeaderboardUserStats = async (): Promise<{ message: string; data
   return apiRequest('/leaderboard/user-stats');
 };
 
+// ==== In-App Notifications ====
+export type AppNotification = {
+  _id: string;
+  category: 'performance' | 'coach' | 'gamification' | 'system';
+  type: string;
+  title: string;
+  body?: string;
+  actionUrl?: string;
+  importance?: 'low' | 'normal' | 'high';
+  icon?: string;
+  readAt?: string | null;
+  createdAt: string;
+  meta?: any;
+};
+
+export const getNotifications = async (params: { unreadOnly?: boolean; limit?: number; cursor?: string } = {}): Promise<{ message: string; data: AppNotification[]; paging: { hasMore: boolean; nextCursor?: string | null } }> => {
+  const search = new URLSearchParams();
+  if (params.unreadOnly !== undefined) search.set('unreadOnly', String(params.unreadOnly));
+  if (params.limit !== undefined) search.set('limit', String(params.limit));
+  if (params.cursor) search.set('cursor', params.cursor);
+  const qs = search.toString();
+  return apiRequest(`/notifications${qs ? `?${qs}` : ''}`);
+};
+
+export const markNotificationRead = async (id: string) => {
+  return apiRequest(`/notifications/${id}/read`, { method: 'POST' });
+};
+
+export const markAllNotificationsRead = async () => {
+  return apiRequest(`/notifications/read-all`, { method: 'POST' });
+};
+
+export const getAdminUserPlan = async (id: string) => {
+  return apiRequest(`/admin/users/${id}/plan`);
+};
+
+export const updateAdminUserPlan = async (id: string, payload: { tier?: 'free'|'premium'; status?: 'active'|'expired'|'cancelled'; expiresAt?: string; resetLimits?: boolean }) => {
+  return apiRequest(`/admin/users/${id}/plan`, { method: 'PUT', body: JSON.stringify(payload) });
+};
+
+export const updateAdminUserLimits = async (id: string, payload: Partial<{ activePlansMax: number; studySessionsPerDay: number; examsPerMonth: number }>) => {
+  return apiRequest(`/admin/users/${id}/limits`, { method: 'PUT', body: JSON.stringify(payload) });
+};
+
+export const updateAdminUserEntitlements = async (id: string, entitlements: string[]) => {
+  return apiRequest(`/admin/users/${id}/entitlements`, { method: 'PUT', body: JSON.stringify({ entitlements }) });
+};
+

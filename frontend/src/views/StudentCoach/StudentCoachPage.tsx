@@ -1,9 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, Card, Spin, Typography } from 'antd';
+import { Alert, Card, Spin, Typography, Modal, Button } from 'antd';
 import { getMyCoach, getCoachFeedbackStatus } from '../../services/api';
 import CoachProfile from './CoachProfile';
 import SecretFeedbackForm from '../../components/student/FeedbackForm/SecretFeedbackForm';
 import StudentPrograms from './StudentPrograms';
+import FeatureGate from '../../components/FeatureGate';
 import StudentCoachTour from '../../components/tour/StudentTour/StudentCoachTour';
 import { useAuth } from '../../contexts/AuthContext';
 import './StudentCoachPage.scss';
@@ -19,6 +20,7 @@ export const StudentCoachPage: React.FC = () => {
   const bannerRef = useRef<HTMLDivElement | null>(null);
   const profileRef = useRef<HTMLDivElement | null>(null);
   const programsRef = useRef<HTMLDivElement | null>(null);
+  const isFree = (user?.plan?.tier as any) === 'free';
 
   const load = async () => {
     setLoading(true);
@@ -101,6 +103,20 @@ export const StudentCoachPage: React.FC = () => {
 
   return (
     <div className="student-coach-page">
+      <Modal
+        open={!!isFree}
+        closable={false}
+        maskClosable={false}
+        getContainer={() => (document.querySelector('.app-content') as HTMLElement) || document.body}
+        footer={[
+          <Button key="upgrade" type="primary" onClick={() => { window.location.href = 'https://nikykskoclugu.com.tr/#iletisim'; }}>
+            Premium’a Yükselt
+          </Button>
+        ]}
+      >
+        <Title level={4}>Koçum</Title>
+        <Text>Bu sayfa, koçun günlük program yönlendirmelerini ve iletişimi içerir. Premium üyelik ile koç programları ve etkileşimler aktif olur.</Text>
+      </Modal>
       {banner}
       <div ref={profileRef as any} className="coach-profile-section">
         <CoachProfile
@@ -113,7 +129,9 @@ export const StudentCoachPage: React.FC = () => {
         />
       </div>
       <div style={{ marginTop: 16 }} ref={programsRef as any} className="programs-section">
-        <StudentPrograms />
+        <FeatureGate requiredPlan="premium" fallbackMode="banner">
+          <StudentPrograms />
+        </FeatureGate>
       </div>
       <SecretFeedbackForm
         open={modalOpen}

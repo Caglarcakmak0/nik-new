@@ -3,6 +3,13 @@ export interface User {
     fullName: string;
     email: string;
     role: 'admin' | 'coach' | 'student';
+    plan?: {
+      tier?: 'free' | 'premium';
+      status?: 'active' | 'expired' | 'cancelled';
+      startedAt?: string;
+      expiresAt?: string | null;
+    };
+    entitlements?: string[];
     firstName?: string;
     lastName?: string;
     phone?: string;
