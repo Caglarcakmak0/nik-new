@@ -1,0 +1,12 @@
+{
+  "name": "nik-new-root",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "start": "npm --prefix backend start",
+    "dev": "npm --prefix backend run dev",
+    "verify:smtp": "npm --prefix backend run verify:smtp"
+  }
+}
+
+

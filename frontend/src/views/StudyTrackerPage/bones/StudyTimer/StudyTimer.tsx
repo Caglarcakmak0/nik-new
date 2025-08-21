@@ -78,6 +78,12 @@ const StudyTimer: React.FC<StudyTimerProps> = ({
   // Timer reference
   const timerRef = useRef<number | null>(null);
   const startTimeRef = useRef<number>(0);
+  // Çalışılan süreyi saniye bazında biriktir (sadece study modunda artar)
+  const accumulatedStudySecondsRef = useRef<number>(0);
+  // Son aktif mod (paused iken study/break ayrımını korumak için)
+  const lastActiveModeRef = useRef<TimerMode>('study');
+  // Kaydedilmemiş çalışma var mı?
+  const hasUnsavedWorkRef = useRef<boolean>(false);
 
   // Timer mode hesaplama
   const getTimerMode = (): TimerMode => {
@@ -106,6 +112,7 @@ const StudyTimer: React.FC<StudyTimerProps> = ({
       setTotalTime(studyTimeInSeconds);
       setState('running');
       startTimeRef.current = Date.now();
+      hasUnsavedWorkRef.current = true;
     } else if (state === 'paused') {
       // Devam et
       setState('running');
@@ -119,14 +126,62 @@ const StudyTimer: React.FC<StudyTimerProps> = ({
     }
   }, [state]);
 
-  // Timer durdurma
-  const stopTimer = useCallback(() => {
-    setState('idle');
-    setCurrentTime(0);
-    setTotalTime(0);
-    setCurrentSession(1);
-    setCompletedSessions(0);
+  // Çalışılan dakika hesabı (biriken saniyeden)
+  const getWorkedMinutes = useCallback(() => {
+    const minutes = Math.max(1, Math.round(accumulatedStudySecondsRef.current / 60));
+    return minutes;
   }, []);
+
+  // Oturumu sonlandır ve kaydet
+  const finalizeSession = useCallback((reason: 'completed' | 'stopped' | 'unmount') => {
+    if (!hasUnsavedWorkRef.current) return;
+
+    const workedMinutes = getWorkedMinutes();
+    if (workedMinutes <= 0) {
+      // Kaydedilecek anlamlı süre yok
+      hasUnsavedWorkRef.current = false;
+      accumulatedStudySecondsRef.current = 0;
+      return;
+    }
+
+    const sessionData = {
+      subject: config.subject,
+      duration: workedMinutes,
+      date: new Date(),
+      technique: config.technique
+    };
+
+    if (reason === 'completed') {
+      // Tamamlandığında feedback iste
+      setPendingSessionData(sessionData);
+      setShowFeedback(true);
+      setState('completed');
+      // hasUnsavedWorkRef completed akışında, feedback sonrası temizlenecek
+    } else {
+      // Manuel durdurma veya unmount: hemen varsayılan feedback ile kaydet
+      onSessionComplete?.({
+        ...sessionData,
+        quality: 3,
+        mood: 'Normal' as MoodType,
+        distractions: 0,
+        notes: ''
+      });
+      message.success('Çalışma süresi kaydedildi.');
+      // Temizle
+      hasUnsavedWorkRef.current = false;
+      accumulatedStudySecondsRef.current = 0;
+      setState('idle');
+      setCurrentTime(0);
+      setTotalTime(0);
+      setCurrentSession(1);
+      setCompletedSessions(0);
+    }
+  }, [config, getWorkedMinutes, onSessionComplete]);
+
+  // Timer durdurma (manuel): kısmi süreyi kaydet
+  const stopTimer = useCallback(() => {
+    finalizeSession('stopped');
+  }, [finalizeSession]);
 
   // Timer sıfırlama
   const resetTimer = useCallback(() => {
@@ -174,6 +229,9 @@ const StudyTimer: React.FC<StudyTimerProps> = ({
 
     // Session data'yı callback'e gönder
     onSessionComplete?.(completeSessionData);
+    // Temizle
+    hasUnsavedWorkRef.current = false;
+    accumulatedStudySecondsRef.current = 0;
     
     // Modal'ı kapat ve pending data'yı temizle
     setShowFeedback(false);
@@ -194,6 +252,9 @@ const StudyTimer: React.FC<StudyTimerProps> = ({
     };
 
     onSessionComplete?.(completeSessionData);
+    // Temizle
+    hasUnsavedWorkRef.current = false;
+    accumulatedStudySecondsRef.current = 0;
     
     setShowFeedback(false);
     setPendingSessionData(null);
@@ -220,20 +281,8 @@ const StudyTimer: React.FC<StudyTimerProps> = ({
                 return breakTimeInSeconds;
               } else {
                 // Tüm sessionlar tamamlandı
-                setState('completed');
                 message.success(`Tüm ${config.technique} sessionları tamamlandı!`);
-                
-                // Session data'yı pending olarak sakla
-                const actualDuration = completedSessions * config.studyDuration; // Gerçekte tamamlanan sessionlar
-                const sessionData = {
-                  subject: config.subject,
-                  duration: Math.max(1, actualDuration > 0 ? actualDuration : config.studyDuration), // En az 1 dakika
-                  date: new Date(),
-                  technique: config.technique
-                };
-                setPendingSessionData(sessionData);
-                setShowFeedback(true);
-                
+                finalizeSession('completed');
                 return 0;
               }
             } else if (state === 'break') {
@@ -249,6 +298,10 @@ const StudyTimer: React.FC<StudyTimerProps> = ({
           }
           return prev - 1;
         });
+        // Saniye bazında çalışma biriktir (sadece study modunda ve running iken)
+        if (state === 'running' && lastActiveModeRef.current === 'study') {
+          accumulatedStudySecondsRef.current += 1;
+        }
       }, 1000);
     } else {
       if (timerRef.current) {
@@ -263,7 +316,23 @@ const StudyTimer: React.FC<StudyTimerProps> = ({
         clearInterval(timerRef.current);
       }
     };
-  }, [state, currentSession, config, onSessionComplete]);
+  }, [state, currentSession, config, onSessionComplete, finalizeSession]);
+
+  // Son aktif modu takip et
+  useEffect(() => {
+    if (state === 'running') {
+      lastActiveModeRef.current = 'study';
+    } else if (state === 'break') {
+      lastActiveModeRef.current = 'break';
+    }
+  }, [state]);
+
+  // Bileşen unmount olduğunda kısmi süreyi kaydet
+  useEffect(() => {
+    return () => {
+      finalizeSession('unmount');
+    };
+  }, [finalizeSession]);
 
   // Control buttons
   const renderControls = () => {

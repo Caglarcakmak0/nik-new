@@ -189,7 +189,8 @@
   
   .ant-modal-content {
     border-radius: 20px;
-    overflow: hidden;
+    // İçerik kaydırması modal body üzerinde yapılacak
+    overflow: visible;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
   }
 }

@@ -282,6 +282,22 @@ body h2.ant-typography {
   border-radius: 12px;
 }
 
+// Modal scroll/dimension fixes
+// - Büyük içeriklerde modal gövdesinin dikey kaydırılmasına izin ver
+// - Başlık ve footer sabit kalır, içerik taşarsa gövdede kayar
+:where([class^="css-"]) .ant-modal,
+.ant-modal {
+  .ant-modal-content {
+    // İçerik kesilmesin; body'de kaydırma olsun
+    overflow: visible;
+  }
+
+  .ant-modal-body {
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+}
+
 // ===== TAB BAŞLIKLARI İÇİN ÖZEL STİLLER =====
 // Tab başlıkları için font-weight ve margin ayarları
 .ant-tabs-tab {

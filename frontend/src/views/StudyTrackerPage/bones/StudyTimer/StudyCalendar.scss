@@ -203,11 +203,14 @@
     .ant-modal-body {
       padding: 24px;
       max-height: 70vh;
+      overflow-y: auto;
 
     }
 
     .ant-modal-content {
       border-radius: 16px;
+      // İçerik kesilmesin; kaydırma body üzerinde olsun
+      overflow: visible;
       box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
     }
   }
