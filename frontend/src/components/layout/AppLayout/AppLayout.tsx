@@ -288,16 +288,6 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
               
           {/* Sağ taraf - User info */}
           <div className="header-right">
-            {/* Design switch (deneysel) */}
-            <Segmented
-              value={designMode}
-              onChange={(val) => setDesignMode(val as any)}
-              options={[
-                { label: 'Soft', value: 'soft' },
-                { label: 'Neon', value: 'neon' },
-              ]}
-              size="small"
-            />
             {/* Theme Toggle */}
             <Tooltip title={getThemeTooltip()}>
               <Button

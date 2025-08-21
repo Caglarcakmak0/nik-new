@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Card, Select, InputNumber, Space, Button, Typography, Popover, Tooltip, Divider, message, Spin, Modal } from 'antd';
 const { Option } = Select;
 import { HighlightOutlined } from '@ant-design/icons';
@@ -146,6 +146,8 @@ const ColorCell: React.FC<{
   isDark?: boolean;
 }> = ({ color, onChange, rowIndex, day, isSelected, onSelect, isReadOnly, isDark = false }) => {
   const colors = isDark ? PRESET_COLORS_DARK : PRESET_COLORS;
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+  const suppressNextOpenRef = useRef(false);
   
   const content = (
     <div className="tmx-color-grid">
@@ -154,7 +156,10 @@ const ColorCell: React.FC<{
           key={c}
           className="tmx-color-swatch"
           style={{ backgroundColor: c }}
-          onClick={() => onChange(c)}
+          onClick={() => {
+            onChange(c);
+            setIsPopoverOpen(false);
+          }}
           aria-label={c}
         />
       ))}
@@ -168,8 +173,11 @@ const ColorCell: React.FC<{
       e.preventDefault();
       e.stopPropagation();
       onSelect(rowIndex, day, true);
+      // Shift tıklamada popover açılmasını engelle
+      setIsPopoverOpen(false);
     } else {
       onSelect(rowIndex, day, false);
+      // Normal tıklamada popover aç/kapa kontrolünü onOpenChange'e bırak
     }
   };
 
@@ -183,10 +191,29 @@ const ColorCell: React.FC<{
   }
 
   return (
-    <Popover trigger="click" content={content} overlayStyle={{ width: 220 }}>
+    <Popover
+      trigger="click"
+      content={content}
+      overlayStyle={{ width: 220 }}
+      open={isPopoverOpen}
+      onOpenChange={(next) => {
+        if (suppressNextOpenRef.current) {
+          // Shift ile tetiklenen tıklamada açılmayı bastır
+          suppressNextOpenRef.current = false;
+          return;
+        }
+        setIsPopoverOpen(next);
+      }}
+    >
       <div 
         className={`tmx-cell ${isSelected ? 'tmx-cell-selected' : ''}`} 
         style={{ backgroundColor: color }}
+        onMouseDownCapture={(e) => {
+          if (e.shiftKey) {
+            // Popover'ın açılmasını engellemek için bu click döngüsünü işaretle
+            suppressNextOpenRef.current = true;
+          }
+        }}
         onClick={handleClick}
       />
     </Popover>
@@ -200,7 +227,7 @@ const TopicMatrix: React.FC = () => {
   const isStudent = useIsStudent();
   const isAdmin = useIsAdmin();
   const canEdit = isCoach || isAdmin;
-  const isFree = (user?.plan?.tier as any) === 'free';
+  const isStudentFree = isStudent && (user?.plan?.tier as any) === 'free';
   
   const subjectOptions = useMemo(() => buildSubjectOptions(), []);
   const [subject, setSubject] = useState<SubjectKey>('matematik');
@@ -368,12 +395,12 @@ const TopicMatrix: React.FC = () => {
         
         e.preventDefault();
         
-        if (isMultiSelectMode && selectedCells.size > 0) {
+        if (selectedCells.size > 0) {
           // Apply color to selected cells
           applyColorToSelectedCells(colorMap.color);
           message.success(`${colorMap.label} rengi ${selectedCells.size} hücreye uygulandı`);
         } else {
-          message.info(`${key.toUpperCase()} tuşu: ${colorMap.label} - Önce hücre seçin veya shift+click ile çoklu seçim yapın`);
+          message.info(`${key.toUpperCase()} tuşu: ${colorMap.label} - Önce bir hücre seçin. Çoklu seçim için Shift + tıklayın.`);
         }
       }
     };
@@ -428,10 +455,9 @@ const TopicMatrix: React.FC = () => {
         return newSet;
       });
     } else {
-      if (isMultiSelectMode) {
-        setSelectedCells(new Set());
-        setIsMultiSelectMode(false);
-      }
+      // Tek tıklamada tek hücre seçimi aktif kalsın
+      setSelectedCells(new Set([key]));
+      setIsMultiSelectMode(false);
     }
   };
 
@@ -506,7 +532,7 @@ const TopicMatrix: React.FC = () => {
   return (
     <div className="tmx-container">
       <Modal
-        open={isFree}
+        open={isStudentFree}
         closable={false}
         maskClosable={false}
         getContainer={() => (document.querySelector('.app-content') as HTMLElement) || document.body}
@@ -707,7 +733,10 @@ const TopicMatrix: React.FC = () => {
                       `;
                       button.onclick = () => {
                         setTopicColor(rowIndex, c);
-                        document.body.removeChild(popover);
+                        // Popover'ın hala DOM'da olup olmadığını kontrol et
+                        if (document.body.contains(popover)) {
+                          document.body.removeChild(popover);
+                        }
                       };
                       colorGrid.appendChild(button);
                     });
@@ -718,7 +747,10 @@ const TopicMatrix: React.FC = () => {
                     // Popover dışına tıklandığında kapat
                     const closePopover = (e: MouseEvent) => {
                       if (!popover.contains(e.target as Node)) {
-                        document.body.removeChild(popover);
+                        // Popover'ın hala DOM'da olup olmadığını kontrol et
+                        if (document.body.contains(popover)) {
+                          document.body.removeChild(popover);
+                        }
                         document.removeEventListener('click', closePopover);
                       }
                     };

@@ -305,7 +305,10 @@ const StudyStatistics: React.FC<StudyStatisticsProps> = ({ refreshTrigger = 0 })
     link.download = `study-statistics-${period}-${dayjs().format('YYYY-MM-DD')}.json`;
     document.body.appendChild(link);
     link.click();
-    document.body.removeChild(link);
+    // Link'in hala DOM'da olup olmadığını kontrol et
+    if (document.body.contains(link)) {
+      document.body.removeChild(link);
+    }
     URL.revokeObjectURL(url);
   };
 

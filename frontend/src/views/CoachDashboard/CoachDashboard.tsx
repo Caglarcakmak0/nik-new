@@ -366,11 +366,9 @@ const CoachDashboard: React.FC = () => {
           <Card loading={liveDashboardLoading}>
             <div style={{ textAlign: 'center' }}>
               <Title level={3} style={{ color: '#52c41a', margin: 0 }}>
-                <Badge dot={liveDashboard?.summary?.activeNow > 0}>
-                  {liveDashboard?.summary?.activeNow || 0}
-                </Badge>
+                {liveDashboard?.summary?.activeNow || 0}
               </Title>
-              <Text type="secondary">🔴 Şu An Aktif</Text>
+              <Text type="secondary"> Şu An Aktif</Text>
             </div>
           </Card>
         </Col>
@@ -403,7 +401,6 @@ const CoachDashboard: React.FC = () => {
             <Space>
               <PlayCircleOutlined style={{ color: '#52c41a' }} />
               <Text strong>🔴 Canlı Çalışan Öğrenciler</Text>
-              <Badge count={liveDashboard.liveStudents.length} style={{ backgroundColor: '#52c41a' }} />
             </Space>
           }
           style={{ marginBottom: '24px' }}

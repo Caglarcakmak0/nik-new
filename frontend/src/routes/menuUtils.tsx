@@ -113,13 +113,6 @@ export const allMenuItems: MenuItemEx[] = [
     roles: ["admin"],
   },
   {
-    key: "/admin/users",
-    icon: <UserOutlined />,
-    label: "Kullanıcı Yönetimi",
-    roles: ["admin"],
-    disabled: true
-  },
-  {
     key: "/admin/coaches",
     icon: <TeamOutlined />,
     label: "Koç Yönetimi",

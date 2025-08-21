@@ -331,3 +331,185 @@
 .app-layout.light .theme-button {
   color: #000;
 }
+
+// Light mode için header stilleri
+.app-layout.light {
+  .app-header {
+    background: #ffffff !important;
+    border-bottom: 1px solid #e5e7eb !important;
+    color: #111827 !important;
+    
+    .header-left {
+      .collapse-button {
+        color: #374151 !important;
+        
+        &:hover {
+          background: #f3f4f6 !important;
+          color: #111827 !important;
+        }
+      }
+    }
+    
+    .header-right {
+      .theme-button {
+        color: #374151 !important;
+        
+        &:hover {
+          background: #f3f4f6 !important;
+          color: #111827 !important;
+        }
+      }
+      
+      .notification-button {
+        color: #374151 !important;
+        
+        &:hover {
+          background: #f3f4f6 !important;
+          color: #111827 !important;
+        }
+      }
+      
+      .user-dropdown {
+        color: #111827 !important;
+        
+        &:hover {
+          background: #f3f4f6 !important;
+        }
+        
+        .user-info {
+          .user-name {
+            color: #111827 !important;
+          }
+          
+          .user-role {
+            color: #6b7280 !important;
+          }
+        }
+      }
+    }
+  }
+  
+  .app-sider {
+    background: #ffffff !important;
+    border-right: 1px solid #e5e7eb !important;
+    
+    .sider-menu {
+      background: #ffffff !important;
+      
+      .ant-menu-item {
+        color: #374151 !important;
+        
+        &:hover {
+          background: #f3f4f6 !important;
+          color: #111827 !important;
+        }
+        
+        &.ant-menu-item-selected {
+          background: #eff6ff !important;
+          color: #3b82f6 !important;
+        }
+      }
+      
+      .ant-menu-submenu {
+        .ant-menu-submenu-title {
+          color: #374151 !important;
+          
+          &:hover {
+            color: #111827 !important;
+          }
+        }
+      }
+    }
+  }
+}
+
+// Dark mode için header stilleri
+.app-layout.dark {
+  .app-header {
+    background: #1f2937 !important;
+    border-bottom: 1px solid #374151 !important;
+    color: #f9fafb !important;
+    
+    .header-left {
+      .collapse-button {
+        color: #9ca3af !important;
+        
+        &:hover {
+          background: #374151 !important;
+          color: #f9fafb !important;
+        }
+      }
+    }
+    
+    .header-right {
+      .theme-button {
+        color: #9ca3af !important;
+        
+        &:hover {
+          background: #374151 !important;
+          color: #f9fafb !important;
+        }
+      }
+      
+      .notification-button {
+        color: #9ca3af !important;
+        
+        &:hover {
+          background: #374151 !important;
+          color: #f9fafb !important;
+        }
+      }
+      
+      .user-dropdown {
+        color: #f9fafb !important;
+        
+        &:hover {
+          background: #374151 !important;
+        }
+        
+        .user-info {
+          .user-name {
+            color: #f9fafb !important;
+          }
+          
+          .user-role {
+            color: #9ca3af !important;
+          }
+        }
+      }
+    }
+  }
+  
+  .app-sider {
+    background: #1f2937 !important;
+    border-right: 1px solid #374151 !important;
+    
+    .sider-menu {
+      background: #1f2937 !important;
+      
+      .ant-menu-item {
+        color: #9ca3af !important;
+        
+        &:hover {
+          background: #374151 !important;
+          color: #f9fafb !important;
+        }
+        
+        &.ant-menu-item-selected {
+          background: #374151 !important;
+          color: #f9fafb !important;
+        }
+      }
+      
+      .ant-menu-submenu {
+        .ant-menu-submenu-title {
+          color: #9ca3af !important;
+          
+          &:hover {
+            color: #f9fafb !important;
+          }
+        }
+      }
+    }
+  }
+}
