@@ -1,9 +1,17 @@
 const express = require('express');
 const router = express.Router();
 const authenticateToken = require('../auth');
-const { checkRole, checkSameUserOrAdmin, checkCoachAccess } = require('../authRoles');
+const { checkRole, checkSameUserOrAdmin } = require('../authRoles');
 const TopicMatrix = require('../models/TopicMatrix');
 const Users = require('../models/Users');
+const CoachStudent = require('../models/CoachStudent');
+
+// Helper: Koç ilgili öğrenciye atanmış mı?
+async function hasCoachStudentAccess(coachId, studentId) {
+  if (!coachId || !studentId) return false;
+  const relation = await CoachStudent.findOne({ coachId, studentId, status: 'active' }).select('_id');
+  return !!relation;
+}
 
 // All endpoints require authentication
 router.use(authenticateToken);
@@ -24,7 +32,7 @@ router.get('/:userId/:subject', async (req, res) => {
     }
 
     if (requestingUser.role === 'coach') {
-      const hasAccess = await checkCoachAccess(requestingUser.userId, userId);
+      const hasAccess = await hasCoachStudentAccess(requestingUser.userId, userId);
       if (!hasAccess) {
         return res.status(403).json({ message: 'Coach can only access assigned students' });
       }
@@ -71,7 +79,7 @@ router.post('/', async (req, res) => {
     }
 
     if (requestingUser.role === 'coach') {
-      const hasAccess = await checkCoachAccess(requestingUser.userId, userId);
+      const hasAccess = await hasCoachStudentAccess(requestingUser.userId, userId);
       if (!hasAccess) {
         return res.status(403).json({ message: 'Coach can only modify assigned students data' });
       }
@@ -144,7 +152,7 @@ router.get('/user/:userId', async (req, res) => {
     }
 
     if (requestingUser.role === 'coach') {
-      const hasAccess = await checkCoachAccess(requestingUser.userId, userId);
+      const hasAccess = await hasCoachStudentAccess(requestingUser.userId, userId);
       if (!hasAccess) {
         return res.status(403).json({ message: 'Coach can only access assigned students' });
       }
@@ -183,7 +191,7 @@ router.delete('/:userId/:subject', async (req, res) => {
     }
 
     if (requestingUser.role === 'coach') {
-      const hasAccess = await checkCoachAccess(requestingUser.userId, userId);
+      const hasAccess = await hasCoachStudentAccess(requestingUser.userId, userId);
       if (!hasAccess) {
         return res.status(403).json({ message: 'Coach can only delete assigned students data' });
       }

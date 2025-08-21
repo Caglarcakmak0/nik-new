@@ -4,6 +4,7 @@ const nodemailer = require('nodemailer');
 const handlebars = require('handlebars');
 const juice = require('juice');
 const dotenv = require('dotenv');
+const os = require('os');
 
 dotenv.config();
 
@@ -12,6 +13,7 @@ function createTransporter() {
   const port = Number(process.env.SMTP_PORT || 587);
   const user = process.env.SMTP_USER;
   const pass = process.env.SMTP_PASS;
+  const heloName = process.env.SMTP_NAME || process.env.SMTP_HELO || undefined;
   if (!host || !user || !pass) {
     throw new Error('SMTP yapılandırması eksik. Lütfen .env dosyasını kontrol edin.');
   }
@@ -20,11 +22,12 @@ function createTransporter() {
     host,
     port,
     secure,
+    name: heloName,
     auth: { user, pass },
     logger: true,
     debug: true,
   });
-  console.log('[mail] transporter created', { host, port, secure, user });
+  console.log('[mail] transporter created', { host, port, secure, user, heloName: heloName || '(default)' });
   return transport;
 }
 
@@ -87,7 +90,10 @@ async function sendTemplatedMail({ to, subject, template, data = {}, attachments
   console.log('[mail] send start', { to, subject, from, template, attachmentsCount: attachments?.length || 0 });
   try {
     const text = buildPlainText(template, data);
-    const headers = {};
+    const headers = {
+      'Auto-Submitted': 'auto-generated',
+      'X-Auto-Response-Suppress': 'All',
+    };
     if (process.env.LIST_UNSUBSCRIBE) headers['List-Unsubscribe'] = process.env.LIST_UNSUBSCRIBE;
     const info = await transporter.sendMail({ from, to, subject, html, text, attachments, headers });
     console.log('[mail] send ok', {
