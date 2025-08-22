@@ -14,6 +14,12 @@ function createTransporter() {
   const user = process.env.SMTP_USER;
   const pass = process.env.SMTP_PASS;
   const heloName = process.env.SMTP_NAME || process.env.SMTP_HELO || undefined;
+  const isProduction = String(process.env.NODE_ENV).toLowerCase() === 'production';
+  const enableDebug = String(process.env.SMTP_DEBUG || (!isProduction)).toLowerCase() === 'true';
+  const usePool = String(process.env.SMTP_POOL || 'false').toLowerCase() === 'true';
+  const maxConnections = Number(process.env.SMTP_POOL_MAX_CONNECTIONS || 2);
+  const maxMessages = Number(process.env.SMTP_POOL_MAX_MESSAGES || 100);
+  const tlsRejectUnauthorized = String(process.env.SMTP_TLS_REJECT_UNAUTHORIZED || 'true').toLowerCase() === 'true';
   if (!host || !user || !pass) {
     throw new Error('SMTP yapılandırması eksik. Lütfen .env dosyasını kontrol edin.');
   }
@@ -24,10 +30,16 @@ function createTransporter() {
     secure,
     name: heloName,
     auth: { user, pass },
-    logger: true,
-    debug: true,
+    logger: enableDebug,
+    debug: enableDebug,
+    pool: usePool,
+    maxConnections,
+    maxMessages,
+    tls: { minVersion: 'TLSv1.2', rejectUnauthorized: tlsRejectUnauthorized }
   });
-  console.log('[mail] transporter created', { host, port, secure, user, heloName: heloName || '(default)' });
+  if (!isProduction || enableDebug) {
+    console.log('[mail] transporter created', { host, port, secure, user, heloName: heloName || '(default)', pool: usePool, maxConnections, maxMessages, enableDebug });
+  }
   return transport;
 }
 
@@ -86,7 +98,10 @@ function buildSimpleHtml(templateName, data = {}) {
 async function sendTemplatedMail({ to, subject, template, data = {}, attachments = [] }) {
   const useSimple = String(process.env.EMAIL_SIMPLE || 'true').toLowerCase() === 'true';
   const html = useSimple ? buildSimpleHtml(template, data) : renderTemplate(template, data);
-  const from = process.env.SMTP_FROM || process.env.SMTP_USER;
+  const fromAddress = process.env.SMTP_FROM || process.env.SMTP_USER;
+  const fromName = process.env.SMTP_FROM_NAME;
+  const replyTo = process.env.SMTP_REPLY_TO;
+  const from = fromName ? `${fromName} <${fromAddress}>` : fromAddress;
   console.log('[mail] send start', { to, subject, from, template, attachmentsCount: attachments?.length || 0 });
   try {
     const text = buildPlainText(template, data);
@@ -95,7 +110,7 @@ async function sendTemplatedMail({ to, subject, template, data = {}, attachments
       'X-Auto-Response-Suppress': 'All',
     };
     if (process.env.LIST_UNSUBSCRIBE) headers['List-Unsubscribe'] = process.env.LIST_UNSUBSCRIBE;
-    const info = await transporter.sendMail({ from, to, subject, html, text, attachments, headers });
+    const info = await transporter.sendMail({ from, to, subject, html, text, attachments, headers, replyTo });
     console.log('[mail] send ok', {
       messageId: info?.messageId,
       envelope: info?.envelope,

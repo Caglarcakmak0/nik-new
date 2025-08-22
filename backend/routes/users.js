@@ -36,6 +36,32 @@ dotenv.config();
 
 const JWT_SECRET_KEY = process.env.JWT_KEY;
 
+// Basit in-memory rate limit (IP ve e‑posta bazlı)
+const RATE_LIMIT_IP_MAX = Number(process.env.RATE_LIMIT_FORGOT_IP_MAX || 5);
+const RATE_LIMIT_IP_WINDOW_MS = Number(process.env.RATE_LIMIT_FORGOT_IP_WINDOW_MS || 60 * 1000); // 1 dk
+const RATE_LIMIT_EMAIL_MAX = Number(process.env.RATE_LIMIT_FORGOT_EMAIL_MAX || 3);
+const RATE_LIMIT_EMAIL_WINDOW_MS = Number(process.env.RATE_LIMIT_FORGOT_EMAIL_WINDOW_MS || 60 * 60 * 1000); // 1 saat
+
+const rateStore = {
+    ip: new Map(),
+    email: new Map()
+};
+
+function isLimited(map, key, max, windowMs) {
+    const now = Date.now();
+    const arr = map.get(key) || [];
+    // Eski kayıtları temizle
+    const recent = arr.filter((ts) => (now - ts) <= windowMs);
+    if (recent.length >= max) {
+        // Temizlenmiş diziyi geri yaz (hafızayı sınırlı tut)
+        map.set(key, recent);
+        return true;
+    }
+    recent.push(now);
+    map.set(key, recent);
+    return false;
+}
+
 // Basit e-posta gönderici (SMTP ile)
 const mailTransporter = (() => {
     const host = process.env.SMTP_HOST;
@@ -366,6 +392,16 @@ router.post('/forgot-password', async (req, res) => {
             return res.status(200).json({ message: 'Eğer bu e‑posta kayıtlıysa, sıfırlama bağlantısı gönderildi.' });
         }
 
+        // Rate limit kontrolleri
+        const ip = req.headers['x-forwarded-for']?.toString().split(',')[0].trim() || req.ip || req.connection?.remoteAddress || 'unknown';
+        const ipLimited = isLimited(rateStore.ip, ip, RATE_LIMIT_IP_MAX, RATE_LIMIT_IP_WINDOW_MS);
+        const emailKey = String(email).toLowerCase();
+        const emailLimited = isLimited(rateStore.email, emailKey, RATE_LIMIT_EMAIL_MAX, RATE_LIMIT_EMAIL_WINDOW_MS);
+        if (ipLimited || emailLimited) {
+            // Uniform response: enumeration koruması
+            return res.status(200).json({ message: 'Eğer bu e‑posta kayıtlıysa, sıfırlama bağlantısı gönderildi.' });
+        }
+
         const lowerEmail = email.toLowerCase();
         const user = await Users.findOne({ email: lowerEmail });
 
@@ -387,7 +423,7 @@ router.post('/forgot-password', async (req, res) => {
         });
 
         const frontendBase = process.env.FRONTEND_BASE_URL || 'http://localhost:5173';
-        const resetUrl = `${frontendBase}/reset-password?uid=${user._id}&token=${rawToken}`;
+        const resetUrl = `${frontendBase}/reset-password?token=${rawToken}`;
         if (process.env.NODE_ENV !== 'production') {
             console.log('Password reset link:', resetUrl);
         }
@@ -414,7 +450,7 @@ router.post('/forgot-password', async (req, res) => {
             console.warn('Şifre sıfırlama e-postası gönderilemedi:', e);
         }
         // Dev ortamında debug linki response içine koy (prod'da asla koyma)
-        if (process.env.NODE_ENV !== 'production' || String(process.env.EMAIL_DEBUG_LINK || '').toLowerCase() === 'true') {
+        if (process.env.NODE_ENV !== 'production' && String(process.env.EMAIL_DEBUG_LINK || '').toLowerCase() === 'true') {
             return res.status(200).json({ message: 'Eğer bu e‑posta kayıtlıysa, sıfırlama bağlantısı gönderildi.', debugResetUrl: resetUrl });
         }
         return uniformResponse();
@@ -427,35 +463,32 @@ router.post('/forgot-password', async (req, res) => {
 // Şifre Sıfırla — token doğrula ve şifreyi güncelle
 router.post('/reset-password', async (req, res) => {
     try {
-        const { uid, token, newPassword } = req.body || {};
-        if (!uid || !token || !newPassword) {
+        const { token, newPassword } = req.body || {};
+        if (!token || !newPassword) {
             return res.status(400).json({ message: 'Geçersiz istek.' });
         }
 
-        const user = await Users.findById(uid);
-        if (!user || !user.passwordResetTokenHash || !user.passwordResetExpiresAt) {
+        // Token hash'i oluştur ve kullanıcıyı hash ile bul
+        const providedHash = crypto.createHash('sha256').update(token).digest('hex');
+        const user = await Users.findOne({ passwordResetTokenHash: providedHash });
+
+        if (!user || !user.passwordResetExpiresAt) {
             return res.status(400).json({ message: 'Token geçersiz veya süresi dolmuş.' });
         }
 
         // Süre kontrolü
         if (user.passwordResetExpiresAt.getTime() < Date.now()) {
             // Token alanlarını temizle
-            await Users.findByIdAndUpdate(uid, {
+            await Users.findByIdAndUpdate(user._id, {
                 passwordResetTokenHash: null,
                 passwordResetExpiresAt: null
             });
             return res.status(400).json({ message: 'Token süresi dolmuş.' });
         }
 
-        // Token hash eşleşmesi
-        const providedHash = crypto.createHash('sha256').update(token).digest('hex');
-        if (providedHash !== user.passwordResetTokenHash) {
-            return res.status(400).json({ message: 'Token geçersiz.' });
-        }
-
         // Şifreyi güncelle
         const hashedPassword = await bcryptjs.hash(newPassword, 10);
-        await Users.findByIdAndUpdate(uid, {
+        await Users.findByIdAndUpdate(user._id, {
             password: hashedPassword,
             tokenVersion: (user.tokenVersion || 0) + 1, // Tüm mevcut access token'ları geçersiz kıl
             // Reset token alanlarını temizle

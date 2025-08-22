@@ -295,5 +295,8 @@ UsersSchema.set('toJSON', { virtuals: true });
 UsersSchema.set('toObject', { virtuals: true });
 
 
+// Şifre sıfırlama token hash'i için index (token-only reset akışı)
+UsersSchema.index({ passwordResetTokenHash: 1 }, { name: 'idx_passwordResetTokenHash' });
+
 const Users = mongoose.model("Users", UsersSchema);
 module.exports = Users;
