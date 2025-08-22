@@ -10,13 +10,9 @@ export const getUniversityImages = (universityName: string): string[] => {
 			'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=1200&h=800&fit=crop',
 			'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=1200&h=800&fit=crop'
 		],
-		'Boğaziçi': [
-			'https://mediastore.cc.bogazici.edu.tr/web/userfiles/images/rounded-in-photoretrica%20(5).png',
-		],
+		
 		'Boğaziçi Üniversitesi': [
-			'https://images.unsplash.com/photo-1571260899304-425eee4c7efc?w=1200&h=800&fit=crop',
-			'https://images.unsplash.com/photo-1580537659466-0a9bfa916a54?w=1200&h=800&fit=crop',
-			'https://images.unsplash.com/photo-1607237138185-eedd9c632b0b?w=1200&h=800&fit=crop'
+			'https://r.resimlink.com/3i8Bt7bokyn.webp',
 		],
 		'ODTÜ': [
 			'https://images.unsplash.com/photo-1498243691581-b145c3f54a5a?w=1200&h=800&fit=crop',
@@ -83,7 +79,21 @@ export const getUniversityImages = (universityName: string): string[] => {
 	];
 };
 
+const isLikelyImageUrl = (url: string): boolean => {
+	// İmaj uzantısı veya bilinen CDN/domain kalıpları
+	const hasImageExtension = /(\.png|\.jpg|\.jpeg|\.webp|\.gif|\.svg)(\?.*)?$/i.test(url);
+	const isKnownImageCdn = url.includes('images.unsplash.com') || url.includes('mediastore.cc.bogazici.edu.tr') || url.startsWith('data:image/');
+	// ibb.co sayfa linklerini ele
+	const isIbbPage = /(^|\.)ibb\.co\//.test(url) && !/(^|\.)i\.ibb\.co\//.test(url);
+	return !isIbbPage && (hasImageExtension || isKnownImageCdn);
+};
+
 export const getRandomUniversityImage = (universityName: string): string => {
 	const list = getUniversityImages(universityName);
-	return list[Math.floor(Math.random() * list.length)];
+	const candidates = list.filter(isLikelyImageUrl);
+	const safeList = candidates.length > 0 ? candidates : [
+		'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=1200&h=800&fit=crop',
+		'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=1200&h=800&fit=crop'
+	];
+	return safeList[Math.floor(Math.random() * safeList.length)];
 };

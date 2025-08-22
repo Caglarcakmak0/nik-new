@@ -10,24 +10,23 @@ const ResetPassword = () => {
   const [loading, setLoading] = useState(false)
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
-  const uid = searchParams.get('uid') || ''
   const token = searchParams.get('token') || ''
 
   useEffect(() => {
-    if (!uid || !token) {
+    if (!token) {
       message.error('Geçersiz bağlantı')
     }
-  }, [uid, token])
+  }, [token])
 
   const onFinish = async (values: { password: string; password2: string }) => {
-    if (!uid || !token) return
+    if (!token) return
     if (values.password !== values.password2) {
       message.error('Şifreler eşleşmiyor')
       return
     }
     setLoading(true)
     try {
-      await authService.resetPassword({ uid, token, newPassword: values.password })
+      await authService.resetPassword({ token, newPassword: values.password })
       message.success('Şifreniz güncellendi. Lütfen giriş yapın.')
       navigate('/login')
     } catch (e: any) {

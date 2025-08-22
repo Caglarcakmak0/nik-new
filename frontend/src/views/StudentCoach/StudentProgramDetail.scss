@@ -1,0 +1,238 @@
+@import '../../styles/variables';
+@import '../../styles/mixins';
+
+.student-program-detail {
+  animation: fadeInUp 0.6s ease-out;
+  
+  .ant-card {
+    animation: fadeIn 0.8s ease-out 0.2s both;
+  }
+  
+  .ant-list-item {
+    animation: fadeIn 0.6s ease-out;
+    @include hover-lift;
+    
+    &:nth-child(1) { animation-delay: 0.1s; }
+    &:nth-child(2) { animation-delay: 0.2s; }
+    &:nth-child(3) { animation-delay: 0.3s; }
+    &:nth-child(4) { animation-delay: 0.4s; }
+    &:nth-child(5) { animation-delay: 0.5s; }
+  }
+  
+  // Konu detayları kartları
+  .ant-card-meta {
+    .ant-card-meta-title {
+      color: #262626;
+    }
+    
+    .ant-card-meta-description {
+      color: #595959;
+    }
+  }
+  
+  // İstatistik kartları
+  .stats-card {
+    .ant-progress-text {
+      color: #262626;
+    }
+  }
+  
+  // Progress bar'lar
+  .ant-progress {
+    .ant-progress-text {
+      color: #262626;
+    }
+  }
+  
+  // Tag'ler
+  .ant-tag {
+    border-color: #d9d9d9;
+  }
+  
+  // Alert'ler
+  .ant-alert {
+    border-color: #d9d9d9;
+  }
+  
+  // Stat text stilleri
+  .stat-label {
+    display: block;
+  }
+  
+  .stat-value {
+    font-size: 18px;
+  }
+  
+  .net-score {
+    font-size: 18px;
+    color: #52c41a;
+  }
+  
+  // Progress inline stilleri
+  .progress-text {
+    margin-right: 8px;
+  }
+  
+  .progress-bar {
+    max-width: 200px;
+  }
+  
+  // Content wrapper
+  .content-wrapper {
+    width: 100%;
+  }
+  
+  // Alert margin
+  .alert-margin {
+    margin-bottom: 16px;
+  }
+}
+
+// Dark mode stilleri
+.theme-dark {
+  .student-program-detail {
+    .ant-card {
+      background: #1f2937 !important;
+      border-color: #374151 !important;
+      color: #f9fafb !important;
+    }
+    
+    .ant-list-item {
+      background: #1f2937 !important;
+      border-color: #374151 !important;
+      
+      &:hover {
+        background: #374151 !important;
+      }
+    }
+    
+    // Konu detayları kartları
+    .ant-card-meta {
+      .ant-card-meta-title {
+        color: #f9fafb !important;
+      }
+      
+      .ant-card-meta-description {
+        color: #9ca3af !important;
+      }
+    }
+    
+    // İstatistik kartları
+    .stats-card {
+      background: #1f2937 !important;
+      border-color: #374151 !important;
+      
+      .ant-progress-text {
+        color: #f9fafb !important;
+      }
+      
+      .ant-typography {
+        color: #f9fafb !important;
+        
+        &.ant-typography-secondary {
+          color: #9ca3af !important;
+        }
+      }
+    }
+    
+    // Progress bar'lar
+    .ant-progress {
+      .ant-progress-text {
+        color: #f9fafb !important;
+      }
+      
+      .ant-progress-bg {
+        background: #3b82f6 !important;
+      }
+    }
+    
+    // Tag'ler
+    .ant-tag {
+      background: #374151 !important;
+      border-color: #4b5563 !important;
+      color: #f9fafb !important;
+    }
+    
+    // Alert'ler
+    .ant-alert {
+      background: #1f2937 !important;
+      border-color: #374151 !important;
+      color: #f9fafb !important;
+      
+      .ant-alert-message {
+        color: #f9fafb !important;
+      }
+      
+      .ant-alert-description {
+        color: #9ca3af !important;
+      }
+    }
+    
+    // Divider
+    .ant-divider {
+      border-color: #374151 !important;
+    }
+    
+    // Space içindeki text'ler
+    .ant-space {
+      .ant-typography {
+        color: #f9fafb !important;
+        
+        &.ant-typography-secondary {
+          color: #9ca3af !important;
+        }
+      }
+    }
+    
+    // List header
+    .ant-list-header {
+      background: #1f2937 !important;
+      border-color: #374151 !important;
+      
+      .ant-typography {
+        color: #f9fafb !important;
+      }
+    }
+    
+    // Card actions
+    .ant-card-actions {
+      background: #1f2937 !important;
+      border-color: #374151 !important;
+      
+      .ant-btn {
+        color: #f9fafb !important;
+        
+        &:hover {
+          background: #374151 !important;
+        }
+      }
+    }
+    
+    // Dark mode için eklenen sınıflar
+    .stat-label {
+      color: #9ca3af !important;
+    }
+    
+    .stat-value {
+      color: #f9fafb !important;
+    }
+    
+    .net-score {
+      color: #52c41a !important;
+    }
+    
+    .progress-text {
+      color: #9ca3af !important;
+    }
+  }
+}
+
+// ===== RESPONSIVE DAVRANIŞ =====
+// Desktop only (1280px+)
+@media (min-width: 1280px) {
+  .student-program-detail {
+    // Desktop stilleri
+  }
+}
+
+/* Mobilde tamamen gizleme kaldırıldı; küçük ekranlarda da içerik görünsün */

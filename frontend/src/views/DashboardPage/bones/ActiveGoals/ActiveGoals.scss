@@ -1,6 +1,56 @@
 @import '../../../../styles/variables';
 @import '../../../../styles/mixins';
 
+// ===== ACTIVE GOALS CARD STYLES =====
+.active-goals-card {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  
+  .ant-card-body {
+    padding: 0 !important;
+    background: transparent !important;
+  }
+}
+
+.active-goals-carousel {
+  .ant-card {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    
+    .ant-card-body {
+      padding: 0 !important;
+      background: transparent !important;
+    }
+  }
+}
+
+// Dark theme card override
+.theme-dark {
+  .active-goals-card {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    
+    .ant-card-body {
+      background: transparent !important;
+    }
+  }
+  
+  .active-goals-carousel {
+    .ant-card {
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+      
+      .ant-card-body {
+        background: transparent !important;
+      }
+    }
+  }
+}
+
 // ===== ACTIVE GOALS CAROUSEL STYLES =====
 .active-goals-carousel {
   border-radius: 16px !important;
@@ -68,24 +118,27 @@
     }
   }
   
-  // Dark theme dots
-  .dark-theme & {
+}
+
+// Dark theme dots
+.theme-dark {
+  .ant-carousel {
     .ant-carousel-dots {
       li {
         button {
-          background-color: #434343 !important;
+          background-color: #4b5563 !important;
           
           &:hover {
-            background-color: #595959 !important;
+            background-color: #6b7280 !important;
           }
         }
         
         &.ant-carousel-dot-active {
           button {
-            background-color: #1890ff !important;
+            background-color: #3b82f6 !important;
             
             &:hover {
-              background-color: #40a9ff !important;
+              background-color: #2563eb !important;
             }
           }
         }
@@ -93,6 +146,7 @@
     }
   }
 }
+  
 
 // ===== GOAL CARD STYLES =====
 .goal-card {
@@ -102,10 +156,12 @@
   position: relative;
   cursor: pointer;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  
-  // Dark theme
-  .dark-theme & {
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+// Dark mode goal card
+.theme-dark {
+  .goal-card {
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
   }
 }
 
@@ -154,10 +210,32 @@
   background: #fafafa;
   border-radius: 16px;
   border: 2px dashed #d9d9d9;
-  
-  .dark-theme & {
-    background: #262626;
-    border-color: #434343;
+}
+
+// Dark mode empty state
+.theme-dark {
+  .empty-state {
+    background: #1f2937 !important;
+    border-color: #374151 !important;
+    
+    .empty-state-title {
+      color: #f9fafb !important;
+    }
+    
+    .empty-state-description {
+      color: #9ca3af !important;
+    }
+    
+    .empty-state-button {
+      background: #3b82f6 !important;
+      border-color: #3b82f6 !important;
+      color: #ffffff !important;
+      
+      &:hover {
+        background: #2563eb !important;
+        border-color: #2563eb !important;
+      }
+    }
   }
 }
 

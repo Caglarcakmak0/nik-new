@@ -227,6 +227,7 @@ const TopicMatrix: React.FC = () => {
   const isStudent = useIsStudent();
   const isAdmin = useIsAdmin();
   const canEdit = isCoach || isAdmin;
+  const canSelectSubject = isCoach || isAdmin || isStudent; // Öğrenciler ders seçebilir
   const isStudentFree = isStudent && (user?.plan?.tier as any) === 'free';
   
   const subjectOptions = useMemo(() => buildSubjectOptions(), []);
@@ -574,13 +575,13 @@ const TopicMatrix: React.FC = () => {
               value={subject}
               options={subjectOptions}
               onChange={(v) => setSubject(v as SubjectKey)}
-              disabled={!canEdit}
+              disabled={!canSelectSubject}
             />
             <Select
               style={{ width: 200 }}
               value={dayCount}
               onChange={(v) => setDayCount(Number(v || 30))}
-              disabled={!canEdit}
+              disabled={!canSelectSubject}
               placeholder="Gün seçin"
             >
               <Option value={28}>28 Gün</Option>
@@ -757,7 +758,7 @@ const TopicMatrix: React.FC = () => {
                     setTimeout(() => document.addEventListener('click', closePopover), 100);
                   } : undefined}
                 >
-                  <Text>{topic}</Text>
+                  <Text>{topic || 'Konu Bulunamadı'}</Text>
                 </div>
                 {days.map((d) => (
                   <ColorCell

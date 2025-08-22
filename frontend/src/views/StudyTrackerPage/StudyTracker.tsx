@@ -34,6 +34,7 @@ import {
 import { StudyTimer, StudyCalendar, SessionHistory, StudyRoom, StudyStatistics } from "./bones";
 import { useAuth } from "../../contexts/AuthContext";
 import { apiRequest, getStudentPrograms, StudentProgram } from "../../services/api";
+import './StudyTracker.scss';
 import dayjs from "dayjs";  
 import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/tr"; // Türkçe locale
@@ -341,7 +342,7 @@ const StudyTracker: React.FC = () => {
   };
 
   return (
-    <div style={{ padding: "0 0 24px 0" }}>
+    <div className="study-tracker">
       {/* Header */}
       <div style={{ marginBottom: "24px" }}>
         <Title level={2} style={{ margin: 0, fontWeight: 500, fontSize: '24px' }}>
@@ -359,101 +360,6 @@ const StudyTracker: React.FC = () => {
               size="large"
               onSessionComplete={handleSessionComplete}
             />
-
-
-
-            {/* Koç Programlarım */}
-            {coachPrograms.length > 0 && (
-              <Card 
-                title="Koç Programlarım" 
-                size="small"
-                extra={
-                  <Button 
-                    type="link" 
-                    size="small"
-                    onClick={() => setShowProgramModal(true)}
-                  >
-                    Tümü
-                  </Button>
-                }
-                loading={programsLoading}
-              >
-                <Space direction="vertical" size="small" style={{ width: "100%" }}>
-                  {coachPrograms.slice(0, 3).map((program) => {
-                    const isToday = new Date(program.date).toDateString() === new Date().toDateString();
-                    const completionRate = program.stats?.completionRate || 0;
-                    
-                    return (
-                      <div key={program._id} style={{ 
-                        padding: '8px 0', 
-                        borderBottom: '1px solid #f0f0f0' 
-                      }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <div style={{ flex: 1 }}>
-                            <Space>
-                              <Text strong style={{ fontSize: '13px' }}>{program.title}</Text>
-                              {isToday && (
-                                <Badge  
-                                  count="BUGÜN" 
-                                  style={{ backgroundColor: '#52c41a' }}
-                                  size="small"
-                                />
-                              )}
-                            </Space>
-                            <div>
-                              <Text type="secondary" style={{ fontSize: '11px' }}>
-                                {program.subjects?.length || 0} konu • {completionRate}% tamamlandı
-                              </Text>
-                            </div>
-                          </div>
-                          <Button 
-                            type="primary" 
-                            size="small"
-                            icon={<PlayCircleOutlined />}
-                            onClick={() => {
-                              setSelectedProgram(program);
-                              setShowProgramModal(true);
-                            }}
-                          >
-                            Çalış
-                          </Button>
-                        </div>
-                        <Progress 
-                          percent={completionRate} 
-                          size="small" 
-                          strokeColor={completionRate === 100 ? '#52c41a' : '#1890ff'}
-                          showInfo={false}
-                          style={{ marginTop: 4 }}
-                        />
-                      </div>
-                    );
-                  })}
-                </Space>
-              </Card>
-            )}
-
-            {/* En Son Aktiviteler */}
-            <Card title="🕐 Son Aktiviteler" size="small">
-              <Timeline
-                items={sessions.slice(0, 5).map((session) => ({
-                  color: session.efficiency >= 80 ? "green" : "blue",
-                  children: (
-                    <div key={session._id}>
-                      <Text strong>{session.subject}</Text>
-                      <br />
-                      <Text type="secondary" style={{ fontSize: "12px" }}>
-                        {formatTime(session.duration)} • {session.technique} •
-                        {session.quality}
-                      </Text>
-                      <br />
-                      <Text type="secondary" style={{ fontSize: "11px" }}>
-                        {dayjs(session.date).fromNow()}
-                      </Text>
-                    </div>
-                  ),
-                }))}
-              />
-            </Card>
           </Space>
         </Col>
 
@@ -675,7 +581,7 @@ const StudyTracker: React.FC = () => {
 
       {/* Coach Programs Modal */}
       <Modal
-                        title="Tüm Koç Programlarım"
+        title="Tüm Koç Programlarım"
         open={showProgramModal}
         onCancel={() => {
           setShowProgramModal(false);
@@ -683,6 +589,7 @@ const StudyTracker: React.FC = () => {
         }}
         footer={null}
         width={800}
+        className="coach-programs-modal"
       >
         {selectedProgram ? (
           <div>
@@ -690,10 +597,10 @@ const StudyTracker: React.FC = () => {
               type="info"
               message={`${selectedProgram.title} - Konu Seçimi`}
               description="Çalışmak istediğiniz konuyu seçin ve timer'ı başlatın"
-              style={{ marginBottom: 16 }}
+              className="alert-margin"
             />
 
-            <div style={{ display: 'grid', gap: '8px' }}>
+            <div className="programs-grid">
               {selectedProgram.subjects?.map((subject, idx) => {
                 const subjectProgress = (subject.targetTime && subject.targetTime > 0) 
                   ? Math.round(((subject.studyTime || 0) / subject.targetTime) * 100) 
@@ -703,17 +610,15 @@ const StudyTracker: React.FC = () => {
                   <Card 
                     key={idx} 
                     size="small" 
-                    style={{ 
-                      marginBottom: 8,
-                      border: subject.status === 'completed' ? '1px solid #52c41a' : 
-                              subject.status === 'in_progress' ? '1px solid #1890ff' : '1px solid #d9d9d9',
-                      opacity: subject.status === 'completed' ? 0.7 : 1
-                    }}
+                    className={`program-card ${
+                      subject.status === 'completed' ? 'completed' : 
+                      subject.status === 'in_progress' ? 'in-progress' : 'default'
+                    }`}
                   >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                      <div style={{ flex: 1 }}>
+                    <div className="program-content">
+                      <div className="program-info">
                         <Space>
-                          <Text strong style={{ fontSize: '14px' }}>
+                          <Text strong className="program-title">
                             {subject.subject?.charAt(0).toUpperCase() + subject.subject?.slice(1)}
                           </Text>
                           <Tag 
@@ -726,19 +631,19 @@ const StudyTracker: React.FC = () => {
                              subject.status === 'in_progress' ? 'Devam Ediyor' : 'Başlanmadı'}
                           </Tag>
                         </Space>
-                        <div style={{ marginTop: 4 }}>
-                          <Text type="secondary" style={{ fontSize: '12px', display: 'block' }}>
+                        <div className="program-details">
+                          <Text type="secondary" className="program-description">
                             {subject.description}
                           </Text>
-                          <Space size="middle" style={{ marginTop: 4 }}>
-                            <Text type="secondary" style={{ fontSize: '11px' }}>
+                          <Space size="middle" className="program-details">
+                            <Text type="secondary" className="program-detail-text">
                               Hedef: {subject.targetTime || 0} dk
                             </Text>
-                            <Text type="secondary" style={{ fontSize: '11px' }}>
+                            <Text type="secondary" className="program-detail-text">
                               Çalışılan: {subject.studyTime || 0} dk ({subjectProgress}%)
                             </Text>
                             {subject.targetQuestions && (
-                              <Text type="secondary" style={{ fontSize: '11px' }}>
+                              <Text type="secondary" className="program-detail-text">
                                 Hedef Soru: {subject.targetQuestions}
                               </Text>
                             )}
@@ -748,10 +653,10 @@ const StudyTracker: React.FC = () => {
                           percent={Math.min(subjectProgress, 100)} 
                           size="small" 
                           strokeColor={subjectProgress >= 100 ? '#52c41a' : '#1890ff'}
-                          style={{ marginTop: 6 }}
+                          className="program-progress"
                         />
                       </div>
-                      <div style={{ marginLeft: 16 }}>
+                      <div className="program-actions">
                         <Button 
                           type="primary" 
                           size="small"
@@ -776,7 +681,7 @@ const StudyTracker: React.FC = () => {
             </div>
           </div>
         ) : (
-          <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+          <Space direction="vertical" size="middle" className="program-list">
             {coachPrograms.map((program) => {
               const isToday = new Date(program.date).toDateString() === new Date().toDateString();
               const completionRate = program.stats?.completionRate || 0;
@@ -785,11 +690,11 @@ const StudyTracker: React.FC = () => {
                 <Card 
                   key={program._id} 
                   size="small" 
-                  style={{ cursor: 'pointer' }}
+                  className="program-item"
                   onClick={() => setSelectedProgram(program)}
                   hoverable
                 >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div className="program-item-content">
                     <div>
                       <Space>
                         <Text strong>{program.title}</Text>
@@ -798,7 +703,7 @@ const StudyTracker: React.FC = () => {
                         )}
                       </Space>
                       <div>
-                        <Text type="secondary" style={{ fontSize: '12px' }}>
+                        <Text type="secondary" className="program-item-info">
                           {program.subjects?.length || 0} konu • %{completionRate} tamamlandı
                         </Text>
                       </div>

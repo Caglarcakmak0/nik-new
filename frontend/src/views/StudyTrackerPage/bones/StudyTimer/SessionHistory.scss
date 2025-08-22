@@ -208,11 +208,7 @@
 }
 
 // Dark mode support - Force override with higher specificity
-[data-theme="dark"] .session-history,
-html[data-theme="dark"] .session-history,
-body[data-theme="dark"] .session-history,
-.theme-dark .session-history,
-.dark .session-history {
+.theme-dark .session-history {
   .ant-card {
     border-color: #374151 !important;
     background: #1f2937 !important;

@@ -33,7 +33,6 @@ const ActiveGoals: React.FC<ActiveGoalsProps> = ({ goals, loading = false }) => 
     const gradients: { [key: string]: string } = {
       'İTÜ': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
       'İstanbul Teknik Üniversitesi': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      'Boğaziçi': 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
       'Boğaziçi Üniversitesi': 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
       'ODTÜ': 'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)',
       'Orta Doğu Teknik Üniversitesi': 'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)',
@@ -41,7 +40,7 @@ const ActiveGoals: React.FC<ActiveGoalsProps> = ({ goals, loading = false }) => 
       'Sabancı': 'linear-gradient(135deg, #a8e6cf 0%, #dcedc1 100%)',
       'Bilkent': 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
       'Hacettepe': 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-      'default': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+      
     };
     
     for (const [key, gradient] of Object.entries(gradients)) {
@@ -81,10 +80,11 @@ const ActiveGoals: React.FC<ActiveGoalsProps> = ({ goals, loading = false }) => 
   return (
     <Card
       loading={loading}
+      className="active-goals-card"
       style={{
-        background: isDark ? '#141414' : 'transparent',
+        background: 'transparent',
         border: 'none',
-        borderBottom: 'none'
+        boxShadow: 'none'
       }}
     >
       {goals && goals.length > 0 ? (
@@ -107,7 +107,10 @@ const ActiveGoals: React.FC<ActiveGoalsProps> = ({ goals, loading = false }) => 
                  <div
                    className="goal-card"
                    style={{
-                     background: `url(${getGoalImage(goal)}) center/cover`
+                     backgroundImage: `url("${getGoalImage(goal)}")`,
+                     backgroundPosition: 'center',
+                     backgroundSize: 'cover',
+                     backgroundRepeat: 'no-repeat'
                    }}
                    onClick={() => navigate('/goals')}
                  >

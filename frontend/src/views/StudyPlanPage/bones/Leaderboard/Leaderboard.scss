@@ -40,7 +40,7 @@
     }
     
     // Dark mode için user stats card stilleri
-    [data-theme='dark'] & {
+    .theme-dark & {
       background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
       border: 1px solid #303030;
       
@@ -85,7 +85,7 @@
     }
     
     // Dark mode için genel kart stilleri
-    [data-theme='dark'] & {
+    .theme-dark & {
       border-color: #434343;
       background: #262626;
       
@@ -122,7 +122,7 @@
       }
       
       // Dark mode için öğrenci kartı stilleri
-      [data-theme='dark'] & {
+      .theme-dark & {
         background: linear-gradient(135deg, #1f1f1f 0%, #2a2a2a 100%) !important;
         border-color: #177ddc !important;
         box-shadow: 0 4px 12px rgba(23, 125, 220, 0.2) !important;
@@ -206,7 +206,7 @@
     }
     
     // Dark mode için genel kart stilleri
-    [data-theme='dark'] & {
+    .theme-dark & {
       border-color: #303030;
       background: #1f1f1f;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);

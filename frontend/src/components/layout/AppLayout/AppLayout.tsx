@@ -216,7 +216,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
 
 
   return (
-    <Layout className={`app-layout ${isDark ? 'dark' : 'light'}`}>
+    <Layout className={`app-layout ${isDark ? 'theme-dark' : 'theme-light'}`}>
       {/* Sidebar */}
       <Sider 
         trigger={null} 

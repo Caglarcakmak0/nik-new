@@ -47,7 +47,7 @@ export const authService = {
     });
   },
 
-  resetPassword: async (params: { uid: string; token: string; newPassword: string }) => {
+  resetPassword: async (params: { token: string; newPassword: string }) => {
     return apiRequest('/users/reset-password', {
       method: 'POST',
       body: JSON.stringify(params),

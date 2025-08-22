@@ -251,7 +251,7 @@
 }
 
  // Dark mode için border rengi ve efektler
- .app-layout.dark {
+ .theme-dark .app-layout {
    .app-sider .sider-logo {
      border-bottom: none !important;
     background: linear-gradient(135deg, rgba(24, 144, 255, 0.08) 0%, rgba(251, 146, 60, 0.08) 100%);
@@ -293,7 +293,7 @@
 }
 
  // Light mode için border rengi ve efektler
- .app-layout.light {
+ .theme-light .app-layout {
    .app-sider .sider-logo {
      border-bottom: none !important;
     background: linear-gradient(135deg, rgba(24, 144, 255, 0.03) 0%, rgba(251, 146, 60, 0.03) 100%);
@@ -323,17 +323,17 @@
 }
 
 // Dark mode için theme button rengi
-.app-layout.dark .theme-button {
+.theme-dark .app-layout .theme-button {
   color: #fff;
 }
 
 // Light mode için theme button rengi
-.app-layout.light .theme-button {
+.theme-light .app-layout .theme-button {
   color: #000;
 }
 
 // Light mode için header stilleri
-.app-layout.light {
+.theme-light .app-layout {
   .app-header {
     background: #ffffff !important;
     border-bottom: 1px solid #e5e7eb !important;
@@ -424,7 +424,7 @@
 }
 
 // Dark mode için header stilleri
-.app-layout.dark {
+.theme-dark .app-layout {
   .app-header {
     background: #1f2937 !important;
     border-bottom: 1px solid #374151 !important;

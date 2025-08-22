@@ -4,6 +4,7 @@ import { Card, List, Typography, Tag, Space, Button, Skeleton, Alert, Progress, 
 import { PlayCircleOutlined, ClockCircleOutlined, BookOutlined, CheckCircleOutlined, TrophyOutlined, StopOutlined } from '@ant-design/icons';
 import { getStudentProgramDetail, StudentProgram, createStudySession, updateLiveTracking } from '../../services/api';
 import StudyTimer from '../../views/StudyTrackerPage/bones/StudyTimer/StudyTimer';
+import './StudentProgramDetail.scss';
 
 const { Title, Text } = Typography;
 
@@ -174,7 +175,7 @@ const StudentProgramDetail: React.FC = () => {
   }, [id]);
 
   return (
-    <Card
+    <Card className="student-program-detail"
       title={(
         <Space>
           <Link to="/student/coach">← Geri</Link>
@@ -216,10 +217,10 @@ const StudentProgramDetail: React.FC = () => {
 
           {/* İstatistikler */}
           {program.stats && (
-            <Card size="small" style={{ marginBottom: 16 }}>
+            <Card size="small" className="stats-card alert-margin">
               <Space size="large" wrap>
                 <div>
-                  <Text type="secondary" style={{ display: 'block' }}>Toplam İlerleme</Text>
+                  <Text type="secondary" className="stat-label">Toplam İlerleme</Text>
                   <Progress 
                     type="circle" 
                     percent={program.stats.completionRate || 0} 
@@ -228,20 +229,20 @@ const StudentProgramDetail: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <Text type="secondary" style={{ display: 'block' }}>Çalışma Süresi</Text>
-                  <Text strong style={{ fontSize: '18px' }}>
+                  <Text type="secondary" className="stat-label">Çalışma Süresi</Text>
+                  <Text strong className="stat-value">
                     <ClockCircleOutlined /> {program.stats.totalStudyTime || 0} / {program.stats.totalTargetTime || 0} dk
                   </Text>
                 </div>
                 <div>
-                  <Text type="secondary" style={{ display: 'block' }}>Tamamlanan Sorular</Text>
-                  <Text strong style={{ fontSize: '18px' }}>
+                  <Text type="secondary" className="stat-label">Tamamlanan Sorular</Text>
+                  <Text strong className="stat-value">
                     <CheckCircleOutlined /> {program.stats.totalCompletedQuestions || 0} / {program.stats.totalTargetQuestions || 0}
                   </Text>
                 </div>
                 <div>
-                  <Text type="secondary" style={{ display: 'block' }}>Net Skor</Text>
-                  <Text strong style={{ fontSize: '18px', color: '#52c41a' }}>
+                  <Text type="secondary" className="stat-label">Net Skor</Text>
+                  <Text strong className="net-score">
                     <TrophyOutlined /> {program.stats.netScore || 0}
                   </Text>
                 </div>
@@ -296,7 +297,7 @@ const StudentProgramDetail: React.FC = () => {
                         </Space>
                       }
                       description={
-                        <Space direction="vertical" size="small" style={{ width: '100%' }}>
+                        <Space direction="vertical" size="small" className="content-wrapper">
                           {s.description && (
                             <Text type="secondary">{s.description}</Text>
                           )}
@@ -311,13 +312,13 @@ const StudentProgramDetail: React.FC = () => {
                           
                           {/* Çalışma Süre İlerlemesi */}
                           <div>
-                            <Text type="secondary" style={{ marginRight: 8 }}>
+                            <Text type="secondary" className="progress-text">
                               Süre: {s.studyTime || 0} / {s.targetTime || 0} dk ({progress}%)
                             </Text>
                             <Progress 
                               percent={Math.min(progress, 100)} 
                               size="small" 
-                              style={{ maxWidth: 200 }}
+                              className="progress-bar"
                               strokeColor={progress >= 100 ? '#52c41a' : '#1890ff'}
                             />
                           </div>
@@ -325,13 +326,13 @@ const StudentProgramDetail: React.FC = () => {
                           {/* Soru İlerlemesi */}
                           {(s.targetQuestions && s.targetQuestions > 0) && (
                             <div>
-                              <Text type="secondary" style={{ marginRight: 8 }}>
+                              <Text type="secondary" className="progress-text">
                                 Sorular: {s.completedQuestions || 0} / {s.targetQuestions} ({questionProgress}%)
                               </Text>
                               <Progress 
                                 percent={Math.min(questionProgress, 100)} 
                                 size="small" 
-                                style={{ maxWidth: 200 }}
+                                className="progress-bar"
                                 strokeColor={questionProgress >= 100 ? '#52c41a' : '#1890ff'}
                               />
                             </div>
@@ -392,7 +393,7 @@ const StudentProgramDetail: React.FC = () => {
                   )}
                 </Space>
               }
-              style={{ marginBottom: 16 }}
+              className="alert-margin"
             />
             <StudyTimer
               size="large"

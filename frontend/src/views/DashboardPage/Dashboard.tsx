@@ -158,7 +158,7 @@ const Dashboard: React.FC = () => {
               />
             </Col>
             <Col xs={24} lg={5}>
-              <div style={{  display: 'flex', flexDirection: 'column', paddingTop: '22px' }}>
+              <div style={{  display: 'flex', flexDirection: 'column' }}>
                 <Space direction="vertical" size={5} style={{ width: '100%', flex: 1 }}>
                   {/* Leaderboard Card */}
                   <Card style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>

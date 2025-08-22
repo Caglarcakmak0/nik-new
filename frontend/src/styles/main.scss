@@ -520,4 +520,224 @@ body h2.ant-typography {
       }
     }
   }
+  
+  // Dark mode list stilleri - Ant Design list split son eleman hover sorunu
+  .ant-list-split {
+    .ant-spin-container {
+      > .ant-list-items {
+        > .ant-list-item {
+          &:last-child {
+            &:hover {
+              background: #374151 !important;
+              border-color: #4b5563 !important;
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  // CSS dev-only override'ları için de aynı stil
+  :where(.css-dev-only-do-not-override-*) {
+    .ant-list-split {
+      .ant-spin-container {
+        > .ant-list-items {
+          > .ant-list-item {
+            &:last-child {
+              &:hover {
+                background: #374151 !important;
+                border-color: #4b5563 !important;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  // Global dark mode stilleri - Tüm sayfalar için
+  body {
+    background: #0f1419 !important;
+    color: #f9fafb !important;
+  }
+  
+  // Ant Design global dark mode stilleri
+  .ant-layout {
+    background: #0f1419 !important;
+  }
+  
+  .ant-layout-content {
+    background: #0f1419 !important;
+  }
+  
+  // Ant Design form elemanları için global dark mode
+  .ant-form-item-label > label {
+    color: #f9fafb !important;
+  }
+  
+  .ant-form-item-explain-error {
+    color: #ef4444 !important;
+  }
+  
+  // Ant Design modal dark mode
+  .ant-modal-content {
+    background: #1f2937 !important;
+    color: #f9fafb !important;
+  }
+  
+  .ant-modal-header {
+    background: #1f2937 !important;
+    border-bottom-color: #374151 !important;
+  }
+  
+  .ant-modal-title {
+    color: #f9fafb !important;
+  }
+  
+  .ant-modal-body {
+    background: #1f2937 !important;
+    color: #f9fafb !important;
+  }
+  
+  .ant-modal-footer {
+    background: #1f2937 !important;
+    border-top-color: #374151 !important;
+  }
+  
+  // Ant Design dropdown dark mode
+  .ant-dropdown-menu {
+    background: #1f2937 !important;
+    border-color: #374151 !important;
+  }
+  
+  .ant-dropdown-menu-item {
+    color: #f9fafb !important;
+    
+    &:hover {
+      background: #374151 !important;
+    }
+  }
+  
+  // Ant Design tooltip dark mode
+  .ant-tooltip-inner {
+    background: #1f2937 !important;
+    color: #f9fafb !important;
+  }
+  
+  .ant-tooltip-arrow::before {
+    background: #1f2937 !important;
+  }
+  
+  // Ant Design message dark mode
+  .ant-message-notice-content {
+    background: #1f2937 !important;
+    color: #f9fafb !important;
+    border-color: #374151 !important;
+  }
+  
+  // Ant Design notification dark mode
+  .ant-notification-notice {
+    background: #1f2937 !important;
+    color: #f9fafb !important;
+    border-color: #374151 !important;
+  }
+  
+  // Ant Design progress dark mode
+  .ant-progress-text {
+    color: #f9fafb !important;
+  }
+  
+  // Ant Design statistic dark mode
+  .ant-statistic-title {
+    color: #9ca3af !important;
+  }
+  
+  .ant-statistic-content {
+    color: #f9fafb !important;
+  }
+  
+  // Ant Design typography dark mode
+  .ant-typography {
+    color: #f9fafb !important;
+    
+    &.ant-typography-secondary {
+      color: #9ca3af !important;
+    }
+  }
+  
+  // Ant Design divider dark mode
+  .ant-divider {
+    border-color: #374151 !important;
+  }
+  
+  // Ant Design space dark mode
+  .ant-space {
+    .ant-space-item {
+      .ant-btn {
+        background: #374151 !important;
+        border-color: #4b5563 !important;
+        color: #f9fafb !important;
+        
+        &:hover {
+          background: #4b5563 !important;
+          border-color: #6b7280 !important;
+        }
+        
+        &.ant-btn-primary {
+          background: #3b82f6 !important;
+          border-color: #3b82f6 !important;
+          color: #ffffff !important;
+          
+          &:hover {
+            background: #2563eb !important;
+            border-color: #2563eb !important;
+          }
+        }
+        
+        &.ant-btn-dangerous {
+          background: #ef4444 !important;
+          border-color: #ef4444 !important;
+          color: #ffffff !important;
+          
+          &:hover {
+            background: #dc2626 !important;
+            border-color: #dc2626 !important;
+          }
+        }
+      }
+    }
+  }
+  
+  // Koç programları dark mode
+  .ant-card-meta {
+    .ant-card-meta-title {
+      color: #f9fafb !important;
+    }
+    
+    .ant-card-meta-description {
+      color: #9ca3af !important;
+    }
+  }
+  
+  .ant-list-header {
+    background: #1f2937 !important;
+    border-color: #374151 !important;
+    
+    .ant-typography {
+      color: #f9fafb !important;
+    }
+  }
+  
+  .ant-card-actions {
+    background: #1f2937 !important;
+    border-color: #374151 !important;
+    
+    .ant-btn {
+      color: #f9fafb !important;
+      
+      &:hover {
+        background: #374151 !important;
+      }
+    }
+  }
 }

@@ -5,6 +5,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { apiRequest } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import CreateProgramTour from '../../components/tour/CoachTour/CreateProgramTour';
+import './CreateProgram.scss';
 
 type SubjectForm = {
   subject: string;
@@ -86,7 +87,7 @@ const CreateProgram: React.FC = () => {
   };
 
   return (
-    <div>
+    <div className="create-program">
       <Form form={form} layout="vertical" onFinish={submit}>
         {/* Öğrenci ve Tarih Bilgileri Kartı */}
         <Card title="Program Bilgileri" style={{ marginBottom: 16 }}>
