@@ -125,6 +125,8 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
     const path = location.pathname;
     if (path.startsWith('/profile') || path.startsWith('/education') || path.startsWith('/goals')) {
       setOpenKeys(['profile']);
+    } else if (path.startsWith('/study-tracker/')) {
+      setOpenKeys(['/study-tracker']);
     } else {
       setOpenKeys([]);
     }
@@ -248,7 +250,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
               <Text strong className="brand-text">
                 NİK YKS{planLabel ? (
                   <>
-                    {' '}<span style={{ color: '#000' }}>{String(planLabel).toUpperCase()}</span>
+                      {' '}<span className={`plan-label${isDark ? ' plan-label-dark' : ''}`}>{String(planLabel).toUpperCase()}</span>
                   </>
                 ) : null}
               </Text>

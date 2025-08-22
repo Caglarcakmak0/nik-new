@@ -16,6 +16,12 @@ import Profile from "./views/ProfilePage/Profile";
 import EducationInfo from "./views/EducationInfo";
 import Goals from "./views/GoalsPage/Goals";
 import StudyTracker from "./views/StudyTrackerPage/StudyTracker";
+import StudyTrackerSessions from "./views/StudyTrackerPage/subpages/StudyTrackerSessions";
+import StudyTrackerCalendar from "./views/StudyTrackerPage/subpages/StudyTrackerCalendar";
+import StudyTrackerRoom from "./views/StudyTrackerPage/subpages/StudyTrackerRoom";
+import StudyTrackerStatistics from "./views/StudyTrackerPage/subpages/StudyTrackerStatistics";
+import StudyTrackerCoachPrograms from "./views/StudyTrackerPage/subpages/StudyTrackerCoachPrograms";
+import StudyTrackerTimer from "./views/StudyTrackerPage/subpages/StudyTrackerTimer";
 import StudyPlan from "./views/StudyPlanPage/StudyPlan";
 import StudentExams from "./views/StudentExams/StudentExams";
 import TopicMatrix from "./views/TopicMatrix/TopicMatrix";
@@ -87,11 +93,56 @@ function ThemedApp() {
                             </ProtectedRoute>
                           }
                         />
+                        {/* Study Tracker nested pages */}
                         <Route
                           path="/study-tracker"
+                          element={<Navigate to="/study-tracker/sessions" replace />}
+                        />
+                        <Route
+                          path="/study-tracker/timer"
                           element={
                             <ProtectedRoute allowedRoles={["student"]}>
-                              <StudyTracker />
+                              <StudyTrackerTimer />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/study-tracker/sessions"
+                          element={
+                            <ProtectedRoute allowedRoles={["student"]}>
+                              <StudyTrackerSessions />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/study-tracker/calendar"
+                          element={
+                            <ProtectedRoute allowedRoles={["student"]}>
+                              <StudyTrackerCalendar />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/study-tracker/study-room"
+                          element={
+                            <ProtectedRoute allowedRoles={["student"]}>
+                              <StudyTrackerRoom />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/study-tracker/statistics"
+                          element={
+                            <ProtectedRoute allowedRoles={["student"]}>
+                              <StudyTrackerStatistics />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/study-tracker/coach-programs"
+                          element={
+                            <ProtectedRoute allowedRoles={["student"]}>
+                              <StudyTrackerCoachPrograms />
                             </ProtectedRoute>
                           }
                         />

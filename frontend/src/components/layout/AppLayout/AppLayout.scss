@@ -129,7 +129,7 @@
           font-weight: 900;
           font-size: 20px;
           transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-          text-shadow: 0 2px 4px rgba(251, 146, 60, 0.3);
+            /* text-shadow removed */
           letter-spacing: 0.5px;
         }
       }
@@ -287,7 +287,7 @@
      }
 
      .brand-text {
-       text-shadow: 0 2px 4px rgba(251, 146, 60, 0.5);
+  /* text-shadow removed */
      }
   }
 }

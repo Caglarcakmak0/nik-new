@@ -1,8 +1,55 @@
 @import '../../styles/variables';
 @import '../../styles/mixins';
 
+// ===== INLINE CSS CLASSES =====
+.subject-card {
+  padding: 6px 8px;
+  background: #fafafa;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.text-description-small {
+  font-size: 11px;
+}
+
+.margin-top-16 {
+  margin-top: 16px;
+}
+
+// Dark mode overrides
+.theme-dark {
+  .subject-card {
+    background: #1f2937;
+  }
+}
+
 .study-tracker {
   padding: 0 0 24px 0;
+  // Genel program grid (modal dışında da kullanılacak)
+  .programs-grid {
+    display: grid;
+    gap: 12px; // konu kartları arası boşluk
+  }
+  
+  .study-tracker-grid {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 24px;
+  }
+  .left-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .right-panel {
+    min-height: 400px;
+  }
+  @media (max-width: 992px) {
+    .study-tracker-grid {
+      grid-template-columns: 1fr;
+    }
+  }
   
   // Coach Programs Modal
   .coach-programs-modal {
@@ -10,10 +57,8 @@
       margin-bottom: 16px;
     }
     
-    .programs-grid {
-      display: grid;
-      gap: 8px;
-    }
+  // Modal içindeki grid artık genel tanımı kullanıyor; gerekirse override
+  .programs-grid { gap: 12px; }
     
     .program-card {
       margin-bottom: 8px;

@@ -56,7 +56,7 @@ interface Subject {
   status: 'not_started' | 'in_progress' | 'completed' | 'skipped';
   sessionIds: string[];
 }
-
+  
 interface DailyTableProps {
   plan: {
     _id: string;
@@ -319,7 +319,7 @@ const DailyTable: React.FC<DailyTableProps> = ({
       <span>{title}</span>
       {tooltip && (
         <Tooltip title={tooltip} placement="top">
-          <InfoCircleOutlined style={{ color: '#999', fontSize: '12px' }} />
+          <InfoCircleOutlined className="header-tooltip-icon" />
         </Tooltip>
       )}
     </div>
@@ -433,11 +433,11 @@ const DailyTable: React.FC<DailyTableProps> = ({
               }}
               onBlur={() => saveDYBForSubject(record.index)}
               size="small"
-              style={{ width: '60px' }}
+              className="input-small"
             />
           );
         }
-        return <Text style={{ color: '#52c41a', fontWeight: 'bold' }}>{correct}</Text>;
+        return <Text className="text-correct">{correct}</Text>;
       },
       sorter: (a, b) => a.correctAnswers - b.correctAnswers,
       sortOrder: sorterState?.orderBy === 'correctAnswers' ? sorterState.orderDirection : undefined,
@@ -464,11 +464,11 @@ const DailyTable: React.FC<DailyTableProps> = ({
               }}
               onBlur={() => saveDYBForSubject(record.index)}
               size="small"
-              style={{ width: '60px' }}
+              className="input-small"
             />
           );
         }
-        return <Text style={{ color: '#ff4d4f', fontWeight: 'bold' }}>{wrong}</Text>;
+        return <Text className="text-wrong">{wrong}</Text>;
       },
       sorter: (a, b) => a.wrongAnswers - b.wrongAnswers,
       sortOrder: sorterState?.orderBy === 'wrongAnswers' ? sorterState.orderDirection : undefined,
@@ -495,11 +495,11 @@ const DailyTable: React.FC<DailyTableProps> = ({
               }}
               onBlur={() => saveDYBForSubject(record.index)}
               size="small"
-              style={{ width: '60px' }}
+              className="input-small"
             />
           );
         }
-        return <Text style={{ color: '#8c8c8c', fontWeight: 'bold' }}>{blank}</Text>;
+        return <Text className="text-blank">{blank}</Text>;
       },
       sorter: (a, b) => a.blankAnswers - b.blankAnswers,
       sortOrder: sorterState?.orderBy === 'blankAnswers' ? sorterState.orderDirection : undefined,
@@ -562,7 +562,7 @@ const DailyTable: React.FC<DailyTableProps> = ({
           <Select
             size="small"
             value={status}
-            style={{ width: 150 }}
+            className="select-status"
             onChange={(val) => onSubjectUpdate(record.index, { status: val })}
             options={[
               { label: 'Başlanmadı', value: 'not_started' },
@@ -662,7 +662,7 @@ const DailyTable: React.FC<DailyTableProps> = ({
           <div className="interaction-guide">
             <div className="guide-content">
               <div className="guide-text">
-                <Text type="secondary" style={{ fontSize: '14px' }}>
+                <Text type="secondary" className="text-secondary-small">
                   💡 Ders detaylarını görmek için satıra tıklayın
                 </Text>
               </div>
@@ -724,7 +724,7 @@ const DailyTable: React.FC<DailyTableProps> = ({
           {totalCount > pageSize && (
             <div className="pagination-container">
               <div className="pagination-info">
-                <Typography.Text style={{ color: '#64748b', fontSize: '13px' }}>
+                <Typography.Text className="text-pagination">
                   Toplam Kayıt Sayısı: {totalCount}
                 </Typography.Text>
 
@@ -738,14 +738,14 @@ const DailyTable: React.FC<DailyTableProps> = ({
                 />
 
                 <div className="page-size-selector">
-                  <span style={{ color: '#64748b', fontSize: '13px' }}>Kayıt Göster:</span>
+                  <span className="text-pagination">Kayıt Göster:</span>
                   <Select
                     value={pageSize}
                     onChange={(val) => {
                       setPageSize(val);
                       setPage(1);
                     }}
-                    style={{ width: 80 }}
+                    className="select-pagesize"
                     size="small"
                     options={[5, 10, 20, 50].map(v => ({ label: v, value: v }))}
                   />

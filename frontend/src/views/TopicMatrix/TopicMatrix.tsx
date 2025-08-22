@@ -538,12 +538,17 @@ const TopicMatrix: React.FC = () => {
         maskClosable={false}
         getContainer={() => (document.querySelector('.app-content') as HTMLElement) || document.body}
         footer={[
-          <Button key="upgrade" type="primary" onClick={() => { window.location.href = 'https://nikykskoclugu.com.tr/#iletisim'; }}>
+          <Button
+            key="upgrade"
+            type="primary"
+            className={typeof window !== 'undefined' && document.body.classList.contains('theme-dark') ? 'premium-upgrade-btn' : ''}
+            onClick={() => { window.location.href = 'https://nikykskoclugu.com.tr/#iletisim'; }}
+          >
             Premium’a Yükselt
           </Button>
         ]}
       >
-        <Title level={4}>Konu Matrisi (Aylık Takip)</Title>
+  <Title level={4}>Konu Takibi (Aylık İzleme)</Title>
         <Text>
           Bu sayfa, öğrencinin her derste aylık konu takibini yapmak için kullanılır. Premium üyelik ile düzenleme ve koç yönlendirmeleri aktif olur.
         </Text>
@@ -663,7 +668,7 @@ const TopicMatrix: React.FC = () => {
         {isCoach && !selectedStudentId ? (
           <div style={{ padding: '40px', textAlign: 'center' }}>
             <Text type="secondary" style={{ fontSize: '16px' }}>
-              Konu matrisini görüntülemek için lütfen bir öğrenci seçin.
+              Konu takibini görüntülemek için lütfen bir öğrenci seçin.
             </Text>
           </div>
         ) : (
@@ -781,7 +786,7 @@ const TopicMatrix: React.FC = () => {
         <Divider />
         <Text type="secondary">
           <div style={{ marginBottom: '8px' }}>
-            <strong>Kullanım:</strong> {canEdit ? 'Hücreye tıklayarak renk seçin. "Satır Rengi" ile tüm satırı, "Konu Rengi" ile konu arka planını, sütun başlığındaki "Renk" ile sütunu renklendirebilirsiniz.' : 'Konu matrisini görüntüleyebilirsiniz. Düzenleme yetkiniz bulunmamaktadır.'}
+            <strong>Kullanım:</strong> {canEdit ? 'Hücreye tıklayarak renk seçin. "Satır Rengi" ile tüm satırı, "Konu Rengi" ile konu arka planını, sütun başlığındaki "Renk" ile sütunu renklendirebilirsiniz.' : 'Konu takibini görüntüleyebilirsiniz. Düzenleme yetkiniz bulunmamaktadır.'}
           </div>
           {canEdit && (
             <>

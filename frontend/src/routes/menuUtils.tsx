@@ -4,16 +4,15 @@ import {
   ClockCircleOutlined,
   BarChartOutlined,
   CalendarOutlined,
-  ProfileOutlined,
   TeamOutlined,
   FileTextOutlined,
   BookOutlined,
   ExperimentOutlined,
   BulbOutlined,
-  GlobalOutlined,
   QuestionCircleOutlined,
   CompassOutlined,
-  TrophyOutlined
+  TrophyOutlined,
+  HistoryOutlined
 } from "@ant-design/icons";
 import type { MenuItemEx, Role } from "./menuTypes";
 
@@ -77,8 +76,46 @@ export const allMenuItems: MenuItemEx[] = [
   {
     key: "/study-tracker",
     icon: <ExperimentOutlined />,
-    label: "Çalışma Tracker",
+  label: "Çalışma Zamanlayıcı",
     roles: ["student"],
+    children: [
+      {
+        key: "/study-tracker/timer",
+        icon: <ClockCircleOutlined />,
+  label: "Serbest Zamanlayıcı",
+        roles: ["student"],
+      },
+      {
+        key: "/study-tracker/sessions",
+        icon: <HistoryOutlined />,
+        label: "Oturum Geçmişi",
+        roles: ["student"],
+      },
+      {
+        key: "/study-tracker/calendar",
+        icon: <CalendarOutlined />,
+        label: "Takvim",
+        roles: ["student"],
+      },
+      {
+        key: "/study-tracker/study-room",
+        icon: <TrophyOutlined />,
+        label: "Çalışma Odası",
+        roles: ["student"],
+      },
+      {
+        key: "/study-tracker/statistics",
+        icon: <BarChartOutlined />,
+        label: "İstatistikler",
+        roles: ["student"],
+      },
+      {
+        key: "/study-tracker/coach-programs",
+        icon: <UserOutlined />,
+  label: "Günlük Programlar",
+        roles: ["student"],
+      },
+    ]
   },
   {
     key: "/study-plan",
@@ -89,7 +126,7 @@ export const allMenuItems: MenuItemEx[] = [
   {
     key: "/topic-matrix",
     icon: <CompassOutlined />,
-    label: "Konu Matrisi",
+  label: "Konu Takibi",
     roles: ["student", "coach"],
   },
   {
