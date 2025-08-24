@@ -287,15 +287,19 @@ const SessionHistory: React.FC<SessionHistoryProps> = ({ refreshTrigger = 0 }) =
 
   // Toplamlar (tam filtrelenmiş set üzerinden)
   const totals = useMemo(() => {
-    return filteredSessions.reduce(
+    const agg = filteredSessions.reduce(
       (acc, s) => {
         acc.duration += Number(s.duration) || 0;
-        acc.quality += Number(s.quality) || 0;
-        acc.efficiency += Number(s.efficiency) || 0;
+        acc.quality += Number(s.quality) || 0; // gerekirse ortalama kaliteye çevrilebilir
+        acc.efficiencySum += Number(s.efficiency) || 0;
+        acc.count += 1;
         return acc;
       },
-      { duration: 0, quality: 0, efficiency: 0 }
+      { duration: 0, quality: 0, efficiencySum: 0, count: 0 }
     );
+  const averageEfficiency = agg.count ? Math.round((agg.efficiencySum / agg.count) * 100) / 100 : 0; // 2 ondalık
+  const averageQuality = agg.count ? Math.round((agg.quality / agg.count) * 100) / 100 : 0;
+  return { ...agg, averageEfficiency, averageQuality };
   }, [filteredSessions]);
 
   // Tablo değişiklikleri (sıralama)
@@ -403,10 +407,10 @@ const SessionHistory: React.FC<SessionHistoryProps> = ({ refreshTrigger = 0 }) =
                 </Table.Summary.Cell>
                 <Table.Summary.Cell index={3} />
                 <Table.Summary.Cell index={4} className="summary-cell" align="center">
-                  <Text strong>{totals.quality}</Text>
+                  <Text strong>{totals.averageQuality}</Text>
                 </Table.Summary.Cell>
                 <Table.Summary.Cell index={5} className="summary-cell" align="right">
-                  <Text strong>{`%${totals.efficiency}`}</Text>
+                  <Text strong>{`%${totals.averageEfficiency}`}</Text>
                 </Table.Summary.Cell>
                 <Table.Summary.Cell index={6} />
               </Table.Summary.Row>

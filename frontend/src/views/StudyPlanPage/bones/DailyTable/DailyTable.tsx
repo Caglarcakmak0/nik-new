@@ -756,41 +756,56 @@ const DailyTable: React.FC<DailyTableProps> = ({
         </div>
       </Card>
 
-      {/* Plan Summary with Real-time Status */}
-      <Card className="plan-summary" size="small">
-        <Row gutter={16}>
-          <Col xs={12} md={6}>
-            <Statistic
-              title="Toplam Hedef"
-              value={plan.stats.totalTargetQuestions ?? 0}
-              prefix={<TrophyOutlined />}
-            />
-          </Col>
-          <Col xs={12} md={6}>
-            <Statistic
-              title="Tamamlanan"
-              value={plan.stats.totalCompletedQuestions ?? 0}
-              suffix={`/${plan.stats.totalTargetQuestions ?? 0}`}
-              prefix={<CheckCircleOutlined />}
-            />
-          </Col>
-          <Col xs={12} md={6}>
-            <Statistic
-              title="Toplam Süre"
-              value={plan.stats.totalStudyTime ?? 0}
-              suffix="dk"
-              prefix={<ClockCircleOutlined />}
-            />
-          </Col>
-          <Col xs={12} md={6}>
-            <Statistic
-              title="Tamamlanma"
-              value={Math.round(plan.stats.completionRate ?? 0)}
-              suffix="%"
-            />
-          </Col>
-        </Row>
-      </Card>
+      {/* Plan Summary (öğrenci olmayan roller için gösterilmeye devam) */}
+      {!isStudent && (
+        <Card className="plan-summary" size="small">
+          <Row gutter={16}>
+            <Col xs={12} md={4}>
+              <Statistic
+                title="Toplam Hedef"
+                value={plan.stats.totalTargetQuestions ?? 0}
+                prefix={<TrophyOutlined />}
+              />
+            </Col>
+            <Col xs={12} md={4}>
+              <Statistic
+                title="Tamamlanan"
+                value={plan.stats.totalCompletedQuestions ?? 0}
+                suffix={`/${plan.stats.totalTargetQuestions ?? 0}`}
+                prefix={<CheckCircleOutlined />}
+              />
+            </Col>
+            <Col xs={12} md={4}>
+              <Statistic
+                title="Tamamlanma"
+                value={Math.round(plan.stats.completionRate ?? 0)}
+                suffix="%"
+              />
+            </Col>
+            <Col xs={12} md={4}>
+              <Statistic
+                title="Başarı Oranı"
+                value={Math.round(plan.stats.successRate ?? 0)}
+                suffix="%"
+              />
+            </Col>
+            <Col xs={12} md={4}>
+              <Statistic
+                title="Toplam Süre"
+                value={plan.stats.totalStudyTime ?? 0}
+                suffix="dk"
+                prefix={<ClockCircleOutlined />}
+              />
+            </Col>
+            <Col xs={12} md={4}>
+              <Statistic
+                title="Net Puan"
+                value={Number.isFinite(plan.stats.netScore) ? plan.stats.netScore.toFixed(1) : 0}
+              />
+            </Col>
+          </Row>
+        </Card>
+      )}
 
       {/* Student Feedback Section - Only visible to students */}
       {isStudent && (
@@ -905,58 +920,35 @@ const DailyTable: React.FC<DailyTableProps> = ({
               </div>
             </div>
 
-            {/* Performans Özeti */}
-            <div className="evaluation-section performance-section">
-              <div className="section-header">
-                <Title level={5} className="section-title">
-                  <TrophyOutlined /> Bugünkü Performans Özeti
-                </Title>
-                <Text type="secondary" className="section-description">
-                  Günlük çalışma istatistikleriniz
-                </Text>
-              </div>
-              
-              <div className="performance-grid">
-                <div className="performance-card">
-                  <div className="performance-icon">
-                    <CheckCircleOutlined />
-                  </div>
-                  <div className="performance-content">
-                    <div className="performance-value">{plan.stats.completionRate}%</div>
-                    <div className="performance-label">Tamamlanma Oranı</div>
-                  </div>
+            {/* Birleştirilmiş Performans İstatistikleri (ilk kart tasarımıyla) */}
+            <div className="evaluation-section performance-section merged-metrics">
+              <Card className="plan-summary merged" size="small" title={
+                <div style={{display:'flex',alignItems:'center',gap:8}}>
+                  <TrophyOutlined />
+                  <span>Günlük Performans Özeti</span>
                 </div>
-                
-                <div className="performance-card">
-                  <div className="performance-icon">
-                    <TrophyOutlined />
-                  </div>
-                  <div className="performance-content">
-                    <div className="performance-value">{plan.stats.successRate}%</div>
-                    <div className="performance-label">Başarı Oranı</div>
-                  </div>
-                </div>
-                
-                <div className="performance-card">
-                  <div className="performance-icon">
-                    <ClockCircleOutlined />
-                  </div>
-                  <div className="performance-content">
-                    <div className="performance-value">{Math.round(plan.stats.totalStudyTime / 60)}dk</div>
-                    <div className="performance-label">Toplam Süre</div>
-                  </div>
-                </div>
-                
-                <div className="performance-card">
-                  <div className="performance-icon">
-                    <FireOutlined />
-                  </div>
-                  <div className="performance-content">
-                    <div className="performance-value">{plan.stats.netScore.toFixed(1)}</div>
-                    <div className="performance-label">Net Puan</div>
-                  </div>
-                </div>
-              </div>
+              }>
+                <Row gutter={[16,16]}>
+                  <Col xs={12} md={8} lg={4}>
+                    <Statistic title="Toplam Hedef" value={plan.stats.totalTargetQuestions ?? 0} />
+                  </Col>
+                  <Col xs={12} md={8} lg={4}>
+                    <Statistic title="Tamamlanan" value={plan.stats.totalCompletedQuestions ?? 0} suffix={`/${plan.stats.totalTargetQuestions ?? 0}`} />
+                  </Col>
+                  <Col xs={12} md={8} lg={4}>
+                    <Statistic title="Tamamlanma" value={Math.round(plan.stats.completionRate ?? 0)} suffix="%" />
+                  </Col>
+                  <Col xs={12} md={8} lg={4}>
+                    <Statistic title="Başarı Oranı" value={Math.round(plan.stats.successRate ?? 0)} suffix="%" />
+                  </Col>
+                  <Col xs={12} md={8} lg={4}>
+                    <Statistic title="Toplam Süre" value={plan.stats.totalStudyTime ?? 0} suffix="dk" />
+                  </Col>
+                  <Col xs={12} md={8} lg={4}>
+                    <Statistic title="Net Puan" value={Number.isFinite(plan.stats.netScore) ? plan.stats.netScore.toFixed(1) : 0} />
+                  </Col>
+                </Row>
+              </Card>
             </div>
 
             {/* Gönder Butonu */}

@@ -1,0 +1,26 @@
+// Global button standardization
+.ant-btn {
+  font-weight:600;
+  border-radius:9px;
+  height:34px;
+  padding:0 14px;
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  letter-spacing:.2px;
+  &.ant-btn-sm { height:30px; font-size:12px; }
+  &.ant-btn-lg { height:42px; font-size:16px; }
+  &.ant-btn-primary { box-shadow:0 2px 4px rgba(0,0,0,0.08); }
+  &.ant-btn-default { background:#ffffff; }
+  &.ant-btn-variant-outlined { /* outlined consistency */
+    background:transparent;
+    border-width:1px;
+  }
+  &:hover { transition:all .25s; }
+}
+.theme-dark .ant-btn.ant-btn-default { background:#1e293b; color:#f1f5f9; border-color:#334155; }
+.theme-dark .ant-btn.ant-btn-default:hover { background:#273549; }
+
+// Icon sizing consistency
+.ant-btn .ant-btn-icon { display:inline-flex; align-items:center; }
+.ant-btn .anticon { font-size:14px; }

@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Typography, Card, Space, Button, Badge, Tag, Progress } from 'antd';
+import { Typography, Card, Space, Button, Badge, Tag, Progress, Modal } from 'antd';
 import { useAuth } from '../../../contexts/AuthContext';
 import { getStudentPrograms, StudentProgram } from '../../../services/api';
 import { PlayCircleOutlined, BookOutlined, ClockCircleOutlined } from '@ant-design/icons';
+import StudyTimer from '../bones/StudyTimer/StudyTimer';
 import '../StudyTracker.scss';
 
 const { Title, Text } = Typography;
@@ -14,7 +15,9 @@ const StudyTrackerCoachPrograms: React.FC = () => {
   const [loading, setLoading] = useState(false);
   // Modal kaldırıldı; detaylar artık kart içinde açılır (accordion tarzı)
   const [expandedProgramId, setExpandedProgramId] = useState<string | null>(null);
-  // Timer kaldırıldı; sadece program listesi ve konu seçimi gösteriliyor.
+  // Timer modal state (yeniden eklendi)
+  const [showTimer, setShowTimer] = useState(false);
+  const [activeSubject, setActiveSubject] = useState<{ programId: string; subject: string; targetTime?: number; technique?: string } | null>(null);
 
   const fetchPrograms = async () => {
     if (isFree) return;
@@ -113,7 +116,10 @@ const StudyTrackerCoachPrograms: React.FC = () => {
                                   size="small"
                                   icon={<PlayCircleOutlined />}
                                   disabled={subject.status === 'completed'}
-                                  onClick={() => { /* burada çalışma ekranına yönlendirme yapılabilir */ }}
+                                  onClick={() => {
+                                    setActiveSubject({ programId: program._id, subject: subject.subject, targetTime: subject.targetTime });
+                                    setShowTimer(true);
+                                  }}
                                   style={{ backgroundColor: subject.status === 'in_progress' ? '#52c41a' : undefined }}
                                 >
                                   {subject.status === 'completed' ? 'Tamamlandı' : subject.status === 'in_progress' ? 'Devam Et' : 'Hazır'}
@@ -131,7 +137,30 @@ const StudyTrackerCoachPrograms: React.FC = () => {
           })}
         </Space>
       )}
-      {/* Modal kaldırıldı; detaylar kart içinde gösteriliyor */}
+      {/* Çalışma Timer Modal */}
+      <Modal
+        open={showTimer}
+        onCancel={() => { setShowTimer(false); setActiveSubject(null); }}
+        footer={null}
+        width={520}
+        destroyOnClose
+        title={activeSubject ? `${activeSubject.subject} • Çalışma Oturumu` : 'Çalışma Oturumu'}
+      >
+        {activeSubject && (
+          <StudyTimer
+            size="large"
+            initialConfig={{
+              subject: activeSubject.subject,
+              studyDuration: activeSubject.targetTime && activeSubject.targetTime > 0 ? Math.min(activeSubject.targetTime, 180) : 25,
+              technique: 'Pomodoro'
+            }}
+            onSessionComplete={() => {
+              // Oturum tamamlandığında programları yeniden yükle
+              fetchPrograms();
+            }}
+          />
+        )}
+      </Modal>
     </div>
   );
 };

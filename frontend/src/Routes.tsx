@@ -15,14 +15,15 @@ import Dashboard from "./views/DashboardPage/Dashboard";
 import Profile from "./views/ProfilePage/Profile";
 import EducationInfo from "./views/EducationInfo";
 import Goals from "./views/GoalsPage/Goals";
-import StudyTracker from "./views/StudyTrackerPage/StudyTracker";
 import StudyTrackerSessions from "./views/StudyTrackerPage/subpages/StudyTrackerSessions";
 import StudyTrackerCalendar from "./views/StudyTrackerPage/subpages/StudyTrackerCalendar";
 import StudyTrackerRoom from "./views/StudyTrackerPage/subpages/StudyTrackerRoom";
 import StudyTrackerStatistics from "./views/StudyTrackerPage/subpages/StudyTrackerStatistics";
 import StudyTrackerCoachPrograms from "./views/StudyTrackerPage/subpages/StudyTrackerCoachPrograms";
 import StudyTrackerTimer from "./views/StudyTrackerPage/subpages/StudyTrackerTimer";
-import StudyPlan from "./views/StudyPlanPage/StudyPlan";
+import DailyPlanPage from "./views/StudyPlanPage/subpages/DailyPlanPage";
+import MonthlyPlanPage from "./views/StudyPlanPage/subpages/MonthlyPlanPage";
+import AnalyticsPlanPage from "./views/StudyPlanPage/subpages/AnalyticsPlanPage";
 import StudentExams from "./views/StudentExams/StudentExams";
 import TopicMatrix from "./views/TopicMatrix/TopicMatrix";
 import CoachDashboard from "./views/CoachDashboard/CoachDashboard";
@@ -148,9 +149,29 @@ function ThemedApp() {
                         />
                         <Route
                           path="/study-plan"
+                          element={<Navigate to="/study-plan/daily" replace />}
+                        />
+                        <Route
+                          path="/study-plan/daily"
                           element={
                             <ProtectedRoute allowedRoles={["student"]}>
-                              <StudyPlan />
+                              <DailyPlanPage />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/study-plan/monthly"
+                          element={
+                            <ProtectedRoute allowedRoles={["student"]}>
+                              <MonthlyPlanPage />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/study-plan/analytics"
+                          element={
+                            <ProtectedRoute allowedRoles={["student"]}>
+                              <AnalyticsPlanPage />
                             </ProtectedRoute>
                           }
                         />

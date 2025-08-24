@@ -7,18 +7,14 @@ import {
   Col, 
   Button,
   DatePicker,
-  Tabs,
   message,
   Modal
 } from 'antd';
 import { 
   CalendarOutlined,
-  TableOutlined,
-  BarChartOutlined,
-  PlusOutlined,
-  BulbOutlined,
-  GiftOutlined
+  PlusOutlined
 } from '@ant-design/icons';
+import { useLocation } from 'react-router-dom';
 import { useAuth, useIsStudent, useIsCoach } from '../../contexts/AuthContext';
 import { apiRequest } from '../../services/api';
 import DailyTable from './bones/DailyTable/DailyTable';
@@ -26,8 +22,6 @@ import MonthlyCalendar from './bones/MonthlyCalendar/MonthlyCalendar';
 
 import CreatePlanModal from './bones/CreatePlan/CreatePlanModal';
 import AdvancedAnalytics from './bones/AdvancedAnalytics/AdvancedAnalytics';
-import StudyRecommendations from './bones/StudyRecommendations/StudyRecommendations';
-import Achievements from './bones/Achievements/Achievements';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import StudyPlanTour from '../../components/tour/StudentTour/StudyPlanTour';
@@ -76,7 +70,11 @@ interface DailyPlan {
   dailyGoal?: string;
 }
 
-const StudyPlan: React.FC = () => {
+interface StudyPlanProps {
+  initialTab?: string; // 'daily' | 'monthly' | 'analytics'
+}
+
+const StudyPlan: React.FC<StudyPlanProps> = ({ initialTab }) => {
   const { user: _user } = useAuth();
   const isFree = (_user?.plan?.tier as any) === 'free';
   const isStudent = useIsStudent();
@@ -84,7 +82,8 @@ const StudyPlan: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Dayjs>(dayjs());
   const [currentPlan, setCurrentPlan] = useState<DailyPlan | null>(null);
-  const [activeTab, setActiveTab] = useState<string>('daily');
+  const [activeTab, setActiveTab] = useState<string>(initialTab || 'daily');
+  const location = useLocation();
   const [showCreateModal, setShowCreateModal] = useState(false);
 
   // Tour targets
@@ -190,6 +189,28 @@ const StudyPlan: React.FC = () => {
     fetchDailyPlan(selectedDate);
   }, [selectedDate]);
 
+  // URL'ye göre tab senkronize et (ayrı sayfalar)
+  useEffect(() => {
+    const path = location.pathname;
+    if (path.startsWith('/study-plan/')) {
+      const seg = path.split('/')[2];
+      if (seg && ['daily','monthly','analytics'].includes(seg)) {
+        setActiveTab(seg);
+      }
+    } else if (path === '/study-plan') {
+      if (activeTab !== 'daily') setActiveTab('daily');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname]);
+
+  useEffect(() => {
+    const base = '/study-plan';
+    const target = activeTab === 'daily' ? `${base}/daily` : `${base}/${activeTab}`;
+    if (window.location.pathname !== target) {
+      window.history.replaceState({}, '', target);
+    }
+  }, [activeTab]);
+
   // Plan var mı kontrolü
   const hasPlan = currentPlan !== null;
 
@@ -245,108 +266,35 @@ const StudyPlan: React.FC = () => {
       {/* Content */}
       <div className="page-content" ref={tabsRef as any}>
         {hasPlan ? (
-          // Plan var - Tabs ile farklı görünümler
-          <Tabs 
-            activeKey={activeTab} 
-            onChange={setActiveTab} 
-            size="large"
-            animated={{ tabPane: true }}
-            tabBarStyle={{ 
-              marginBottom: '24px',
-              transition: 'all 0.3s ease-in-out'
-            }}
-            items={[
-              {
-                key: 'daily',
-                label: (
-                  <span id="tab-daily-label" style={{ fontWeight: 500 }}>
-                    <TableOutlined style={{ marginRight: '5px' }} />
-                    Günlük Tablo
-                  </span>
-                ),
-                children: (
-                  <div ref={dailyTableRef as any} className="stagger-item">
-                    <DailyTable
-                      plan={currentPlan}
-                      onSubjectUpdate={handleSubjectUpdate}
-                      onPlanUpdate={(updateData) => handleUpdatePlan(currentPlan._id, updateData)}
-                      onRefresh={() => fetchDailyPlan(selectedDate)}
-                      loading={loading}
-                    />
-                  </div>
-                )
-              },
-
-              {
-                key: 'monthly',
-                label: (
-                  <span id="tab-monthly-label" style={{ fontWeight: 500 }}>
-                    <CalendarOutlined style={{ marginRight: '5px' }} />
-                    Aylık Görünüm
-                  </span>
-                ),
-                children: (
-                  <div ref={monthlyCalendarRef as any} className="stagger-item">
-                    <MonthlyCalendar
-                      selectedDate={selectedDate}
-                      onDateSelect={setSelectedDate}
-                      currentPlan={currentPlan}
-                    />
-                  </div>
-                )
-              },
-              {
-                key: 'analytics',
-                label: (
-                  <span id="tab-analytics-label" style={{ fontWeight: 500 }}>
-                    <BarChartOutlined style={{ marginRight: '5px' }} />
-                    Çalışma İstatistikleri
-                  </span>
-                ),
-                forceRender: true,
-                children: (
-                  <AdvancedAnalytics
-                    plan={currentPlan}
-                    selectedDate={selectedDate}
-                    onRefresh={() => fetchDailyPlan(selectedDate)}
-                  />
-                )
-              },
-              {
-                key: 'recommendations',
-                label: (
-                  <span id="tab-recommendations-label" style={{ opacity: 0.5, fontWeight: 500 }}>
-                    <BulbOutlined style={{ marginRight: '5px' }} />
-                    AI Öneriler
-                    <span style={{ fontSize: '10px', marginLeft: '8px', color: '#999' }}>(Yakında)</span>
-                  </span>
-                ),
-                disabled: true,
-                children: (
-                  <StudyRecommendations
-                    plan={currentPlan}
-                    selectedDate={selectedDate}
-                    onStartRecommendation={(rec) => {
-                      message.info(`${rec.title} başlatıldı! Timer sayfasına yönlendiriliyorsunuz.`);
-                    }}
-                  />
-                )
-              },
-
-              {
-                key: 'achievements',
-                label: (
-                  <span id="tab-achievements-label" style={{ opacity: 0.5, fontWeight: 500 }}>
-                    <GiftOutlined style={{ marginRight: '5px' }} />
-                    Rozetlerim
-                    <span style={{ fontSize: '10px', marginLeft: '8px', color: '#999' }}>(Yakında)</span>
-                  </span>
-                ),
-                disabled: true,
-                children: <Achievements />
-              }
-            ]}
-          />
+          <div className="study-plan-view-wrapper">
+            {activeTab === 'daily' && (
+              <div ref={dailyTableRef as any} className="stagger-item">
+                <DailyTable
+                  plan={currentPlan}
+                  onSubjectUpdate={handleSubjectUpdate}
+                  onPlanUpdate={(updateData) => handleUpdatePlan(currentPlan._id, updateData)}
+                  onRefresh={() => fetchDailyPlan(selectedDate)}
+                  loading={loading}
+                />
+              </div>
+            )}
+            {activeTab === 'monthly' && (
+              <div ref={monthlyCalendarRef as any} className="stagger-item">
+                <MonthlyCalendar
+                  selectedDate={selectedDate}
+                  onDateSelect={setSelectedDate}
+                  currentPlan={currentPlan}
+                />
+              </div>
+            )}
+            {activeTab === 'analytics' && (
+              <AdvancedAnalytics
+                plan={currentPlan}
+                selectedDate={selectedDate}
+                onRefresh={() => fetchDailyPlan(selectedDate)}
+              />
+            )}
+          </div>
         ) : (
           // Plan yok - Boş durum
           <Card>

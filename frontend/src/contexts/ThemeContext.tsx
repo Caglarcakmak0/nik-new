@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { detectInitialTheme, setTheme as applyAndPersistTheme } from '../styles/theme';
 
 export type ThemeMode = 'light' | 'dark';
 
@@ -13,57 +14,38 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const useTheme = (): ThemeContextType => {
   const context = useContext(ThemeContext);
-  if (!context) {
-    throw new Error('useTheme must be used within a ThemeProvider');
-  }
+  if (!context) throw new Error('useTheme must be used within a ThemeProvider');
   return context;
 };
 
-interface ThemeProviderProps {
-  children: ReactNode;
-}
+interface ThemeProviderProps { children: ReactNode; }
 
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
-  const [themeMode, setThemeMode] = useState<ThemeMode>('light');
+  // Tek kaynak: detectInitialTheme (body class + localStorage + system)
+  const [themeMode, setThemeMode] = useState<ThemeMode>(() => detectInitialTheme());
 
-  // localStorage'dan tema tercihini yükle
+  // Eski anahtar ("theme") varsa bir kerelik migrate et
   useEffect(() => {
-    const savedTheme = localStorage.getItem('theme') as ThemeMode;
-    if (savedTheme && ['light', 'dark'].includes(savedTheme)) {
-      setThemeMode(savedTheme);
+    const legacy = localStorage.getItem('theme');
+    if (legacy && (legacy === 'dark' || legacy === 'light')) {
+      applyAndPersistTheme(legacy as ThemeMode);
+      setThemeMode(legacy as ThemeMode);
+      localStorage.removeItem('theme');
+    } else {
+      // ensure current applied (in case React strict remount cleared something)
+      applyAndPersistTheme(themeMode);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Tema değiştiğinde localStorage'a kaydet
+  // State değişince kalıcı hale getir (theme.ts zaten class + storage günceller)
   useEffect(() => {
-    localStorage.setItem('theme', themeMode);
+    applyAndPersistTheme(themeMode);
   }, [themeMode]);
 
-  // Aktif tema durumunu hesapla
   const isDark = themeMode === 'dark';
+  const toggleTheme = () => setThemeMode(m => (m === 'light' ? 'dark' : 'light'));
 
-  const toggleTheme = () => {
-    setThemeMode(prevMode => (prevMode === 'light' ? 'dark' : 'light'));
-  };
-
-  // Body class for advanced theming hooks
-  useEffect(() => {
-    const classes = ['theme-light', 'theme-dark'];
-    document.body.classList.remove(...classes);
-    const current = `theme-${themeMode}`;
-    document.body.classList.add(current);
-  }, [themeMode]);
-
-  const value: ThemeContextType = {
-    themeMode,
-    isDark,
-    setThemeMode,
-    toggleTheme
-  };
-
-  return (
-    <ThemeContext.Provider value={value}>
-      {children}
-    </ThemeContext.Provider>
-  );
+  const value: ThemeContextType = { themeMode, isDark, setThemeMode, toggleTheme };
+  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 };

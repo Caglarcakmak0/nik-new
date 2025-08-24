@@ -1,8 +1,7 @@
 import React from 'react';
-import { Card, Button, Space, Typography, Avatar } from 'antd';
+import { Card, Space, Typography, Avatar } from 'antd';
 import { toAbsoluteUrl } from '../../services/api';
 import './CoachProfile.scss';
-import FeatureGate from '../../components/FeatureGate';
 
 type Props = {
   coachName?: string;
@@ -10,12 +9,12 @@ type Props = {
   coachAvatar?: string | null;
   coachBio?: string;
   assignedAt?: string | Date | null;
-  onOpenFeedback?: () => void;
+  // Feedback butonu kaldırıldı
 };
 
 const { Text, Title } = Typography;
 
-export const CoachProfile: React.FC<Props> = ({ coachName, coachEmail, coachAvatar, coachBio, assignedAt, onOpenFeedback }) => {
+export const CoachProfile: React.FC<Props> = ({ coachName, coachEmail, coachAvatar, coachBio, assignedAt }) => {
   return (
     <Card className="coach-profile">
       <Space direction="vertical" size={12} style={{ width: '100%' }}>
@@ -34,11 +33,7 @@ export const CoachProfile: React.FC<Props> = ({ coachName, coachEmail, coachAvat
         {assignedAt && (
           <Text type="secondary" className="coach-assignment-date">Atama Tarihi: {new Date(assignedAt).toLocaleDateString('tr-TR')}</Text>
         )}
-        <div className="feedback-button">
-          <FeatureGate requiredPlan="premium" fallbackMode="banner">
-            <Button type="primary" onClick={onOpenFeedback}>Gizli Değerlendirme Gönder</Button>
-          </FeatureGate>
-        </div>
+  {/* Feedback butonu kaldırıldı; form sayfada ayrı gösteriliyor */}
       </Space>
     </Card>
   );

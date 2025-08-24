@@ -1,0 +1,41 @@
+// New compact dual-pane layout (chart left, stats right)
+// Reverted original baseline + delta pills
+// Layout: chart & title left (title overlay), stats on right
+.analytics-mini-card {
+  position:relative;
+  overflow:hidden;
+  border-radius:14px;
+  background:#ffffff;
+  display:flex;
+  box-shadow:0 1px 3px rgba(0,0,0,0.04);
+  transition:box-shadow .25s, transform .25s;
+  &:hover { box-shadow:0 4px 16px -2px rgba(0,0,0,0.12); }
+  .ant-card-head { display:none; }
+  .ant-card-body { padding:0; width:100%; }
+  .amc-content { display:flex; width:100%; min-height:74px; }
+  .amc-chart-side { position:relative; flex:1 1 auto; min-width:90px; padding:8px 0 4px 6px; display:flex; align-items:flex-end; }
+  .amc-chart-wrapper { position:relative; width:100%; height:100%; }
+  .amc-spark { position:absolute; inset:0 0 0 0; width:100%; height:100%; }
+  .amc-title-overlay { position:absolute; top:6px; left:8px; font-size:13px; font-weight:500; color:#4b5563; padding:0 0; border-radius:0; background:transparent; }
+  .amc-stat-side { flex:0 0 auto; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:10px 12px 10px 10px; gap:6px; min-width:80px; background:#f1f2f5; border-left:1px solid #e0e4e9; border-top-left-radius:8px; border-bottom-left-radius:8px; text-align:center; }
+  .amc-main-value { font-size:28px; font-weight:600; line-height:1; color:#111827; letter-spacing:-0.5px; }
+  &.is-positive .amc-main-value { color: #16a34a; }
+  &.is-negative .amc-main-value { color: #dc2626; }
+  .amc-deltas-inline { display:flex; gap:4px; }
+  .amc-delta-pill { font-size:11px; line-height:1; padding:4px 6px 5px; border-radius:999px; color:#fff; font-weight:600; display:inline-flex; align-items:center; justify-content:center; }
+  .amc-chart-wrapper, .amc-chart-wrapper * { pointer-events:none; }
+  .recharts-surface { overflow:visible; }
+}
+
+.theme-dark .analytics-mini-card {
+  background:#1f2937 !important;
+  .amc-title-overlay { color:#e2e8f0; background:transparent; }
+  .amc-main-value { color:#f1f5f9; }
+  .amc-stat-side { background:#34353C; border-left:1px solid #41434b;  align-items:center; text-align:center; }
+  &.is-positive .amc-main-value { color: #16a34a; }
+  &.is-negative .amc-main-value { color: #f87171; }
+}
+
+@media (max-width: 576px) {
+  .analytics-mini-card { .amc-main-value { font-size:24px; } }
+}

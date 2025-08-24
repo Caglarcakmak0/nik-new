@@ -3,8 +3,6 @@ import { Alert, Card, Spin, Typography, Modal, Button } from 'antd';
 import { getMyCoach, getCoachFeedbackStatus } from '../../services/api';
 import CoachProfile from './CoachProfile';
 import SecretFeedbackForm from '../../components/student/FeedbackForm/SecretFeedbackForm';
-import StudentPrograms from './StudentPrograms';
-import FeatureGate from '../../components/FeatureGate';
 import StudentCoachTour from '../../components/tour/StudentTour/StudentCoachTour';
 import { useAuth } from '../../contexts/AuthContext';
 import './StudentCoachPage.scss';
@@ -16,10 +14,9 @@ export const StudentCoachPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [coach, setCoach] = useState<{ id: string; name: string; email: string; avatar?: string | null; bio?: string; assignedAt: string | Date } | null>(null);
   const [status, setStatus] = useState<{ dueThisMonth: boolean; coachId: string | null; lastSubmittedAt: string | null; countThisMonth: number } | null>(null);
-  const [modalOpen, setModalOpen] = useState(false);
+  // Geri bildirim formu artık her zaman görünür; state kaldırıldı
   const bannerRef = useRef<HTMLDivElement | null>(null);
   const profileRef = useRef<HTMLDivElement | null>(null);
-  const programsRef = useRef<HTMLDivElement | null>(null);
   const isFree = (user?.plan?.tier as any) === 'free';
 
   const load = async () => {
@@ -58,7 +55,8 @@ export const StudentCoachPage: React.FC = () => {
             </span>
           }
           showIcon
-          action={<a onClick={() => setModalOpen(true)}>Değerlendirme Yap</a>}
+          // Butonla açma kaldırıldı; form aşağıda sürekli açık
+          action={null}
           style={{ marginBottom: 16 }}
         />
       );
@@ -125,27 +123,21 @@ export const StudentCoachPage: React.FC = () => {
           coachAvatar={coach.avatar || null}
           coachBio={coach.bio}
           assignedAt={coach.assignedAt}
-          onOpenFeedback={() => setModalOpen(true)}
         />
       </div>
-      <div style={{ marginTop: 16 }} ref={programsRef as any} className="programs-section">
-        <FeatureGate requiredPlan="premium" fallbackMode="banner">
-          <StudentPrograms />
-        </FeatureGate>
+      <div style={{ marginTop: 16 }}>
+        <SecretFeedbackForm
+          coachId={coach.id}
+          coachName={coach.name}
+          onSubmitted={() => { load(); }}
+        />
       </div>
-      <SecretFeedbackForm
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-        coachId={coach.id}
-        coachName={coach.name}
-        onSubmitted={load}
-      />
       <StudentCoachTour
         userId={user?._id}
         targets={{
           getBannerEl: () => (bannerRef.current as any) || document.querySelector('.ant-alert') as HTMLElement | null,
           getProfileEl: () => (profileRef.current as any) || null,
-          getProgramsEl: () => (programsRef.current as any) || null,
+          getProgramsEl: () => null, // Program bölümü kaldırıldı
         }}
       />
     </div>

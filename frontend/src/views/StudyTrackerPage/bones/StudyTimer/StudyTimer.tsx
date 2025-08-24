@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Button, Space, Card, message } from 'antd';
+import { Button, Space, Card, message, Modal } from 'antd';
 import { 
   PlayCircleOutlined, 
   PauseCircleOutlined, 
@@ -8,6 +8,7 @@ import {
   SettingOutlined
 } from '@ant-design/icons';
 import TimerDisplay from './TimerDisplay';
+import { createStudySession } from '../../../../services/api';
 import SessionSetup, { StudySessionConfig } from './SessionSetup';
 import SessionFeedback from './SessionFeedback';
 import './StudyTimer.scss';
@@ -76,7 +77,7 @@ const StudyTimer: React.FC<StudyTimerProps> = ({
   const [pendingSessionData, setPendingSessionData] = useState<any>(null);
 
   // Timer reference
-  const timerRef = useRef<number | null>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const startTimeRef = useRef<number>(0);
   // Çalışılan süreyi saniye bazında biriktir (sadece study modunda artar)
   const accumulatedStudySecondsRef = useRef<number>(0);
@@ -151,36 +152,31 @@ const StudyTimer: React.FC<StudyTimerProps> = ({
       technique: config.technique
     };
 
-    if (reason === 'completed') {
-      // Tamamlandığında feedback iste
-      setPendingSessionData(sessionData);
-      setShowFeedback(true);
-      setState('completed');
-      // hasUnsavedWorkRef completed akışında, feedback sonrası temizlenecek
-    } else {
-      // Manuel durdurma veya unmount: hemen varsayılan feedback ile kaydet
-      onSessionComplete?.({
-        ...sessionData,
-        quality: 3,
-        mood: 'Normal' as MoodType,
-        distractions: 0,
-        notes: ''
-      });
-      message.success('Çalışma süresi kaydedildi.');
-      // Temizle
+    // Her iki durumda da (tamamlandı veya manuel durdurma) kullanıcıdan geri bildirim istenir.
+    // 'unmount' özel durum: sessizce kaydetmeye çalışmayacağız; veri kaybı tolere edilir.
+    if (reason === 'unmount') {
+      // Sessiz at: kullanıcı pencereyi kapatmış; otomatik kayıt yapmıyoruz artık.
       hasUnsavedWorkRef.current = false;
       accumulatedStudySecondsRef.current = 0;
-      setState('idle');
-      setCurrentTime(0);
-      setTotalTime(0);
-      setCurrentSession(1);
-      setCompletedSessions(0);
+      return;
     }
+
+    setPendingSessionData(sessionData);
+    setShowFeedback(true);
+    setState('completed');
   }, [config, getWorkedMinutes, onSessionComplete]);
 
   // Timer durdurma (manuel): kısmi süreyi kaydet
   const stopTimer = useCallback(() => {
-    finalizeSession('stopped');
+    // Yanlış tıklamaları önlemek için onay penceresi
+    if (!hasUnsavedWorkRef.current) return;
+    Modal.confirm({
+      title: 'Oturumu sonlandırmak istediğinize emin misiniz?',
+      content: 'Bu oturumu şimdi sonlandırırsanız kalan süre iptal edilir ve geri bildirimi doldurmanız gerekecek.',
+      okText: 'Evet, Sonlandır',
+      cancelText: 'Vazgeç',
+      onOk: () => finalizeSession('stopped'),
+    });
   }, [finalizeSession]);
 
   // Timer sıfırlama
@@ -227,37 +223,47 @@ const StudyTimer: React.FC<StudyTimerProps> = ({
       notes: feedbackData.notes
     };
 
-    // Session data'yı callback'e gönder
-    onSessionComplete?.(completeSessionData);
-    // Temizle
-    hasUnsavedWorkRef.current = false;
-    accumulatedStudySecondsRef.current = 0;
-    
-    // Modal'ı kapat ve pending data'yı temizle
-    setShowFeedback(false);
-    setPendingSessionData(null);
+    (async () => {
+      try {
+        const payload = {
+          subject: completeSessionData.subject,
+          duration: completeSessionData.duration,
+          date: completeSessionData.date,
+          notes: completeSessionData.notes,
+          quality: completeSessionData.quality,
+          technique: completeSessionData.technique,
+          mood: completeSessionData.mood,
+          distractions: completeSessionData.distractions
+        };
+        const saved = await createStudySession(payload);
+        const savedSession = (saved && (saved as any).data) ? (saved as any).data : saved;
+        onSessionComplete?.(savedSession);
+        message.success('Oturum kaydedildi');
+      } catch (e: any) {
+        message.error(e?.message || 'Oturum kaydedilemedi');
+      } finally {
+        hasUnsavedWorkRef.current = false;
+        accumulatedStudySecondsRef.current = 0;
+        setShowFeedback(false);
+        setPendingSessionData(null);
+      }
+    })();
   };
 
   // Feedback modal'ını kapatma
   const handleFeedbackCancel = () => {
     if (!pendingSessionData) return;
-
-    // Varsayılan değerlerle session'ı tamamla
-    const completeSessionData = {
-      ...pendingSessionData,
-      quality: 3, // Varsayılan orta kalite
-      mood: 'Normal' as MoodType,
-      distractions: 0,
-      notes: ''
-    };
-
-    onSessionComplete?.(completeSessionData);
-    // Temizle
+    // Kaydetmeden oturumu iptal et
     hasUnsavedWorkRef.current = false;
     accumulatedStudySecondsRef.current = 0;
-    
     setShowFeedback(false);
     setPendingSessionData(null);
+    setState('idle');
+    setCurrentTime(0);
+    setTotalTime(0);
+    setCurrentSession(1);
+    setCompletedSessions(0);
+    message.info('Oturum kaydedilmedi.');
   };
 
   // Timer logic - useEffect

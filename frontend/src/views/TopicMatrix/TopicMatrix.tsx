@@ -1,14 +1,16 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Card, Select, InputNumber, Space, Button, Typography, Popover, Tooltip, Divider, message, Spin, Modal } from 'antd';
+import { Card, Select, Space, Button, Typography, Popover, Divider, message, Spin } from 'antd';
 const { Option } = Select;
-import { HighlightOutlined } from '@ant-design/icons';
 import { SUBJECT_TOPIC_BANK } from '../../constants/subjectTopics';
+import { PRESET_COLORS, PRESET_COLORS_DARK, KEYBOARD_COLOR_MAP, KEYBOARD_COLOR_MAP_DARK, SUBJECT_LABELS, resolveGroup } from './bones/constants';
+import { useLocalMap } from './bones/useLocalMap';
+import ColorCell from './bones/ColorCell';
 import { useAuth, useIsCoach, useIsStudent, useIsAdmin } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { apiRequest } from '../../services/api';
 import './TopicMatrix.scss';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 type SubjectKey = keyof typeof SUBJECT_TOPIC_BANK;
 
@@ -18,77 +20,6 @@ interface Student {
   email: string;
   grade?: number;
 }
-const PRESET_COLORS = [
-  '#ffffff',
-  '#faad14',
-  '#1677ff',
-  '#722ed1',
-  '#e61215',
-  '#595555'
-];
-
-const PRESET_COLORS_DARK = [
-  '#1f2937',
-  '#faad14',
-  '#1677ff',
-  '#722ed1',
-  '#e61215',
-  '#6b7280'
-];
-
-const KEYBOARD_COLOR_MAP: Record<string, { color: string; label: string }> = {
-  'q': { color: '#ffffff', label: 'Beyaz' },
-  'w': { color: '#faad14', label: 'Turuncu' },
-  'e': { color: '#1677ff', label: 'Mavi' },
-  'r': { color: '#722ed1', label: 'Mor' },
-  't': { color: '#e61215', label: 'Kırmızı' },
-  'y': { color: '#52c41a', label: 'Yeşil' },
-  'u': { color: '#595555', label: 'Gri' }
-};
-
-const KEYBOARD_COLOR_MAP_DARK: Record<string, { color: string; label: string }> = {
-  'q': { color: '#1f2937', label: 'Koyu Gri' },
-  'w': { color: '#faad14', label: 'Turuncu' },
-  'e': { color: '#1677ff', label: 'Mavi' },
-  'r': { color: '#722ed1', label: 'Mor' },
-  't': { color: '#e61215', label: 'Kırmızı' },
-  'y': { color: '#52c41a', label: 'Yeşil' },
-  'u': { color: '#6b7280', label: 'Gri' }
-};
-
-const SUBJECT_LABELS: Record<string, string> = {
-  turkce: 'Türkçe',
-  tarih: 'Tarih',
-  cografya: 'Coğrafya',
-  felsefe: 'Felsefe',
-  din_kultur: 'Din Kültürü',
-  matematik: 'Matematik',
-  geometri: 'Geometri',
-  fizik: 'Fizik',
-  kimya: 'Kimya',
-  biyoloji: 'Biyoloji',
-  edebiyat: 'Edebiyat',
-  tarih_ayt: 'Tarih',
-  cografya_ayt: 'Coğrafya',
-  felsefe_ayt: 'Felsefe',
-  din_kultur_ayt: 'Din Kültürü',
-  matematik_ayt: 'Matematik',
-  fizik_ayt: 'Fizik',
-  kimya_ayt: 'Kimya',
-  biyoloji_ayt: 'Biyoloji',
-  ingilizce: 'İngilizce',
-  almanca: 'Almanca',
-  fransizca: 'Fransızca',
-  diger: 'Diğer'
-};
-
-function resolveGroup(key: string): 'TYT' | 'AYT' | 'YDT' | 'Diğer' {
-  if (key.endsWith('_ayt')) return 'AYT';
-  if (['ingilizce', 'almanca', 'fransizca'].includes(key)) return 'YDT';
-  if (key === 'diger') return 'Diğer';
-  return 'TYT';
-}
-
 function buildSubjectOptions() {
   const keys = Object.keys(SUBJECT_TOPIC_BANK) as SubjectKey[];
   return keys.map((k) => ({
@@ -97,138 +28,16 @@ function buildSubjectOptions() {
   }));
 }
 
-function useLocalMap(subject: string, userId?: string, targetUserId?: string) {
-  const effectiveUserId = targetUserId || userId;
-  const storageKey = effectiveUserId 
-    ? `topic_color_matrix_v1_${subject}_${effectiveUserId}` 
-    : `topic_color_matrix_v1_${subject}`;
-    
-  const [map, setMap] = useState<Record<string, string>>({});
-
-  // Load data when subject, userId, or targetUserId changes
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(storageKey);
-      setMap(raw ? (JSON.parse(raw) as Record<string, string>) : {});
-    } catch (_) {
-      setMap({});
-    }
-  }, [storageKey]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(storageKey, JSON.stringify(map));
-    } catch (_) {
-      // no-op
-    }
-  }, [map, storageKey]);
-
-  const clear = () => {
-    setMap({});
-    try {
-      localStorage.removeItem(storageKey);
-    } catch (_) {
-      // no-op
-    }
-  };
-
-  return { map, setMap, clear } as const;
-}
-
-const ColorCell: React.FC<{
-  color?: string;
-  onChange: (hex: string) => void;
-  rowIndex: number;
-  day: number;
-  isSelected?: boolean;
-  onSelect: (rowIndex: number, day: number, isShiftClick: boolean) => void;
-  isReadOnly?: boolean;
-  isDark?: boolean;
-}> = ({ color, onChange, rowIndex, day, isSelected, onSelect, isReadOnly, isDark = false }) => {
-  const colors = isDark ? PRESET_COLORS_DARK : PRESET_COLORS;
-  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
-  const suppressNextOpenRef = useRef(false);
-  
-  const content = (
-    <div className="tmx-color-grid">
-      {colors.map((c) => (
-        <button
-          key={c}
-          className="tmx-color-swatch"
-          style={{ backgroundColor: c }}
-          onClick={() => {
-            onChange(c);
-            setIsPopoverOpen(false);
-          }}
-          aria-label={c}
-        />
-      ))}
-    </div>
-  );
-
-  const handleClick = (e: React.MouseEvent) => {
-    if (isReadOnly) return;
-    
-    if (e.shiftKey) {
-      e.preventDefault();
-      e.stopPropagation();
-      onSelect(rowIndex, day, true);
-      // Shift tıklamada popover açılmasını engelle
-      setIsPopoverOpen(false);
-    } else {
-      onSelect(rowIndex, day, false);
-      // Normal tıklamada popover aç/kapa kontrolünü onOpenChange'e bırak
-    }
-  };
-
-  if (isReadOnly) {
-    return (
-      <div 
-        className={`tmx-cell ${isSelected ? 'tmx-cell-selected' : ''}`} 
-        style={{ backgroundColor: color, cursor: 'default' }}
-      />
-    );
-  }
-
-  return (
-    <Popover
-      trigger="click"
-      content={content}
-      overlayStyle={{ width: 220 }}
-      open={isPopoverOpen}
-      onOpenChange={(next) => {
-        if (suppressNextOpenRef.current) {
-          // Shift ile tetiklenen tıklamada açılmayı bastır
-          suppressNextOpenRef.current = false;
-          return;
-        }
-        setIsPopoverOpen(next);
-      }}
-    >
-      <div 
-        className={`tmx-cell ${isSelected ? 'tmx-cell-selected' : ''}`} 
-        style={{ backgroundColor: color }}
-        onMouseDownCapture={(e) => {
-          if (e.shiftKey) {
-            // Popover'ın açılmasını engellemek için bu click döngüsünü işaretle
-            suppressNextOpenRef.current = true;
-          }
-        }}
-        onClick={handleClick}
-      />
-    </Popover>
-  );
-};
-
 const TopicMatrix: React.FC = () => {
   const { user } = useAuth();
   const { isDark } = useTheme();
   const isCoach = useIsCoach();
   const isStudent = useIsStudent();
   const isAdmin = useIsAdmin();
-  const canEdit = isCoach || isAdmin;
-  const canSelectSubject = isCoach || isAdmin || isStudent; // Öğrenciler ders seçebilir
+  // Free öğrenciler kendi matrislerini düzenleyebilsin (self-tracking). Admin & koç zaten düzenleyebilir.
   const isStudentFree = isStudent && (user?.plan?.tier as any) === 'free';
+  const canEdit = isCoach || isAdmin || isStudentFree;
+  const canSelectSubject = isCoach || isAdmin || isStudent; // Öğrenciler ders seçebilir
   
   const subjectOptions = useMemo(() => buildSubjectOptions(), []);
   const [subject, setSubject] = useState<SubjectKey>('matematik');
@@ -243,6 +52,18 @@ const TopicMatrix: React.FC = () => {
   const [selectedCells, setSelectedCells] = useState<Set<string>>(new Set());
   const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
   
+  // Local cell color map (persisted localStorage per user/subject)
+  const { map, setMap, clear } = useLocalMap(subject, user?._id, selectedStudentId);
+
+  // Track remote load state & debounce timer
+  const hasLoadedRemoteRef = useRef(false);
+  const saveTimerRef = useRef<number | null>(null);
+  const isLoadingRemoteRef = useRef(false);
+  const lastSavedSignatureRef = useRef<string>('');
+
+  // Column colors state  
+  const [columnColors, setColumnColors] = useState<Record<number, string>>({});
+
   const clearColumnColors = () => {
     setColumnColors({});
     try {
@@ -268,11 +89,6 @@ const TopicMatrix: React.FC = () => {
       // no-op
     }
   };
-
-  const { map, setMap, clear } = useLocalMap(subject, user?._id, selectedStudentId);
-  
-  // Column colors state  
-  const [columnColors, setColumnColors] = useState<Record<number, string>>({});
 
   // Topic colors state (for the left column with topic names)
   const [topicColors, setTopicColors] = useState<Record<number, string>>({});
@@ -357,6 +173,102 @@ const TopicMatrix: React.FC = () => {
       fetchStudents();
     }
   }, [isCoach]);
+
+  // MIGRATION: Eski anahtar (kullanıcı ID'siz) verisini kullanıcı giriş yaptıktan sonra taşı
+  useEffect(() => {
+    if (!user?._id) return;
+    const oldKey = `topic_color_matrix_v1_${subject}`; // eski generic anahtar
+    const newKey = `topic_color_matrix_v1_${subject}_${user._id}`;
+    try {
+      const oldData = localStorage.getItem(newKey) || localStorage.getItem(oldKey);
+      if (oldData) {
+        // Eğer yeni anahtar boşsa migrate et
+        if (!localStorage.getItem(newKey)) {
+          localStorage.setItem(newKey, oldData);
+        }
+        if (oldKey !== newKey) {
+          localStorage.removeItem(oldKey);
+        }
+      }
+    } catch (_) { /* no-op */ }
+  }, [user?._id, subject]);
+
+  // Remote'dan yükle (öğrenci kendi verisi veya koç seçili öğrencisi). Free öğrenciler dahil
+  useEffect(() => {
+    const shouldLoad = (isStudent || isCoach || isAdmin) && (isStudent ? !!user?._id : true);
+    if (!shouldLoad) return;
+    const targetUserId = isCoach && selectedStudentId ? selectedStudentId : (user?._id || '');
+    if (!targetUserId) return;
+    const controller = new AbortController();
+    const load = async () => {
+      isLoadingRemoteRef.current = true;
+      try {
+        const res = await apiRequest(`/topic-matrix/${targetUserId}/${subject}`, { signal: controller.signal });
+        if (res?.data) {
+          const remote = res.data;
+          // Remote cellColors Map -> object
+          const cellColors: Record<string, string> = remote.cellColors || {};
+          const colColors: Record<number, string> = remote.columnColors || {};
+          const tColors: Record<number, string> = remote.topicColors || {};
+          setMap(cellColors);
+          setColumnColors(colColors);
+          setTopicColors(tColors);
+          if (remote.dayCount && remote.dayCount !== dayCount) setDayCount(remote.dayCount);
+          hasLoadedRemoteRef.current = true;
+          // Save signature
+          lastSavedSignatureRef.current = JSON.stringify({ cellColors, colColors, tColors, dayCount: remote.dayCount });
+        }
+      } catch (err: any) {
+        // 404 ise sorun değil, yeni oluşturulacak
+      } finally {
+        isLoadingRemoteRef.current = false;
+      }
+    };
+    load();
+    return () => controller.abort();
+  }, [subject, selectedStudentId, isCoach, isStudent, isAdmin, user?._id]);
+
+  // Debounced auto-save (öğrenci kendi düzenlemesi, koç öğrenci düzenlemesi, admin)
+  useEffect(() => {
+    if (!canEdit) return; // düzenleme izni yoksa kaydetme
+    const targetUserId = isCoach && selectedStudentId ? selectedStudentId : user?._id;
+    if (!targetUserId) return;
+    // Remote yükleme bitmeden kaydetme (ilk fetch'i bekle)
+    if (!hasLoadedRemoteRef.current && !isLoadingRemoteRef.current) {
+      // Yüklenemediyse (örn. 404) yine de kaydetmeye izin ver ama bir kere map değişsin
+    }
+    const signature = JSON.stringify({ map, columnColors, topicColors, dayCount });
+    if (signature === lastSavedSignatureRef.current) return; // değişiklik yok
+    if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = window.setTimeout(async () => {
+      try {
+        const payload = {
+          userId: targetUserId,
+            subject,
+            dayCount,
+            topics: SUBJECT_TOPIC_BANK[subject] || [],
+            cellColors: map,
+            columnColors,
+            topicColors
+        };
+        await apiRequest('/topic-matrix', {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
+        lastSavedSignatureRef.current = signature;
+        // İlk başarılı kayıtta kısa bilgi mesajı
+        if (!hasLoadedRemoteRef.current) {
+          message.success('Konu matrisi kaydedildi');
+          hasLoadedRemoteRef.current = true;
+        }
+      } catch (e: any) {
+        // Sessiz; arada hata olursa kullanıcıyı boğmayalım
+      }
+    }, 600); // 600ms debounce
+    return () => {
+      if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current);
+    };
+  }, [map, columnColors, topicColors, dayCount, subject, selectedStudentId, canEdit, isCoach, user?._id]);
 
   // Define color application functions
   const applyColorToSelectedCells = (colorHex: string) => {
@@ -462,29 +374,7 @@ const TopicMatrix: React.FC = () => {
     }
   };
 
-  const handleFillRow = (rowIndex: number, colorHex: string) => {
-    setMap((prev) => {
-      const next = { ...prev } as Record<string, string>;
-      days.forEach((d) => {
-        next[getKey(rowIndex, d)] = colorHex;
-      });
-      return next;
-    });
-  };
-
-  const setColumnColor = (day: number, colorHex: string) => {
-    setColumnColors((prev) => ({ ...prev, [day]: colorHex }));
-  };
-
-  const handleFillColumn = (day: number, colorHex: string) => {
-    setMap((prev) => {
-      const next = { ...prev } as Record<string, string>;
-      topics.forEach((_, rowIndex) => {
-        next[getKey(rowIndex, day)] = colorHex;
-      });
-      return next;
-    });
-  };
+  // (Row/column bulk fill helpers removed as unused after simplifying free student editing scenario)
 
   const setTopicColor = (topicIndex: number, colorHex: string) => {
     setTopicColors((prev) => ({ ...prev, [topicIndex]: colorHex }));
@@ -532,27 +422,6 @@ const TopicMatrix: React.FC = () => {
 
   return (
     <div className="tmx-container">
-      <Modal
-        open={isStudentFree}
-        closable={false}
-        maskClosable={false}
-        getContainer={() => (document.querySelector('.app-content') as HTMLElement) || document.body}
-        footer={[
-          <Button
-            key="upgrade"
-            type="primary"
-            className={typeof window !== 'undefined' && document.body.classList.contains('theme-dark') ? 'premium-upgrade-btn' : ''}
-            onClick={() => { window.location.href = 'https://nikykskoclugu.com.tr/#iletisim'; }}
-          >
-            Premium’a Yükselt
-          </Button>
-        ]}
-      >
-  <Title level={4}>Konu Takibi (Aylık İzleme)</Title>
-        <Text>
-          Bu sayfa, öğrencinin her derste aylık konu takibini yapmak için kullanılır. Premium üyelik ile düzenleme ve koç yönlendirmeleri aktif olur.
-        </Text>
-      </Modal>
       <Card
         extra={
           <Space wrap>
@@ -595,7 +464,7 @@ const TopicMatrix: React.FC = () => {
             </Select>
 
             {canEdit && (
-              <Button onClick={() => { clear(); clearColumnColors(); clearTopicColors(); }}>Temizle</Button>
+              <Button onClick={() => { clear(); clearColumnColors(); clearTopicColors(); }}>Temizle (Yerel)</Button>
             )}
             <Button onClick={exportJson}>Dışa Aktar</Button>
             {canEdit && (
@@ -775,7 +644,7 @@ const TopicMatrix: React.FC = () => {
                     isSelected={selectedCells.has(getKey(rowIndex, d))}
                     onSelect={handleCellSelect}
                     isReadOnly={!canEdit}
-                    isDark={isDark}
+                    presetColors={isDark ? PRESET_COLORS_DARK : PRESET_COLORS}
                   />
                 ))}
               </React.Fragment>

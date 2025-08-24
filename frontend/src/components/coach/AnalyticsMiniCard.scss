@@ -1,0 +1,31 @@
+.analytics-mini-card {
+  position:relative;
+  overflow:hidden;
+  border-radius:12px;
+  background:#ffffff;
+  box-shadow:0 1px 3px rgba(0,0,0,0.04);
+  transition:box-shadow .25s, transform .25s;
+  &:hover { box-shadow:0 4px 16px -2px rgba(0,0,0,0.12); }
+  .ant-card-head { display:none; }
+  .ant-card-body { padding:10px 8px 8px 12px; }
+  /* avoid right-side gap for recharts by applying left margin only */
+  .amc-content { display:flex; align-items:stretch; gap:6px; margin:0 0 0 10px; }
+  .amc-left { flex:0 0 auto; display:flex; flex-direction:column; justify-content:flex-start; min-width:118px; margin:9px 0 6px 12px; gap: 12px; }
+  .amc-title { font-size:14px; font-weight:500; color:#111827; line-height:1.15; }
+  .amc-main-row { display:flex; flex-direction:column; align-items:flex-start; gap:2px; }
+  .amc-main-value { font-size:18px; font-weight:500; line-height:1; color:#111827; letter-spacing:-0.25px; }
+  &.is-positive .amc-main-value { color: #16a34a; }
+  &.is-negative .amc-main-value { color: #dc2626; }
+  /* sub-value removed; use main-value as primary */
+  .amc-chart-wrapper { flex:1; display:flex; align-items:flex-end; justify-content:flex-end; min-width:100px; padding-right:0; }
+  .recharts-surface { overflow:visible; }
+}
+
+.theme-dark .analytics-mini-card {
+  background:#1e2530 !important;
+  .amc-title { color:#f1f5f9; }
+  .amc-main-value { color:#f1f5f9; }
+  /* positive/negative main value colors in dark theme */
+  &.is-positive .amc-main-value { color: #16a34a; }
+  &.is-negative .amc-main-value { color: #f87171; }
+}

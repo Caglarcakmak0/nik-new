@@ -403,8 +403,9 @@ export const updateLiveTracking = async (planId: string, data: {
   });
 };
 
-export const getCoachLiveDashboard = async () => {
-  return apiRequest('/daily-plans/coach/live-dashboard');
+export const getCoachLiveDashboard = async (range?: string) => {
+  const qs = range ? `?range=${range}` : '';
+  return apiRequest(`/daily-plans/coach/live-dashboard${qs}`);
 };
 
 export const getCoachStudentReports = async (params: {
@@ -710,5 +711,37 @@ export const updateAdminUserLimits = async (id: string, payload: Partial<{ activ
 
 export const updateAdminUserEntitlements = async (id: string, entitlements: string[]) => {
   return apiRequest(`/admin/users/${id}/entitlements`, { method: 'PUT', body: JSON.stringify({ entitlements }) });
+};
+
+// ==== YouTube (proxy) ====
+export const getYouTubePlaylistItems = async (playlistId: string, params: { pageToken?: string; maxResults?: number } = {}) => {
+  const search = new URLSearchParams();
+  if (params.pageToken) search.set('pageToken', params.pageToken);
+  if (params.maxResults) search.set('maxResults', String(params.maxResults));
+  return apiRequest(`/youtube/playlist-items?playlistId=${encodeURIComponent(playlistId)}${search.toString() ? `&${search.toString()}` : ''}`);
+};
+
+// === Coach Subject Preferences & Videos ===
+export const getCoachSubjectPreferences = async (studentId: string, subject?: string) => {
+  const search = new URLSearchParams();
+  search.set('studentId', studentId);
+  if (subject) search.set('subject', subject);
+  return apiRequest(`/coach/subject-preferences?${search.toString()}`);
+};
+
+export const createCoachSubjectPreference = async (payload: { studentId: string; subject: string; teacherName?: string; playlistId: string; playlistTitle?: string; channelId?: string; channelTitle?: string }) => {
+  return apiRequest('/coach/subject-preferences', { method: 'POST', body: JSON.stringify(payload) });
+};
+
+export const getCoachUsedVideos = async (studentId: string, subject: string, days = 120) => {
+  const search = new URLSearchParams();
+  search.set('studentId', studentId);
+  search.set('subject', subject);
+  search.set('days', String(days));
+  return apiRequest(`/coach/used-videos?${search.toString()}`);
+};
+
+export const patchCoachProgramSubjectVideos = async (planId: string, subjectIndex: number, payload: { add?: any[]; remove?: string[]; reorder?: { videoId: string; order: number }[] }) => {
+  return apiRequest(`/coach/programs/${planId}/subjects/${subjectIndex}/videos`, { method: 'PATCH', body: JSON.stringify(payload) });
 };
 

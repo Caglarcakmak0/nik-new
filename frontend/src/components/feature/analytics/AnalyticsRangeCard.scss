@@ -1,0 +1,40 @@
+// Minimal trigger button (icon + label) instead of card
+.analytics-range-trigger {
+  all: unset;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  background: #ffffff; /* light mode */
+  border:1px solid #e5e7eb;
+  color:#334155;
+  font-size:12px;
+  font-weight:600;
+  cursor:pointer;
+  line-height:1;
+  transition: background .18s, border-color .18s, color .18s, box-shadow .18s;
+  .arc-icon { font-size:14px; opacity:.8; }
+  &:hover { background:#f1f5f9; border-color:#d0d7de; }
+  &:active { background:#e2e8f0; }
+}
+.theme-dark .analytics-range-trigger {
+  background:#1b1f27;
+  border:1px solid rgba(255,255,255,0.08);
+  color:#e2e8f0;
+  .arc-icon { opacity:.9; }
+  &:hover { background:#222833; border-color:rgba(255,255,255,0.16); }
+  &:active { background:#29313d; }
+}
+.analytics-range-pop .ant-popover-inner { padding:8px 10px 10px; border-radius:10px; background:#1b1f27; box-shadow:0 8px 28px -4px rgba(0,0,0,0.5); }
+
+.arc-menu { display:flex; flex-direction:column; gap:4px; min-width:140px; }
+.arc-menu-item { 
+  all:unset; cursor:pointer; padding:6px 10px; border-radius:6px; font-size:12px; font-weight:500; color:#cbd5e1; line-height:1.1; display:flex; align-items:center; gap:6px; transition:background-color .18s, color .18s; 
+  &:hover { background:#273041; color:#fff; }
+  &.active { background:#2563eb; color:#fff; }
+}
+.theme-dark .arc-menu-item { color:#cbd5e1; &:hover { background:#273041; } }
+
+// Remove old segmented overrides if present
+.analytics-range-pop .ant-segmented { display:none !important; }

@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Card, List, Tag, Typography, DatePicker, Select, Space, Button, Empty, Spin, Pagination, Progress, Badge } from 'antd';
+import { Card, Tag, Typography, DatePicker, Select, Space, Button, Empty, Spin, Pagination, Progress, Badge, Row, Col } from 'antd';
 // Link import'u kaldırıldı - artık kullanılmıyor
-import { ClockCircleOutlined, BookOutlined, CheckCircleOutlined } from '@ant-design/icons';
+// Iconlar list view kaldırıldığı için şimdilik kullanılmıyor
 import { getStudentPrograms, StudentProgram } from '../../services/api';
 import './StudentPrograms.scss';
 
@@ -105,100 +105,60 @@ const StudentPrograms: React.FC = () => {
   ), [status, from, to, limit]);
 
   return (
-    <Card title={<Title level={5} style={{ margin: 0 }}>Programlarım</Title>} extra={header} className="student-programs">
+    <div className="student-programs modern-grid">
+      <div className="programs-toolbar">
+        <Space style={{ width: '100%', justifyContent: 'space-between', flexWrap: 'wrap' }}>
+          <Title level={5} style={{ margin: 0 }}>Programlarım</Title>
+          {header}
+        </Space>
+      </div>
       {loading ? (
-        <Spin />
+        <div className="programs-loading"><Spin /></div>
       ) : items.length === 0 ? (
         <Empty description="Kayıt bulunamadı" />
       ) : (
         <>
-          <List
-            itemLayout="vertical"
-            dataSource={items}
-            renderItem={(p) => {
+          <Row gutter={[16, 16]}>
+            {items.map(p => {
               const completionRate = p.stats?.completionRate || 0;
               const totalSubjects = p.subjects?.length || 0;
               const completedSubjects = p.subjects?.filter(s => s.status === 'completed')?.length || 0;
               const isToday = new Date(p.date).toDateString() === new Date().toDateString();
-              
               return (
-                <List.Item 
-                  key={p._id}
-                  actions={[
-                    <Space key="stats" size="small">
-                      <BookOutlined />
-                      <Text type="secondary">{totalSubjects} konu</Text>
-                    </Space>,
-                    <Space key="progress" size="small">
-                      <CheckCircleOutlined />
-                      <Text type="secondary">{completedSubjects}/{totalSubjects}</Text>
-                    </Space>,
-                    <Space key="time" size="small">
-                      <ClockCircleOutlined />
-                      <Text type="secondary">{p.stats?.totalStudyTime || 0} dk</Text>
-                    </Space>,
-                    // Çalışmaya başla butonu kaldırıldı
-                  ].filter(Boolean)}
-                >
-                  <List.Item.Meta
-                    title={
-                      <Space>
-                        <span style={{ color: '#1890ff', cursor: 'default' }}>
-                          {p.title || 'Çalışma Programı'}
-                        </span>
-                        <Badge 
-                          count={isToday ? 'BUGÜN' : null} 
-                          style={{ backgroundColor: '#52c41a' }}
-                        />
-                        <Tag color={statusColor[p.status] || 'default'}>
-                          {statusText[p.status] || p.status}
-                        </Tag>
+                <Col xs={24} sm={12} md={8} lg={6} xl={6} key={p._id}>
+                  <Card hoverable className={`program-card status-${p.status}`} bodyStyle={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <Space align="start" style={{ justifyContent: 'space-between', width: '100%' }}>
+                      <Space wrap>
+                        <Badge count={isToday ? 'BUGÜN' : null} style={{ backgroundColor: '#52c41a' }}>
+                          <span className="program-title">{p.title || 'Çalışma Programı'}</span>
+                        </Badge>
+                        <Tag color={statusColor[p.status] || 'default'}>{statusText[p.status] || p.status}</Tag>
                       </Space>
-                    }
-                    description={
-                      <Space direction="vertical" size="small" style={{ width: '100%' }}>
-                        <Text type="secondary">
-                          📅 {new Date(p.date).toLocaleDateString('tr-TR', { 
-                            weekday: 'long', 
-                            year: 'numeric', 
-                            month: 'long', 
-                            day: 'numeric' 
-                          })}
-                        </Text>
-
-                        {totalSubjects > 0 && (
-                          <div>
-                            <Text type="secondary" style={{ marginRight: 8 }}>
-                              İlerleme: {completionRate}%
-                            </Text>
-                            <Progress 
-                              percent={completionRate} 
-                              size="small" 
-                              style={{ maxWidth: 200 }}
-                              strokeColor={completionRate === 100 ? '#52c41a' : '#1890ff'}
-                            />
-                          </div>
-                        )}
-                      </Space>
-                    }
-                  />
-                </List.Item>
+                    </Space>
+                    <Text type="secondary" style={{ fontSize: 12 }}>
+                      {new Date(p.date).toLocaleDateString('tr-TR', { weekday: 'long', month: 'short', day: 'numeric' })}
+                    </Text>
+                    {totalSubjects > 0 && (
+                      <div className="progress-row">
+                        <Space size={4} wrap>
+                          <Text type="secondary" style={{ fontSize: 12 }}>{completedSubjects}/{totalSubjects} konu</Text>
+                          <Text type="secondary" style={{ fontSize: 12 }}>{p.stats?.totalStudyTime || 0} dk</Text>
+                        </Space>
+                        <Progress percent={completionRate} size="small" strokeColor={completionRate === 100 ? '#52c41a' : '#1677ff'} showInfo={false} />
+                        <div className="progress-label">%{completionRate}</div>
+                      </div>
+                    )}
+                  </Card>
+                </Col>
               );
-            }}
-          />
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 12 }}>
-            <Pagination
-              current={page}
-              pageSize={limit}
-              total={total}
-              onChange={(p, ps) => { setPage(p); setLimit(ps); }}
-              size="small"
-              showSizeChanger
-            />
+            })}
+          </Row>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 16 }}>
+            <Pagination current={page} pageSize={limit} total={total} onChange={(p, ps) => { setPage(p); setLimit(ps); }} size="small" showSizeChanger />
           </div>
         </>
       )}
-    </Card>
+    </div>
   );
 };
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { 
   Card, 
   Row, 
@@ -61,8 +61,7 @@ import './AdminDashboard.scss';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
-//
-
+// Tipler & yardımcılar (her render'da yeniden oluşturulmasını engellemek için komponent dışında)
 interface User {
   _id: string;
   firstName: string;
@@ -87,6 +86,26 @@ interface SystemMetrics {
   activeUsers: number;
   responseTime: number;
 }
+
+const getRoleInfo = (role: string) => {
+  const roleConfig = {
+    admin: { color: 'red', text: 'Admin' },
+    coach: { color: 'blue', text: 'Koç' },
+    student: { color: 'green', text: 'Öğrenci' }
+  } as const;
+  return roleConfig[role as keyof typeof roleConfig] || { color: 'default', text: role };
+};
+
+const getStatusInfo = (status: string) => {
+  const statusConfig = {
+    active: { color: 'success', text: 'Aktif' },
+    inactive: { color: 'warning', text: 'Pasif' },
+    banned: { color: 'error', text: 'Yasaklı' }
+  } as const;
+  return statusConfig[status as keyof typeof statusConfig] || { color: 'default', text: status };
+};
+
+const pieColors = ['#1890ff', '#faad14', '#52c41a', '#722ed1', '#ff4d4f'];
 
 const AdminDashboard: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -128,40 +147,27 @@ const AdminDashboard: React.FC = () => {
   const [loadingPlan, setLoadingPlan] = useState(false);
 
 
-  // Role colors and text
-  const getRoleInfo = (role: string) => {
-    const roleConfig = {
-      admin: { color: 'red', text: 'Admin' },
-      coach: { color: 'blue', text: 'Koç' },
-      student: { color: 'green', text: 'Öğrenci' }
-    };
-    return roleConfig[role as keyof typeof roleConfig] || { color: 'default', text: role };
-  };
+  // Aktif tab - ağır analitik tabını gereksiz yere mount etmemek için
+  const [activeTab, setActiveTab] = useState('overview');
 
-  const getStatusInfo = (status: string) => {
-    const statusConfig = {
-      active: { color: 'success', text: 'Aktif' },
-      inactive: { color: 'warning', text: 'Pasif' },
-      banned: { color: 'error', text: 'Yasaklı' }
-    };
-    return statusConfig[status as keyof typeof statusConfig] || { color: 'default', text: status };
-  };
+  // Paralel istek çakışmalarını iptal etmek için abort controller referansları
+  const usersAbortRef = useRef<AbortController | null>(null);
 
-  // Users table columns
-  const userColumns: ColumnsType<User> = [
+  // Users table columns (memoize: state setter'lar stable olduğundan sadece bağımlılıklar değişince yeniden oluşur)
+  const userColumns: ColumnsType<User> = useMemo(() => [
     {
       title: 'Kullanıcı',
       key: 'user',
-      render: (_, record) => (
+      render: (_: any, record: User) => (
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <Avatar style={{ backgroundColor: getRoleInfo(record.role).color === 'red' ? '#ff4d4f' : getRoleInfo(record.role).color === 'blue' ? '#1890ff' : '#52c41a' }}>
             {record.firstName.charAt(0)}
           </Avatar>
-          <div>
-            <Text strong>{record.firstName} {record.lastName}</Text>
-            <br />
-            <Text type="secondary" style={{ fontSize: '12px' }}>{record.email}</Text>
-          </div>
+            <div>
+              <Text strong>{record.firstName} {record.lastName}</Text>
+              <br />
+              <Text type="secondary" style={{ fontSize: '12px' }}>{record.email}</Text>
+            </div>
         </div>
       )
     },
@@ -186,9 +192,9 @@ const AdminDashboard: React.FC = () => {
     {
       title: 'Profil Tamamlanması',
       key: 'completion',
-      render: (_, record) => (
+      render: (_: any, record: User) => (
         <div style={{ minWidth: '120px' }}>
-          <Progress 
+          <Progress
             percent={record.profileCompleteness}
             size="small"
             strokeColor={record.profileCompleteness >= 80 ? '#52c41a' : '#1890ff'}
@@ -202,7 +208,7 @@ const AdminDashboard: React.FC = () => {
       dataIndex: 'registrationDate',
       key: 'registrationDate',
       render: (date: string) => new Date(date).toLocaleDateString('tr-TR'),
-      sorter: (a, b) => new Date(a.registrationDate).getTime() - new Date(b.registrationDate).getTime()
+      sorter: (a: User, b: User) => new Date(a.registrationDate).getTime() - new Date(b.registrationDate).getTime()
     },
     {
       title: 'Son Aktivite',
@@ -213,7 +219,7 @@ const AdminDashboard: React.FC = () => {
     {
       title: 'İşlemler',
       key: 'actions',
-      render: (_, record) => (
+      render: (_: any, record: User) => (
         <Space>
           <Button
             type="primary"
@@ -258,7 +264,6 @@ const AdminDashboard: React.FC = () => {
                   try {
                     await deleteUser(record._id);
                     message.success('Kullanıcı silindi');
-                    // Mevcut sayfayı koruyarak listeyi yenile
                     fetchUsers({ page: usersPagination.current, pageSize: usersPagination.pageSize });
                   } catch (e: any) {
                     message.error(e?.message || 'Silme sırasında hata oluştu');
@@ -272,18 +277,20 @@ const AdminDashboard: React.FC = () => {
         </Space>
       )
     }
-  ];
+  ], [editForm, fetchUsers, usersPagination.current, usersPagination.pageSize]);
 
-  const fetchUsers = async (opts?: { page?: number; pageSize?: number }) => {
+  const fetchUsers = useCallback(async (opts?: { page?: number; pageSize?: number }) => {
     try {
+      // Mevcut isteği iptal et
+      if (usersAbortRef.current) usersAbortRef.current.abort();
+      const controller = new AbortController();
+      usersAbortRef.current = controller;
       setLoading(true);
       const page = opts?.page ?? usersPagination.current;
       const pageSize = opts?.pageSize ?? usersPagination.pageSize;
-      const res = await getAdminUsers({ q: searchText || undefined, role: roleFilter || undefined, page, limit: pageSize });
-      // Beklenen şema: { message, data: User[], pagination }
+      const res = await getAdminUsers({ q: searchText || undefined, role: roleFilter || undefined, page, limit: pageSize, signal: (controller as any).signal });
       const items = Array.isArray(res?.data) ? res.data : (res?.data?.data || []);
       const pagination = res?.pagination || res?.data?.pagination || undefined;
-
       const finalList: User[] = items.map((u: any) => ({
         _id: u._id,
         firstName: u.firstName || '',
@@ -295,17 +302,16 @@ const AdminDashboard: React.FC = () => {
         status: u.status,
         registrationDate: u.registrationDate,
       }));
-
       setUsers(finalList);
-      const total = pagination?.total ?? finalList.length;
-      setUsersTotal(total);
+      setUsersTotal(pagination?.total ?? finalList.length);
       setUsersPagination({ current: page, pageSize });
     } catch (e: any) {
+      if (e?.name === 'AbortError') return; // iptal edildi
       message.error(e?.message || 'Kullanıcılar yüklenemedi');
     } finally {
       setLoading(false);
     }
-  };
+  }, [roleFilter, searchText, usersPagination.current, usersPagination.pageSize]);
 
   const handleTableChange = (pagination: any) => {
     const { current, pageSize } = pagination;
@@ -314,8 +320,7 @@ const AdminDashboard: React.FC = () => {
 
   useEffect(() => {
     fetchUsers({ page: 1, pageSize: usersPagination.pageSize });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchText, roleFilter]);
+  }, [fetchUsers, usersPagination.pageSize]);
 
   // Sistem metriklerini yükle (ilk render)
   useEffect(() => {
@@ -372,33 +377,27 @@ const AdminDashboard: React.FC = () => {
 
   useEffect(() => { refreshAnalytics(); }, [refreshAnalytics]);
 
-  // Chart data builders
-  const categoryChartData = feedbackSummary ? [
+  // Chart data builders (memoize)
+  const categoryChartData = useMemo(() => feedbackSummary ? [
     { name: 'İletişim', value: feedbackSummary.categoryAverages.communication },
     { name: 'Program Kalitesi', value: feedbackSummary.categoryAverages.programQuality },
     { name: 'Memnuniyet', value: feedbackSummary.categoryAverages.overallSatisfaction }
-  ] : [];
+  ] : [], [feedbackSummary]);
 
-  const issuesChartData = feedbackSummary ? [
+  const issuesChartData = useMemo(() => feedbackSummary ? [
     { name: 'Aşırı Baskı', value: feedbackSummary.issuesCounts.tooMuchPressure },
     { name: 'Yetersiz Destek', value: feedbackSummary.issuesCounts.notEnoughSupport },
     { name: 'İletişim', value: feedbackSummary.issuesCounts.communicationProblems },
     { name: 'Uygun Değil', value: feedbackSummary.issuesCounts.programNotSuitable }
-  ] : [];
+  ] : [], [feedbackSummary]);
 
-  const statusChartData = feedbackSummary ? [
+  const statusChartData = useMemo(() => feedbackSummary ? [
     { name: 'Yeni', value: feedbackSummary.statusCounts.new },
     { name: 'Okundu', value: feedbackSummary.statusCounts.read }
-  ] : [];
+  ] : [], [feedbackSummary]);
 
-  const pieColors = ['#1890ff', '#faad14', '#52c41a', '#722ed1', '#ff4d4f'];
-
-  const tabsItems = [
-    {
-      key: 'overview',
-      label: (<><BarChartOutlined />Sistem Genel Bakış</>),
-      children: (
-        <>
+  const overviewTab = (
+    <>
           <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
             <Col xs={24}>
               <Card title="Haftalık Motivasyon Sözü" extra={<Text type="secondary">Giriş ekranında gösterilir</Text>}>
@@ -543,14 +542,11 @@ const AdminDashboard: React.FC = () => {
             </Col>
             
           </Row>
-        </>
-      )
-    },
-    {
-      key: 'users',
-      label: (<><UserOutlined />Kullanıcı Yönetimi ({usersTotal})</>),
-      children: (
-        <>
+    </>
+  );
+
+  const usersTab = (
+    <>
           <Row gutter={16} style={{ marginBottom: '24px' }}>
             <Col xs={8} md={6}>
               <Card size="small" className="user-stat students">
@@ -636,15 +632,11 @@ const AdminDashboard: React.FC = () => {
               onChange={handleTableChange}
             />
           </Card>
-        </>
-      )
-    },
-    // Sistem Ayarları sekmesi kaldırıldı
-    {
-      key: 'analytics',
-      label: (<><GlobalOutlined />Analitik & Raporlar</>),
-      children: (
-        <>
+    </>
+  );
+
+  const analyticsTab = (
+    <>
           <Space style={{ width: '100%', marginBottom: 12, justifyContent: 'flex-end' }}>
             <Button icon={<ReloadOutlined />} onClick={refreshAnalytics} loading={analyticsLoading}>
               Yenile
@@ -761,10 +753,8 @@ const AdminDashboard: React.FC = () => {
               </Card>
             </Col>
           </Row>
-        </>
-      )
-    }
-  ];
+    </>
+  );
 
   return (
     <div className="admin-dashboard">
@@ -791,7 +781,17 @@ const AdminDashboard: React.FC = () => {
         </Row>
       </div>
 
-      <Tabs defaultActiveKey="overview" size="large" items={tabsItems} />
+      <Tabs
+        activeKey={activeTab}
+        onChange={setActiveTab}
+        destroyInactiveTabPane
+        size="large"
+        items={[
+          { key: 'overview', label: (<><BarChartOutlined />Sistem Genel Bakış</>), children: overviewTab },
+          { key: 'users', label: (<><UserOutlined />Kullanıcı Yönetimi ({usersTotal})</>), children: usersTab },
+          { key: 'analytics', label: (<><GlobalOutlined />Analitik & Raporlar</>), children: analyticsTab }
+        ]}
+      />
 
       {/* User Details Drawer */}
       <Drawer

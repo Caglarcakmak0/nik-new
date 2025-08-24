@@ -127,6 +127,8 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
       setOpenKeys(['profile']);
     } else if (path.startsWith('/study-tracker/')) {
       setOpenKeys(['/study-tracker']);
+    } else if (path.startsWith('/study-plan/')) {
+      setOpenKeys(['/study-plan']);
     } else {
       setOpenKeys([]);
     }

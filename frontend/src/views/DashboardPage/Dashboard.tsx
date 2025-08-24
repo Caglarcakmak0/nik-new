@@ -17,7 +17,8 @@ import { apiRequest, getLeaderboardUserStats } from '../../services/api';
 import type { LeaderboardUserStats } from '../../services/api';
 import { ActiveGoals } from './bones';
 import { StudyStatistics } from '../StudyTrackerPage/bones';
-import dayjs from 'dayjs';
+import { AnalyticsMiniCard, AnalyticsRangeCard } from '../../components/feature/analytics';
+import type { AnalyticsRange } from '../../components/feature/analytics/AnalyticsRangeCard';
 
 
 const { Title, Text } = Typography;
@@ -60,35 +61,19 @@ const Dashboard: React.FC = () => {
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [userLeaderboard, setUserLeaderboard] = useState<LeaderboardUserStats | null>(null);
-  const [computedStreak, setComputedStreak] = useState<number | null>(null);
+  const [range, setRange] = useState<AnalyticsRange>('weekly');
+  // No local computed streak; backend provides overview.currentStreak
 
   // Dashboard verilerini al
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      const response = await apiRequest('/analytics/dashboard');
-      if (response.data) {
-        setDashboardData(response.data);
-      }
+      const response = await apiRequest(`/analytics/dashboard?range=${range}`);
+      if (response.data) setDashboardData(response.data);
     } catch (error) {
       console.error('Dashboard data fetch error:', error);
-      // Hata durumunda boş data ile devam et
-      setDashboardData({
-        overview: {
-          totalStudyTime: 0,
-          currentStreak: 0,
-          activeGoals: 0,
-          profileCompleteness: user?.profileCompleteness || 0
-        },
-        weeklyTrend: {
-          totalTime: 0,
-          sessionCount: 0,
-          averageQuality: 0,
-          averageEfficiency: 0
-        },
-        goalsOverview: [],
-        recentActivity: []
-      });
+      // Fallback veri yok: state null kalır
+      setDashboardData(null);
     } finally {
       setLoading(false);
     }
@@ -96,39 +81,20 @@ const Dashboard: React.FC = () => {
 
   useEffect(() => {
     fetchDashboardData();
-    // Liderlik kullanıcı istatistikleri
+  }, [range]);
+
+  useEffect(() => {
     (async () => {
       try {
         const res = await getLeaderboardUserStats();
         setUserLeaderboard(res.data);
-      } catch (err) {
-        // Sessizce geç; dashboard minimum verilerle yüklenebilir
-      }
-    })();
-    // Study Tracker ile aynı sistem: /study-sessions üzerinden hesapla
-    (async () => {
-      try {
-        const sessions: Array<{ date: string | Date; duration: number; quality: number; efficiency: number }> = await apiRequest('/study-sessions');
-        // Streak hesapla (Study Tracker mantığı)
-        const uniqueDates = Array.from(new Set(sessions.map(s => dayjs(s.date).format('YYYY-MM-DD')))).sort().reverse();
-        let streak = 0;
-        const today = dayjs().format('YYYY-MM-DD');
-        const yesterday = dayjs().subtract(1, 'day').format('YYYY-MM-DD');
-        if (uniqueDates[0] === today || uniqueDates[0] === yesterday) {
-          streak = 1;
-          for (let i = 1; i < uniqueDates.length; i++) {
-            const prev = dayjs(uniqueDates[i - 1]);
-            const curr = dayjs(uniqueDates[i]);
-            if (prev.diff(curr, 'day') === 1) streak++;
-            else break;
-          }
-        }
-        setComputedStreak(streak);
-      } catch (e) {
-        setComputedStreak(0);
-      }
+      } catch {}
     })();
   }, []);
+
+  // Spark verileri hazırla (mini card için). Boşsa [] döner.
+  const dailyTimeSeries = dashboardData ? Object.values((dashboardData as any).dailyDistribution || {}).map((d: any) => d.totalTime) : [];
+  const dailySessionSeries = dashboardData ? Object.values((dashboardData as any).dailyDistribution || {}).map((d: any) => d.sessionCount) : [];
 
   return (
     <div>
@@ -143,11 +109,53 @@ const Dashboard: React.FC = () => {
       </div>
 
       {loading ? (
-        <Card loading={true} style={{ minHeight: '200px' }}>
-          <div>Dashboard verileri yükleniyor...</div>
+        <Card loading style={{ minHeight: '200px' }} />
+      ) : !dashboardData ? (
+        <Card style={{ minHeight: '120px' }}>
+          <Text type="danger">Dashboard verileri alınamadı.</Text>
         </Card>
       ) : (
         <Space direction="vertical" size="large" style={{ width: '100%' }}>
+          {/* Mini Analytics Cards */}
+          <div style={{ width:'100%', display:'flex', justifyContent:'flex-end', marginBottom:8 }}>
+            <AnalyticsRangeCard value={range} onChange={setRange} />
+          </div>
+          <Row gutter={16} style={{ marginBottom: 24 }}>
+            <Col xs={12} md={5} style={{ marginBottom: 12, marginRight: 12 }}>
+              <AnalyticsMiniCard
+                title="Toplam Çalışma Süresi"
+                subValue={(dashboardData.overview.totalStudyTime || 0) + ' dk'}
+                data={dailyTimeSeries}
+                color="#1890ff"
+              />
+            </Col>
+            <Col xs={12} md={5} style={{ marginBottom: 12, marginRight: 12 }}>
+              <AnalyticsMiniCard
+                title="Mevcut Seri"
+                subValue={dashboardData.overview.currentStreak + ' gün'}
+                data={dailySessionSeries}
+                color="#fa8c16"
+                positive
+              />
+            </Col>
+            <Col xs={12} md={5} style={{ marginBottom: 12, marginRight: 12 }}>
+              <AnalyticsMiniCard
+                title="Aktif Hedefler"
+                subValue={dashboardData.overview.activeGoals}
+                data={dailySessionSeries}
+                color="#722ed1"
+              />
+            </Col>
+            <Col xs={12} md={5} style={{ marginBottom: 12, marginRight: 12 }}>
+              <AnalyticsMiniCard
+                title="Profil Tamamlanma"
+                subValue={'%' + (dashboardData.overview.profileCompleteness || 0)}
+                data={dailyTimeSeries}
+                color="#52c41a"
+                positive
+              />
+            </Col>
+          </Row>
           
           {/* Üst bölüm: %80 ActiveGoals | %20 sağ kolon */}
           <Row gutter={[16, 16]}>
@@ -166,7 +174,7 @@ const Dashboard: React.FC = () => {
                       <Space direction="vertical" style={{ width: '100%' }} size={12}>
                         <Statistic
                           title="Mevcut Seri"
-                          value={computedStreak ?? 0}
+                          value={dashboardData?.overview.currentStreak || 0}
                           suffix="gün"
                           prefix={<FireOutlined style={{ color: '#ff4d4f' }} />}
                         />

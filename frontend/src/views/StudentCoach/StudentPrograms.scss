@@ -1,40 +1,87 @@
 @import '../../styles/variables';
 @import '../../styles/mixins';
 
-.student-programs {
-  animation: fadeInUp 0.6s ease-out;
-  
-  .ant-card {
-    animation: fadeIn 0.8s ease-out 0.2s both;
+// Modern grid layout
+.student-programs.modern-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  animation: fadeInUp 0.5s ease-out;
+
+  .programs-toolbar {
+    background: linear-gradient(135deg, #ffffff 0%, #f5f9ff 100%);
+    padding: 12px 16px;
+    border: 1px solid #f0f4f8;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px -2px rgba(0,0,0,0.05), 0 4px 12px -2px rgba(0,0,0,0.04);
   }
-  
-  .ant-list-item {
-    animation: fadeIn 0.6s ease-out;
-    @include hover-lift; // Hover efekti (gölge ve renk değişiklikleri)
-    
-    &:nth-child(1) { animation-delay: 0.1s; }
-    &:nth-child(2) { animation-delay: 0.2s; }
-    &:nth-child(3) { animation-delay: 0.3s; }
-    &:nth-child(4) { animation-delay: 0.4s; }
-    &:nth-child(5) { animation-delay: 0.5s; }
-    &:nth-child(6) { animation-delay: 0.6s; }
-    &:nth-child(7) { animation-delay: 0.7s; }
-    &:nth-child(8) { animation-delay: 0.8s; }
-    &:nth-child(9) { animation-delay: 0.9s; }
-    &:nth-child(10) { animation-delay: 1.0s; }
+
+  .program-card {
+    position: relative;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid #f1f5f9;
+    background: linear-gradient(180deg,#ffffff 0%, #fcfdff 100%);
+    transition: box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s;
+    min-height: 150px;
+
+    &:hover {
+      box-shadow: 0 6px 18px -6px rgba(23,43,77,0.15),0 2px 6px -2px rgba(23,43,77,0.1);
+      transform: translateY(-4px);
+      border-color: #d0e3ff;
+    }
+
+    .program-title {
+      font-weight: 600;
+      font-size: 15px;
+      color: #1d3557;
+    }
+
+    .ant-badge-count {
+      box-shadow: none;
+      font-weight: 500;
+    }
+
+    .progress-row {
+      margin-top: 4px;
+      display: grid;
+      grid-template-columns: 1fr 60px;
+      align-items: center;
+      gap: 8px;
+      .ant-progress-line {
+        margin-bottom: 0;
+      }
+      .progress-label {
+        font-size: 12px;
+        text-align: right;
+        font-weight: 500;
+        color: #2563eb;
+      }
+    }
   }
-  
-  .ant-pagination {
-    animation: fadeIn 0.8s ease-out 0.8s both;
+
+  // Durum bazlı ince renk şeritleri
+  .program-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: var(--status-color, #e2e8f0);
   }
+  .program-card.status-active { --status-color: #1677ff; }
+  .program-card.status-completed { --status-color: #52c41a; }
+  .program-card.status-failed { --status-color: #ff4d4f; }
+  .program-card.status-archived { --status-color: #722ed1; }
+  .program-card.status-draft { --status-color: #94a3b8; }
+
+  .programs-loading { display: flex; align-items: center; justify-content: center; padding: 48px 0; }
 }
 
 // ===== RESPONSIVE DAVRANIŞ =====
-// Desktop only (1280px+)
-@media (min-width: 1280px) {
-  .student-programs {
-    // Desktop stilleri
-  }
-}
+// Desktop only placeholder kaldırıldı; özel bir stil gerekmiyor şu an
 
-/* Mobilde tamamen gizleme kaldırıldı; küçük ekranlarda da içerik görünsün */
+/* Mobil uyum */
+@media (max-width: 575px) {
+  .student-programs.modern-grid .program-card { min-height: 140px; }
+  .student-programs.modern-grid .programs-toolbar { padding: 10px 12px; }
+}

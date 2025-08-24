@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Typography, Table, Button, Space, Tag, Divider, Row, Col, Modal, Form, Input, Select, message, DatePicker, InputNumber, Badge, Progress, Avatar, Alert } from 'antd';
-import { PlusOutlined, EyeOutlined, CalendarOutlined, ClockCircleOutlined, UserOutlined, PlayCircleOutlined, BookOutlined } from '@ant-design/icons';
+import { Card, Typography, Table, Button, Space, Tag, Row, Col, message, Progress, Avatar } from 'antd';
+import { PlusOutlined, EyeOutlined, ClockCircleOutlined, UserOutlined, PlayCircleOutlined, BookOutlined } from '@ant-design/icons';
 import { useAuth, useIsCoach } from '../../contexts/AuthContext';
 import { apiRequest, getCoachLiveDashboard } from '../../services/api';
+import { useNavigate } from 'react-router-dom';
 import { StudentCard } from '../../components/coach';
+import { AnalyticsMiniCard, AnalyticsRangeCard, AnalyticsRange } from '../../components/feature/analytics';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import CoachDashboardTour from '../../components/tour/CoachTour/CoachDashboardTour';
@@ -12,8 +14,6 @@ dayjs.extend(relativeTime);
 dayjs.locale('tr');
 
 const { Title, Text } = Typography;
-const { TextArea } = Input;
-const { Option } = Select;
 
 interface Student {
   _id: string;
@@ -25,34 +25,25 @@ interface Student {
   activePlansCount: number;
 }
 
-interface ProgramForm {
-  studentId: string;
-  date: string;
-  subjects: Array<{
-    subject: string;
-    description: string;
-    duration: number; // dakika cinsinden
-  }>;
-}
 
 const CoachDashboard: React.FC = () => {
   const isCoach = useIsCoach();
   const { user } = useAuth();
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(false);
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
-  const [form] = Form.useForm();
-  const [showReportsModal, setShowReportsModal] = useState(false);
-  const [studentReports, setStudentReports] = useState<any[]>([]);
+  const navigate = useNavigate();
+  // Rapor / seçili öğrenci modalı kaldırıldı; ilgili state temizlendi
   const [dateFilter] = useState(dayjs());
   const [studentProgramMap, setStudentProgramMap] = useState<Record<string, string | null>>({});
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [editingProgramId, setEditingProgramId] = useState<string | null>(null);
+  // isEditMode legacy state kaldırıldı
+
+  // Sample teacher playlists (static demo data - replace with YouTube API results later)
+  // (Modal kaldırıldı - YouTube entegrasyonu CreateProgram sayfasına taşındı)
   
   // Live Dashboard State
   const [liveDashboard, setLiveDashboard] = useState<any>(null);
   const [liveDashboardLoading, setLiveDashboardLoading] = useState(false);
+  const [analyticsRange, setAnalyticsRange] = useState<AnalyticsRange>('daily');
 
   // Redirect if not coach
   if (!isCoach) {
@@ -95,77 +86,11 @@ const CoachDashboard: React.FC = () => {
   const fetchLiveDashboard = async () => {
     try {
       setLiveDashboardLoading(true);
-      const response = await getCoachLiveDashboard();
-      
-      // Demo data ekleme - eğer gerçek veri yoksa
-      const demoData = response.data || {
-        liveStudents: [
-          {
-            studentId: 'student1',
-            studentName: 'Ahmet Yılmaz',
-            avatar: null,
-            planId: 'demo1',
-            planTitle: 'Matematik Yoğunlaşma Programı',
-            totalSubjects: 3,
-            completedSubjects: 1,
-            inProgressSubjects: 1,
-            totalProgress: 65,
-            totalStudyTime: 135,
-            targetTime: 285,
-            lastActivity: new Date(Date.now() - 5 * 60 * 1000) // 5 dakika önce
-          },
-          {
-            studentId: 'student2', 
-            studentName: 'Zeynep Kaya',
-            avatar: null,
-            planId: 'demo2',
-            planTitle: 'TYT Karma Çalışma',
-            totalSubjects: 2,
-            completedSubjects: 2,
-            inProgressSubjects: 0,
-            totalProgress: 100,
-            totalStudyTime: 120,
-            targetTime: 120,
-            lastActivity: new Date(Date.now() - 2 * 60 * 1000) // 2 dakika önce
-          }
-        ],
-        recentActivity: [
-          {
-            studentId: 'student1',
-            studentName: 'Ahmet Yılmaz',
-            avatar: null,
-            planTitle: 'Matematik Yoğunlaşma Programı',
-            totalProgress: 65,
-            lastActivity: new Date(Date.now() - 5 * 60 * 1000)
-          },
-          {
-            studentId: 'student2',
-            studentName: 'Zeynep Kaya', 
-            avatar: null,
-            planTitle: 'TYT Karma Çalışma',
-            totalProgress: 100,
-            lastActivity: new Date(Date.now() - 10 * 60 * 1000)
-          },
-          {
-            studentId: 'student3',
-            studentName: 'Mehmet Demir',
-            avatar: null,
-            planTitle: 'Fen Bilimleri Özel',
-            totalProgress: 45,
-            lastActivity: new Date(Date.now() - 25 * 60 * 1000)
-          }
-        ],
-        summary: {
-          totalStudentsToday: 8,
-          activeNow: 2,
-          totalCompletedPlans: 3,
-          averageProgress: 78
-        }
-      };
-      
-      setLiveDashboard(demoData);
+      const response = await getCoachLiveDashboard(analyticsRange);
+      setLiveDashboard(response.data); // no fallback demo data
     } catch (error) {
       console.error('Live dashboard fetch error:', error);
+      setLiveDashboard(null);
     } finally {
       setLiveDashboardLoading(false);
     }
@@ -178,102 +103,19 @@ const CoachDashboard: React.FC = () => {
     // Auto-refresh live dashboard every 30 seconds
     const interval = setInterval(fetchLiveDashboard, 30000);
     return () => clearInterval(interval);
-  }, [dateFilter]);
+  }, [dateFilter, analyticsRange]);
 
   // Create program for student
-  const handleCreateProgram = async (values: ProgramForm) => {
-    try {
-      // Toplam süreyi hesapla
-      const totalDuration = values.subjects.reduce((total, subject) => total + subject.duration, 0);
-      const totalHours = Math.floor(totalDuration / 60);
-      const totalMinutes = totalDuration % 60;
-      
-      console.log('Creating program:', values);
-      
-      // Prepare data for backend
-      const dateObj = typeof values.date === 'string' ? dayjs(values.date) : values.date;
-      const programData = {
-        studentId: selectedStudent?._id || values.studentId,
-        date: dateObj.format('YYYY-MM-DD'),
-        subjects: values.subjects,
-        title: `Günlük Program - ${dateObj.format('DD/MM/YYYY')}`
-      };
-      
-      // Send to backend (create or update)
-      if (isEditMode && editingProgramId) {
-        const updateData = {
-          date: dateObj.format('YYYY-MM-DD'),
-          subjects: values.subjects.map(s => ({ subject: s.subject, description: s.description, targetTime: s.duration, priority: 5 })),
-          title: `Koç Programı - ${dateObj.format('DD/MM/YYYY')}`
-        };
-        await apiRequest(`/coach/programs/${editingProgramId}`, {
-          method: 'PUT',
-          body: JSON.stringify(updateData)
-        });
-        message.success('Program başarıyla güncellendi');
-      } else {
-        await apiRequest('/daily-plans/coach-create', {
-          method: 'POST',
-          body: JSON.stringify(programData)
-        });
-        message.success(
-          `Program başarıyla oluşturuldu! Toplam süre: ${totalHours} saat ${totalMinutes} dakika`
-        );
-      }
-      setShowCreateModal(false);
-      form.resetFields();
-      setSelectedStudent(null);
-      setIsEditMode(false);
-      setEditingProgramId(null);
-      
-      // Refresh students to update active plans count
-      fetchStudents();
-      
-    } catch (error: any) {
-      console.error('Program creation error:', error);
-      message.error(error.message || 'Program oluşturulurken hata oluştu');
-    }
-  };
+  // Program oluşturma işlemi CreateProgram sayfasına taşındı
 
   // View student reports
-  const handleViewReports = async (student: Student) => {
-    setSelectedStudent(student);
-    setShowReportsModal(true);
-    
-    try {
-      setLoading(true);
-      const response = await apiRequest(`/daily-plans/coach/student-reports?studentId=${student._id}`);
-      setStudentReports(response.data || []);
-    } catch (error: any) {
-      console.error('Student reports fetch error:', error);
-      message.error('Öğrenci raporları yüklenirken hata oluştu');
-      setStudentReports([]);
-    } finally {
-      setLoading(false);
-    }
+  // Öğrenci rapor modalı kaldırıldı; ileride ayrı route'a taşınabilir.
+  const handleViewReports = async (_student: Student) => {
+    message.info('Rapor görüntüleme yakında ayrı sayfada sunulacak');
   };
 
   const openEditProgram = async (student: Student, programId: string) => {
-    try {
-      setIsEditMode(true);
-      setEditingProgramId(programId);
-      setSelectedStudent(student);
-      setShowCreateModal(true);
-      const detail = await apiRequest(`/coach/programs/${programId}`);
-      const d = detail?.data;
-      form.setFieldsValue({
-        date: d?.date ? dayjs(d.date) : dateFilter,
-        subjects: (d?.subjects || []).map((sub: any) => ({
-          subject: sub.subject,
-          description: sub.description,
-          duration: sub.targetTime || 60
-        }))
-      });
-    } catch (e: any) {
-      message.error(e.message || 'Program detayı yüklenemedi');
-      setIsEditMode(false);
-      setEditingProgramId(null);
-    }
+    navigate(`/coach/programs/create?studentId=${student._id}&editId=${programId}`);
   };
 
   // Table columns
@@ -307,29 +149,9 @@ const CoachDashboard: React.FC = () => {
       render: (_: any, record: Student) => (
         <Space>
           {studentProgramMap[record._id] ? (
-            <Button
-              type="primary"
-              size="small"
-              onClick={() => openEditProgram(record, studentProgramMap[record._id] as string)}
-            >
-              Programı Düzenle
-            </Button>
+            <Button type="primary" size="small" onClick={() => openEditProgram(record, studentProgramMap[record._id] as string)}>Programı Düzenle</Button>
           ) : (
-            <Button
-              type="primary"
-              size="small"
-              icon={<PlusOutlined />}
-              onClick={() => {
-                setIsEditMode(false);
-                setEditingProgramId(null);
-                setSelectedStudent(record);
-                setShowCreateModal(true);
-                form.resetFields();
-                form.setFieldsValue({ date: dateFilter, subjects: [{ subject: '', description: '', duration: 60 }] });
-              }}
-            >
-              Program Oluştur
-            </Button>
+            <Button type="primary" size="small" icon={<PlusOutlined />} onClick={() => navigate(`/coach/programs/create?studentId=${record._id}`)}>Program Oluştur</Button>
           )}
           <Button
             size="small"
@@ -350,47 +172,48 @@ const CoachDashboard: React.FC = () => {
         <Title level={2} style={{ fontWeight: 500, fontSize: '24px' }}>👨‍🏫 Koç Paneli</Title>
       </div>
 
+      {/* Range Filter (top-right) */}
+      <div style={{ width:'100%', display:'flex', justifyContent:'flex-end', marginBottom:12 }}>
+        <AnalyticsRangeCard value={analyticsRange} onChange={setAnalyticsRange} />
+      </div>
       {/* Live Dashboard Stats */}
       <Row gutter={16} style={{ marginBottom: '24px' }}>
-        <Col xs={24} sm={6}>
-          <Card loading={liveDashboardLoading}>
-            <div style={{ textAlign: 'center' }}>
-              <Title level={3} style={{ color: '#1890ff', margin: 0 }}>
-                {liveDashboard?.summary?.totalStudentsToday || students.length}
-              </Title>
-              <Text type="secondary">Bugünkü Öğrenciler</Text>
-            </div>
-          </Card>
+        <Col xs={12} md={6} style={{ marginBottom: 12 }}>
+          <AnalyticsMiniCard
+            title="Bugünkü Öğrenciler"
+            subValue={liveDashboard?.summary?.totalStudentsToday ?? '-'}
+            data={liveDashboard?.summary?.spark1 || []}
+            loading={liveDashboardLoading}
+            color="#1890ff"
+          />
         </Col>
-        <Col xs={24} sm={6}>
-          <Card loading={liveDashboardLoading}>
-            <div style={{ textAlign: 'center' }}>
-              <Title level={3} style={{ color: '#52c41a', margin: 0 }}>
-                {liveDashboard?.summary?.activeNow || 0}
-              </Title>
-              <Text type="secondary"> Şu An Aktif</Text>
-            </div>
-          </Card>
+        <Col xs={12} md={6} style={{ marginBottom: 12 }}>
+          <AnalyticsMiniCard
+            title="Şu An Aktif"
+            subValue={liveDashboard?.summary?.activeNow ?? '-'}
+            data={liveDashboard?.summary?.spark2 || []}
+            loading={liveDashboardLoading}
+            color="#52c41a"
+            positive
+          />
         </Col>
-        <Col xs={24} sm={6}>
-          <Card loading={liveDashboardLoading}>
-            <div style={{ textAlign: 'center' }}>
-              <Title level={3} style={{ color: '#722ed1', margin: 0 }}>
-                {liveDashboard?.summary?.totalCompletedPlans || 0}
-              </Title>
-              <Text type="secondary">Tamamlanan Planlar</Text>
-            </div>
-          </Card>
+        <Col xs={12} md={6} style={{ marginBottom: 12 }}>
+          <AnalyticsMiniCard
+            title="Tamamlanan Planlar"
+            subValue={liveDashboard?.summary?.totalCompletedPlans ?? '-'}
+            data={liveDashboard?.summary?.spark3 || []}
+            loading={liveDashboardLoading}
+            color="#722ed1"
+          />
         </Col>
-        <Col xs={24} sm={6}>
-          <Card loading={liveDashboardLoading}>
-            <div style={{ textAlign: 'center' }}>
-              <Title level={3} style={{ color: '#fa8c16', margin: 0 }}>
-                %{liveDashboard?.summary?.averageProgress || 0}
-              </Title>
-              <Text type="secondary">Ortalama İlerleme</Text>
-            </div>
-          </Card>
+        <Col xs={12} md={6} style={{ marginBottom: 12 }}>
+          <AnalyticsMiniCard
+            title="Ortalama İlerleme"
+            subValue={liveDashboard?.summary?.averageProgress !== undefined ? '%' + liveDashboard.summary.averageProgress : '-'}
+            data={liveDashboard?.summary?.spark4 || []}
+            loading={liveDashboardLoading}
+            color="#fa8c16"
+          />
         </Col>
       </Row>
 
@@ -493,7 +316,7 @@ const CoachDashboard: React.FC = () => {
                 </div>
                 <div style={{ textAlign: 'right' }}>
                   <div>
-                    <Tag color={activity.totalProgress === 100 ? 'success' : 'processing'} size="small">
+                    <Tag color={activity.totalProgress === 100 ? 'success' : 'processing'}>
                       %{activity.totalProgress}
                     </Tag>
                   </div>
@@ -507,16 +330,8 @@ const CoachDashboard: React.FC = () => {
         </Card>
       )}
 
-      {/* Students Table */}
-      <Card title="Öğrenci Listesi" extra={
-        <Button 
-          type="primary" 
-          icon={<PlusOutlined />}
-          onClick={() => setShowCreateModal(true)}
-        >
-          Yeni Program Oluştur
-        </Button>
-      }>
+  {/* Students Table */}
+  <Card title="Öğrenci Listesi" extra={<Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/coach/programs/create')}>Yeni Program Oluştur</Button>}>
         <Table
           columns={columns}
           dataSource={students}
@@ -530,320 +345,6 @@ const CoachDashboard: React.FC = () => {
           }}
         />
       </Card>
-
-      {/* Create Program Modal */}
-      <Modal
-        title={selectedStudent ? `${selectedStudent.fullName} için Program Oluştur` : "Yeni Program Oluştur"}
-        open={showCreateModal}
-        onCancel={() => {
-          setShowCreateModal(false);
-          setSelectedStudent(null);
-          form.resetFields();
-        }}
-        footer={null}
-        width={800}
-      >
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleCreateProgram}
-          initialValues={{
-            date: dayjs(),
-            subjects: [{ subject: '', description: '', duration: 60 }] // 60 dakika varsayılan
-          }}
-        >
-          {!selectedStudent && (
-            <Form.Item
-              name="studentId"
-              label="Öğrenci Seçin"
-              rules={[{ required: true, message: 'Öğrenci seçiniz' }]}
-            >
-              <Select placeholder="Öğrenci seçin...">
-                {students.map(student => (
-                  <Option key={student._id} value={student._id}>
-                    {student.fullName} - {student.grade}
-                  </Option>
-                ))}
-              </Select>
-            </Form.Item>
-          )}
-
-          <Form.Item
-            name="date"
-            label="Program Tarihi"
-            rules={[{ required: true, message: 'Tarih seçiniz' }]}
-          >
-            <DatePicker 
-              style={{ width: '100%' }} 
-              format="DD/MM/YYYY"
-              placeholder="Tarih seçin..."
-            />
-          </Form.Item>
-
-          <Divider>Dersler ve Konular</Divider>
-
-          <Form.List name="subjects">
-            {(fields, { add, remove }) => (
-              <>
-                {fields.map(({ key, name, ...restField }) => (
-                  <Card key={key} size="small" style={{ marginBottom: '16px' }}>
-                    <Row gutter={16}>
-                      <Col span={6}>
-                        <Form.Item
-                          {...restField}
-                          name={[name, 'subject']}
-                          label="Ders"
-                          rules={[{ required: true, message: 'Ders adı giriniz' }]}
-                        >
-                          <Select placeholder="Ders seçin...">
-                            <Option value="matematik">📐 Matematik</Option>
-                            <Option value="turkce">Türkçe</Option>
-                            <Option value="kimya">🧪 Kimya</Option>
-                            <Option value="fizik">🔬 Fizik</Option>
-                            <Option value="biyoloji">🌱 Biyoloji</Option>
-                            <Option value="tarih">Tarih</Option>
-                            <Option value="cografya">🌍 Coğrafya</Option>
-                          </Select>
-                        </Form.Item>
-                      </Col>
-                     
-                      <Col span={12}>
-                        <Form.Item
-                          {...restField}
-                          name={[name, 'description']}
-                          label="Konu Açıklaması"
-                          rules={[{ required: true, message: 'Konu açıklaması giriniz' }]}
-                        >
-                          <TextArea
-                            rows={2}
-                            placeholder="Örnek: Mutlak değer konu anlatım 1-2 videoları izlenip pekiştirme soruları çözülecek"
-                          />
-                        </Form.Item>
-                      </Col>
-                      <Col span={4}>
-                        <Form.Item
-                          {...restField}
-                          name={[name, 'duration']}
-                          label="Süre (dk)"
-                          rules={[{ required: true, message: 'Süre giriniz' }]}
-                        >
-                          <InputNumber<number>
-                            min={15}
-                            max={480}
-                            step={15}
-                            placeholder="60"
-                            style={{ width: '100%' }}
-                            formatter={(value) => `${value} dk`}
-                            parser={(value: string | undefined) => Number((value || '').replace(' dk', ''))}
-                          />
-                        </Form.Item>
-                      </Col>
-                      <Col span={2}>
-                        <Button
-                          type="text"
-                          danger
-                          onClick={() => remove(name)}
-                          style={{ marginTop: '30px' }}
-                        >
-                          Sil
-                        </Button>
-                      </Col>
-                    </Row>
-                  </Card>
-                ))}
-                <Form.Item>
-                  <Button
-                    type="dashed"
-                    onClick={() => add()}
-                    block
-                    icon={<PlusOutlined />}
-                  >
-                    Ders Ekle
-                  </Button>
-                </Form.Item>
-              </>
-            )}
-          </Form.List>
-
-          <div style={{ textAlign: 'right', marginTop: '24px' }}>
-            <Space>
-              <Button onClick={() => {
-                setShowCreateModal(false);
-                setSelectedStudent(null);
-                form.resetFields();
-              }}>
-                İptal
-              </Button>
-              <Button type="primary" htmlType="submit" icon={<CalendarOutlined />}>
-                {isEditMode ? 'Programı Kaydet' : 'Program Oluştur'}
-              </Button>
-            </Space>
-          </div>
-        </Form>
-      </Modal>
-
-      {/* Student Reports Modal */}
-      <Modal
-        title={selectedStudent ? `${selectedStudent.fullName} - Günlük Raporlar` : "Öğrenci Raporları"}
-        open={showReportsModal}
-        onCancel={() => {
-          setShowReportsModal(false);
-          setSelectedStudent(null);
-          setStudentReports([]);
-        }}
-        footer={null}
-        width={1200}
-      >
-        <div>
-          {studentReports.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '40px' }}>
-              <Text type="secondary">
-                Bu öğrenci henüz rapor göndermemiş.
-              </Text>
-            </div>
-          ) : (
-            studentReports.map((report) => (
-              <Card key={report._id} style={{ marginBottom: '16px' }}>
-                {/* Report Header */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                  <div>
-                    <Title level={4} style={{ margin: 0 }}>
-                      {dayjs(report.date).format('DD/MM/YYYY')} - {report.title}
-                    </Title>
-                    <Text type="secondary">
-                      Gönderim: {dayjs(report.submittedAt).format('DD/MM/YYYY HH:mm')}
-                    </Text>
-                  </div>
-                  <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-                    <div style={{ textAlign: 'center' }}>
-                      <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#52c41a' }}>
-                        {report.stats.netScore.toFixed(1)}
-                      </div>
-                      <Text type="secondary" style={{ fontSize: '12px' }}>Net</Text>
-                    </div>
-                    <div style={{ textAlign: 'center' }}>
-                      <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#1890ff' }}>
-                        %{report.stats.completionRate}
-                      </div>
-                      <Text type="secondary" style={{ fontSize: '12px' }}>Tamamlanma</Text>
-                    </div>
-                    <div style={{ textAlign: 'center' }}>
-                      <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#722ed1' }}>
-                        {report.studentFeedback.motivationScore}/10
-                      </div>
-                      <Text type="secondary" style={{ fontSize: '12px' }}>Motivasyon</Text>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Subject Results Table */}
-                <Table
-                  dataSource={report.subjects.map((subject: any, idx: number) => ({...subject, key: idx}))}
-                  pagination={false}
-                  size="small"
-                  columns={[
-                    {
-                      title: 'Ders',
-                      dataIndex: 'subject',
-                      key: 'subject',
-                      render: (subject: string) => {
-                        const names: Record<string, string> = {
-                          matematik: '📐 Matematik',
-                          turkce: 'Türkçe', 
-                          kimya: '🧪 Kimya',
-                          fizik: '🔬 Fizik',
-                          biyoloji: '🌱 Biyoloji',
-                          tarih: 'Tarih',
-                          cografya: '🌍 Coğrafya'
-                        };
-                        return names[subject] || subject;
-                      }
-                    },
-                    {
-                      title: 'Açıklama',
-                      dataIndex: 'description',
-                      key: 'description',
-                      render: (desc: string) => (
-                        <Text style={{ fontSize: '12px' }}>
-                          {desc.length > 50 ? desc.substring(0, 50) + '...' : desc}
-                        </Text>
-                      )
-                    },
-                    {
-                      title: 'D',
-                      dataIndex: 'correctAnswers',
-                      key: 'correct',
-                      align: 'center',
-                      width: 50,
-                      render: (correct: number) => (
-                        <Text style={{ color: '#52c41a', fontWeight: 'bold' }}>
-                          {correct}
-                        </Text>
-                      )
-                    },
-                    {
-                      title: 'Y',
-                      dataIndex: 'wrongAnswers',
-                      key: 'wrong',
-                      align: 'center',
-                      width: 50,
-                      render: (wrong: number) => (
-                        <Text style={{ color: '#ff4d4f', fontWeight: 'bold' }}>
-                          {wrong}
-                        </Text>
-                      )
-                    },
-                    {
-                      title: 'B',
-                      dataIndex: 'blankAnswers',
-                      key: 'blank',
-                      align: 'center',
-                      width: 50,
-                      render: (blank: number) => (
-                        <Text style={{ color: '#8c8c8c', fontWeight: 'bold' }}>
-                          {blank}
-                        </Text>
-                      )
-                    },
-                    {
-                      title: 'Net',
-                      dataIndex: 'netScore',
-                      key: 'net',
-                      align: 'center',
-                      width: 60,
-                      render: (net: number) => (
-                        <Text style={{ color: '#faad14', fontWeight: 'bold' }}>
-                          {net.toFixed(1)}
-                        </Text>
-                      )
-                    },
-                    {
-                      title: 'Süre',
-                      dataIndex: 'targetTime',
-                      key: 'time',
-                      align: 'center',
-                      width: 60,
-                      render: (time: number) => (
-                        <Text>{time} dk</Text>
-                      )
-                    }
-                  ]}
-                />
-
-                {/* Student Feedback */}
-                {report.studentFeedback.feedbackText && (
-                  <div style={{ marginTop: '16px', padding: '12px', background: '#f9f9f9', borderRadius: '8px' }}>
-                    <Text strong>Öğrenci Feedback:</Text>
-                    <div style={{ marginTop: '8px' }}>
-                      <Text>{report.studentFeedback.feedbackText}</Text>
-                    </div>
-                  </div>
-                )}
-              </Card>
-            ))
-          )}
-        </div>
-      </Modal>
 
       {/* Coach page tour */}
       <CoachDashboardTour

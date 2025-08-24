@@ -9,6 +9,7 @@
 // Import variables and mixins
 @import 'variables';
 @import 'mixins';
+@import 'buttons';
 
 // ===== KEYFRAME ANİMASYONLARI =====
 @keyframes fadeIn {
@@ -290,6 +291,15 @@ body h2.ant-typography {
   border-radius: 12px;
 }
 
+/* Override picker & upload padding */
+:where([class^="css-"]) .ant-picker,
+.ant-picker,
+:where([class^="css-"]) .ant-upload,
+.ant-upload {
+  border-radius: 12px !important;
+  padding: 6px 12px !important; /* vertical 6 horizontal 12 */
+}
+
 // Modal scroll/dimension fixes
 // - Büyük içeriklerde modal gövdesinin dikey kaydırılmasına izin ver
 // - Başlık ve footer sabit kalır, içerik taşarsa gövdede kayar
@@ -338,7 +348,7 @@ body h2.ant-typography {
 .ant-input,
 .ant-input-password,
 .ant-input-affix-wrapper {
-  padding: 6px 11px !important;
+  padding: 0 11px !important;
 }
 
 // Input affix wrapper içindeki input için de padding ayarla
@@ -747,5 +757,30 @@ body h2.ant-typography {
         background: #374151 !important;
       }
     }
+  }
+}
+
+// ===== GLOBAL CARD HEADER STANDARDIZATION =====
+// Project-wide card head layout + title sizing (dev + prod builds)
+:where(.css-dev-only-do-not-override-*) .ant-card-head,
+.ant-card-head {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 48px;
+}
+
+:where(.css-dev-only-do-not-override-*) .ant-card-head-title,
+.ant-card-head-title {
+  font-size: 16px !important;
+  line-height: 1.35;
+  font-weight: 600;
+}
+
+// Dark theme keeps same sizing
+.theme-dark {
+  :where(.css-dev-only-do-not-override-*) .ant-card-head-title,
+  .ant-card-head-title {
+    font-size: 16px !important;
   }
 }

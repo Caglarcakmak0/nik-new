@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Modal, Form, Rate, Input, Checkbox, Typography } from 'antd';
+import { Card, Form, Rate, Input, Checkbox, Typography, Space, Button } from 'antd';
 import type { CheckboxValueType } from 'antd/es/checkbox/Group';
 import { submitCoachFeedback, CoachFeedbackCategories, CoachFeedbackSpecificIssues } from '../../../services/api';
 
@@ -7,11 +7,14 @@ const { TextArea } = Input;
 const { Text } = Typography;
 
 type Props = {
-  open: boolean;
-  onClose: () => void;
+  // Modal kullanımını kaldırdık; embed edilerek gösteriliyor
   coachId: string;
   coachName?: string;
   onSubmitted?: () => void;
+  onCancel?: () => void;
+  compact?: boolean;
+  title?: string;
+  submittingExternal?: boolean; // dışarıdan loading göstermek gerekirse
 };
 
 const options = [
@@ -21,7 +24,7 @@ const options = [
   { label: 'Program uygun değil', value: 'programNotSuitable' },
 ] as const;
 
-export const SecretFeedbackForm: React.FC<Props> = ({ open, onClose, coachId, coachName, onSubmitted }) => {
+export const SecretFeedbackForm: React.FC<Props> = ({ coachId, coachName, onSubmitted, onCancel, compact, title, submittingExternal }) => {
   const [form] = Form.useForm();
 
   const initialValues = useMemo(() => ({
@@ -33,7 +36,7 @@ export const SecretFeedbackForm: React.FC<Props> = ({ open, onClose, coachId, co
     other: ''
   }), []);
 
-  const handleOk = async () => {
+  const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
 
@@ -58,56 +61,50 @@ export const SecretFeedbackForm: React.FC<Props> = ({ open, onClose, coachId, co
         specificIssues
       });
 
-      onSubmitted?.();
-      onClose();
-      form.resetFields();
+  onSubmitted?.();
+  form.resetFields();
     } catch (err) {
       // validate hataları veya api hataları form içinde gösterilecek
     }
   };
 
   return (
-    <Modal
-      title={`Koç Değerlendirmesi${coachName ? ` - ${coachName}` : ''}`}
-      open={open}
-      onCancel={() => { form.resetFields(); onClose(); }}
-      onOk={handleOk}
-      okText="Gönder"
-      cancelText="İptal"
+    <Card size={compact ? 'small' : 'default'} className={`secret-feedback-form ${compact ? 'compact' : ''}`}
+      title={title || `Koç Değerlendirmesi${coachName ? ` - ${coachName}` : ''}`}
+      extra={onCancel && (
+        <Button type="text" size="small" onClick={() => { form.resetFields(); onCancel(); }}>Kapat</Button>
+      )}
     >
-      <Form
-        layout="vertical"
-        form={form}
-        initialValues={initialValues}
-      >
-        <Form.Item label="İletişim" name="communication" rules={[{ required: true }]}> 
-          <Rate count={5} />
-        </Form.Item>
-        <Form.Item label="Program Kalitesi" name="programQuality" rules={[{ required: true }]}> 
-          <Rate count={5} />
-        </Form.Item>
-        <Form.Item label="Genel Memnuniyet" name="overallSatisfaction" rules={[{ required: true }]}> 
-          <Rate count={5} />
-        </Form.Item>
-
+      <Form layout="vertical" form={form} initialValues={initialValues} disabled={submittingExternal} onFinish={handleSubmit}>
+        <Space direction={compact ? 'horizontal' : 'vertical'} style={{ width: '100%' }} wrap>
+          <Form.Item label="İletişim" name="communication" rules={[{ required: true }]} style={{ flex: '1 1 160px', minWidth: 140 }}> 
+            <Rate count={5} />
+          </Form.Item>
+          <Form.Item label="Program Kalitesi" name="programQuality" rules={[{ required: true }]} style={{ flex: '1 1 160px', minWidth: 140 }}> 
+            <Rate count={5} />
+          </Form.Item>
+          <Form.Item label="Genel Memnuniyet" name="overallSatisfaction" rules={[{ required: true }]} style={{ flex: '1 1 160px', minWidth: 140 }}> 
+            <Rate count={5} />
+          </Form.Item>
+        </Space>
         <Form.Item label="Özel Konular" name="issues">
           <Checkbox.Group options={options as any} />
         </Form.Item>
         <Form.Item label="Diğer" name="other">
           <Input placeholder="İsteğe bağlı not" maxLength={120} />
         </Form.Item>
-
-        <Form.Item
-          label="Geri Bildirim"
-          name="feedback"
-          rules={[{ required: true, message: 'Lütfen geri bildirim girin' }, { min: 5, message: 'En az 5 karakter' }]}
-        >
+        <Form.Item label="Geri Bildirim" name="feedback" rules={[{ required: true, message: 'Lütfen geri bildirim girin' }, { min: 5, message: 'En az 5 karakter' }]}> 
           <TextArea placeholder="Deneyiminizi anlatın..." rows={4} maxLength={1000} showCount />
         </Form.Item>
-
-        <Text type="secondary">Gönderim anonimdir; koçunuz bu metni göremez.</Text>
+        <Space style={{ width: '100%', justifyContent: 'space-between' }}>
+          <Text type="secondary">Gönderim anonimdir; koçunuz bu metni göremez.</Text>
+          <Space>
+            {onCancel && <Button onClick={() => { form.resetFields(); onCancel(); }}>İptal</Button>}
+            <Button type="primary" htmlType="submit" loading={submittingExternal}>Gönder</Button>
+          </Space>
+        </Space>
       </Form>
-    </Modal>
+    </Card>
   );
 };
 

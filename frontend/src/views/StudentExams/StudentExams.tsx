@@ -75,7 +75,8 @@ function resolveTopicBankKey(sectionName: string, category: Category): string {
 const StudentExams: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<Dayjs>(dayjs());
   const [items, setItems] = useState<PracticeExam[]>([]);
-  const [monthlyMap, setMonthlyMap] = useState<Record<string, { count: number; labels: string[] }>>({});
+  // monthlyMap: her gün için toplam deneme sayısı + etiketler + toplam net
+  const [monthlyMap, setMonthlyMap] = useState<Record<string, { count: number; labels: string[]; totalNet: number }>>({});
   const [loading, setLoading] = useState<boolean>(false);
   const [modalOpen, setModalOpen] = useState<boolean>(false);
   const [editing, setEditing] = useState<PracticeExam | null>(null);
@@ -126,7 +127,7 @@ const StudentExams: React.FC = () => {
       const end = baseDate.endOf('month').toDate().toISOString();
       const res = await getStudentExams({ from: start, to: end, limit: 500 });
       const list: PracticeExam[] = res?.data || [];
-      const map: Record<string, { count: number; labels: string[] }> = {};
+  const map: Record<string, { count: number; labels: string[]; totalNet: number }> = {};
       const toLabel = (e: PracticeExam): string => {
         if (e.category === 'TYT_GENEL') return 'TYT';
         if (e.category === 'AYT_GENEL') return 'AYT';
@@ -148,8 +149,11 @@ const StudentExams: React.FC = () => {
       list.forEach((e) => {
         const key = dayjs(e.date).format('YYYY-MM-DD');
         const label = toLabel(e);
-        if (!map[key]) map[key] = { count: 0, labels: [] };
-        map[key].count += 1;
+  if (!map[key]) map[key] = { count: 0, labels: [], totalNet: 0 };
+  map[key].count += 1;
+  // toplam net ekle (yoksa 0 kabul)
+  const examNet = (e.totals && typeof e.totals.net === 'number') ? e.totals.net : 0;
+  map[key].totalNet += examNet;
         if (map[key].labels.length < 3 && !map[key].labels.includes(label)) {
           map[key].labels.push(label);
         }
@@ -164,37 +168,63 @@ const StudentExams: React.FC = () => {
     fetchMonthly(selectedDate);
   }, [fetchMonthly, monthKey]);
 
+  // Form başlangıç değerleri (warning'i engellemek için form mount olduktan sonra set edilir)
+  const [formInit, setFormInit] = useState<any | null>(null);
+
+  const buildSections = (list: PracticeExamSection[] = []) => list.map(s => ({
+    name: s.name,
+    totalQuestions: s.totalQuestions ?? (s.correctAnswers + s.wrongAnswers + s.blankAnswers),
+    correctAnswers: s.correctAnswers ?? 0,
+    wrongAnswers: s.wrongAnswers ?? 0,
+    blankAnswers: s.blankAnswers ?? 0,
+    wrongTopics: s.wrongTopics || []
+  }));
+
   const openCreate = () => {
     setEditing(null);
-    form.resetFields();
-    form.setFieldsValue({
-      date: selectedDate,
-      category: 'TYT_GENEL',
-      sections: [{ name: 'Bölüm', totalQuestions: 0, correctAnswers: 0, wrongAnswers: 0, blankAnswers: 0 }]
-    });
     setModalOpen(true);
+    // Modal açıldıktan hemen sonra initialValues vereceğiz
+    setTimeout(() => {
+      setFormInit({
+        date: selectedDate,
+        category: 'TYT_GENEL',
+        sections: [{ name: 'Bölüm', totalQuestions: 0, correctAnswers: 0, wrongAnswers: 0, blankAnswers: 0 }]
+      });
+    }, 0);
   };
 
   const openEdit = (record: PracticeExam) => {
     setEditing(record);
-    form.resetFields();
-    form.setFieldsValue({
-      date: dayjs(record.date),
-      category: record.category,
-      branchSubject: record.branchSubject || undefined,
-      title: record.title || '',
-      examDuration: record.examDuration || undefined,
-      notes: record.notes || '',
-      sections: record.sections?.map(s => ({
-        name: s.name,
-        totalQuestions: s.totalQuestions || 0,
-        correctAnswers: s.correctAnswers || 0,
-        wrongAnswers: s.wrongAnswers || 0,
-        blankAnswers: s.blankAnswers || 0,
-      })) || []
-    });
     setModalOpen(true);
+    // Debug (gerekirse kaldırılabilir)
+    console.log('EDIT RECORD RAW', record);
+    console.log('EDIT RECORD SECTIONS', record.sections);
+    setTimeout(() => {
+      setFormInit({
+        date: dayjs(record.date),
+        category: record.category,
+        branchSubject: record.branchSubject || undefined,
+        title: record.title || '',
+        examDuration: record.examDuration || undefined,
+        notes: record.notes || '',
+        sections: buildSections(record.sections)
+      });
+    }, 0);
   };
+
+  // Form'a yeniden mount tetiklemek için key
+  const formKey = useMemo(() => {
+    if (!modalOpen) return 'closed';
+    if (editing) return `edit-${editing._id}`;
+    return 'create-new';
+  }, [modalOpen, editing]);
+
+  // Modal kapanınca cleanup
+  useEffect(() => {
+    if (!modalOpen) {
+      setFormInit(null);
+    }
+  }, [modalOpen]);
 
   const handleDelete = async (id: string) => {
     try {
@@ -427,10 +457,12 @@ const StudentExams: React.FC = () => {
               if (dayData) {
                 const labels = dayData.labels;
                 const more = Math.max(dayData.count - labels.length, 0);
+                const totalNetVal = Number(dayData.totalNet || 0);
+                const netDisplay = Number.isFinite(totalNetVal) ? totalNetVal.toFixed(1) : '0.0';
                 return (
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', fontSize: 14, fontWeight: 'bold' }}>
-                    <span style={{ color: '#555' }}>N: {dayData.count}</span>
-                    <span style={{ color: '#888', textAlign: 'center' }}>
+                    <span style={{ color: '#555' }}>Net: {netDisplay}</span>
+                    <span style={{ color: '#888', textAlign: 'center', fontWeight: 400 }}>
                       {labels.join(', ')}{more > 0 ? ` +${more}` : ''}
                     </span>
                   </div>
@@ -512,7 +544,13 @@ const StudentExams: React.FC = () => {
         width={800}
         destroyOnHidden
       >
-        <Form form={form} layout="vertical" preserve={false}>
+        <Form
+          key={formKey}
+            form={form}
+            layout="vertical"
+            preserve={false}
+            initialValues={formInit || {}}
+        >
           <Form.Item name="date" label="Tarih" rules={[{ required: true, message: 'Tarih gerekli' }]}>
             <DatePicker format="DD.MM.YYYY" style={{ width: '100%' }} />
           </Form.Item>
@@ -540,11 +578,13 @@ const StudentExams: React.FC = () => {
           <Form.List name="sections">
             {(fields, { add, remove }) => (
               <div>
-                {fields.map((field) => (
-                  <Card key={field.key} size="small" style={{ marginBottom: 8 }}>
+                {fields.map((field) => {
+                  const { key, ...restField } = field; // key'i spread dışına al (React key uyarısını önle)
+                  return (
+                  <Card key={key} size="small" style={{ marginBottom: 8 }}>
                     <Space direction="vertical" style={{ width: '100%' }}>
                       <Space wrap>
-                        <Form.Item {...field} name={[field.name, 'name']} label="Ad" rules={[{ required: true, message: 'Bölüm adı gerekli' }]}>
+                        <Form.Item {...restField} name={[field.name, 'name']} label="Ad" rules={[{ required: true, message: 'Bölüm adı gerekli' }]}>                        
                           <Select
                             showSearch
                             style={{ width: 220 }}
@@ -562,16 +602,17 @@ const StudentExams: React.FC = () => {
                             ]}
                           />
                         </Form.Item>
-                        <Form.Item {...field} name={[field.name, 'totalQuestions']} label="Toplam" initialValue={0}>
+                        {/* initialValue'lar kaldırıldı: edit modunda form.setFieldsValue ile gelen gerçek D/Y/B değerleri 0'a overwrite olmasın */}
+                        <Form.Item {...restField} name={[field.name, 'totalQuestions']} label="Toplam">
                           <InputNumber min={0} max={200} />
                         </Form.Item>
-                        <Form.Item {...field} name={[field.name, 'correctAnswers']} label="Doğru" initialValue={0}>
+                        <Form.Item {...restField} name={[field.name, 'correctAnswers']} label="Doğru">
                           <InputNumber min={0} max={200} />
                         </Form.Item>
-                        <Form.Item {...field} name={[field.name, 'wrongAnswers']} label="Yanlış" initialValue={0}>
+                        <Form.Item {...restField} name={[field.name, 'wrongAnswers']} label="Yanlış">
                           <InputNumber min={0} max={200} />
                         </Form.Item>
-                        <Form.Item {...field} name={[field.name, 'blankAnswers']} label="Boş" initialValue={0}>
+                        <Form.Item {...restField} name={[field.name, 'blankAnswers']} label="Boş">
                           <InputNumber min={0} max={200} />
                         </Form.Item>
                         <Form.Item noStyle shouldUpdate={(prev, cur) => (
@@ -585,7 +626,7 @@ const StudentExams: React.FC = () => {
                             const topics = SUBJECT_TOPIC_BANK[key] || [];
                             const options = topics.map((t) => ({ label: t, value: t }));
                             return (
-                              <Form.Item {...field} name={[field.name, 'wrongTopics']} label="Yanlış Konular" tooltip="Yanlış yapılan konu başlıklarını yazın (Enter ile ekleyin)">
+                              <Form.Item {...restField} name={[field.name, 'wrongTopics']} label="Yanlış Konular" tooltip="Yanlış yapılan konu başlıklarını yazın (Enter ile ekleyin)">
                                 <Select
                                   mode="tags"
                                   style={{ minWidth: 260 }}
@@ -614,7 +655,7 @@ const StudentExams: React.FC = () => {
                       <Button danger onClick={() => remove(field.name)}>Bölümü Kaldır</Button>
                     </Space>
                   </Card>
-                ))}
+                );})}
                 <Button type="dashed" onClick={() => add({ name: 'Bölüm', totalQuestions: 0, correctAnswers: 0, wrongAnswers: 0, blankAnswers: 0 })} block>
                   Bölüm Ekle
                 </Button>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Modal, Input, Button, Space, Divider, Typography, message } from 'antd';
+import { Modal, Input, Button, Space, Typography, message, Popconfirm } from 'antd';
 import { CheckOutlined, EditOutlined, TrophyOutlined } from '@ant-design/icons';
 import QualityRating from './QualityRating';
 import MoodSelector from './MoodSelector';
@@ -38,7 +38,7 @@ const SessionFeedback: React.FC<SessionFeedbackProps> = ({
 }) => {
   const [feedback, setFeedback] = useState<SessionFeedbackData>({
     quality: 0,
-    mood: 'Normal',
+    mood: undefined as any, // Zorunlu seçilecek
     distractions: 0,
     notes: ''
   });
@@ -51,7 +51,7 @@ const SessionFeedback: React.FC<SessionFeedbackProps> = ({
       return;
     }
 
-    if (!feedback.mood) {
+  if (!feedback.mood) {
       message.error('Lütfen ruh halinizi seçin!');
       return;
     }
@@ -63,7 +63,7 @@ const SessionFeedback: React.FC<SessionFeedbackProps> = ({
       // Reset form
       setFeedback({
         quality: 0,
-        mood: 'Normal',
+        mood: undefined as any,
         distractions: 0,
         notes: ''
       });
@@ -80,7 +80,7 @@ const SessionFeedback: React.FC<SessionFeedbackProps> = ({
     // Reset form
     setFeedback({
       quality: 0,
-      mood: 'Normal',
+      mood: undefined as any,
       distractions: 0,
       notes: ''
     });
@@ -149,19 +149,27 @@ const SessionFeedback: React.FC<SessionFeedbackProps> = ({
           alignItems: 'center',
           padding: '16px 0'
         }}>
-          <Button 
-            onClick={handleCancel} 
+          <Popconfirm
+            title="Oturum kaydedilmeyecek"
+            description="Bu oturumu kaydetmeden kapatmak istediğinize emin misiniz?"
+            okText="Evet"
+            cancelText="Vazgeç"
+            onConfirm={handleCancel}
             disabled={loading}
-            style={{
-              borderRadius: '12px',
-              height: '44px',
-              padding: '0 24px',
-              border: '1px solid #e9ecef',
-              color: '#666'
-            }}
           >
-            Atla
-          </Button>
+            <Button 
+              disabled={loading}
+              style={{
+                borderRadius: '12px',
+                height: '44px',
+                padding: '0 24px',
+                border: '1px solid #e9ecef',
+                color: '#666'
+              }}
+            >
+              Kaydetmeden Kapat
+            </Button>
+          </Popconfirm>
           <Button 
             type="primary" 
             icon={<CheckOutlined />}
@@ -296,21 +304,24 @@ const SessionFeedback: React.FC<SessionFeedbackProps> = ({
           </div>
         </Space>
 
-        <div style={{ 
-          marginTop: 24, 
-          textAlign: 'center',
-          padding: '16px',
-          background: 'rgba(255,255,255,0.6)',
-          borderRadius: '12px',
-          border: '1px solid rgba(102, 126, 234, 0.1)'
-        }}>
-          <Text style={{ 
-            fontSize: '12px',
-            color: '#666',
-            lineHeight: '1.5'
+        <div style={{ marginTop: 24 }}>
+          <div style={{ 
+            textAlign: 'center',
+            padding: '16px',
+            background: 'rgba(255,255,255,0.6)',
+            borderRadius: '12px',
+            border: '1px solid rgba(102, 126, 234, 0.1)',
+            marginBottom: 12
           }}>
-            Bu veriler çalışma alışkanlıklarınızı analiz etmek ve size daha iyi öneriler sunmak için kullanılır
-          </Text>
+            <Text style={{ fontSize: 12, color: '#666', lineHeight: '1.5' }}>
+              Bu veriler çalışma alışkanlıklarınızı analiz etmek ve size daha iyi öneriler sunmak için kullanılır
+            </Text>
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <Text type="danger" style={{ fontSize: 12 }}>
+              Kaydetmeden Kapat seçeneğini kullanırsanız bu oturum kaydedilmeyecek.
+            </Text>
+          </div>
         </div>
       </div>
     </Modal>

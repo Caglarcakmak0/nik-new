@@ -12,7 +12,8 @@ import {
   QuestionCircleOutlined,
   CompassOutlined,
   TrophyOutlined,
-  HistoryOutlined
+  HistoryOutlined,
+  TableOutlined
 } from "@ant-design/icons";
 import type { MenuItemEx, Role } from "./menuTypes";
 
@@ -122,6 +123,26 @@ export const allMenuItems: MenuItemEx[] = [
     icon: <BookOutlined />,
     label: "Çalışma Programı",
     roles: ["student"],
+    children: [
+      {
+        key: "/study-plan/daily",
+        icon: <TableOutlined />,
+        label: "Günlük Tablo",
+        roles: ["student"],
+      },
+      {
+        key: "/study-plan/monthly",
+        icon: <CalendarOutlined />,
+        label: "Aylık Görünüm",
+        roles: ["student"],
+      },
+      {
+        key: "/study-plan/analytics",
+        icon: <BarChartOutlined />,
+        label: "İstatistikler",
+        roles: ["student"],
+      }
+    ]
   },
   {
     key: "/topic-matrix",
