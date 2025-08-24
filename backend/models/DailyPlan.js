@@ -92,7 +92,20 @@ const DailyPlanSchema = mongoose.Schema({
         sessionIds: [{ 
             type: mongoose.Schema.Types.ObjectId, 
             ref: 'StudySession' 
-        }]
+        }],
+
+        // YouTube video atamaları (koç ekler, öğrenci sadece görüntüler)
+        videos: [{
+            videoId: { type: String, required: true },
+            playlistId: { type: String },
+            title: { type: String, trim: true },
+            durationSeconds: { type: Number, default: 0 },
+            channelTitle: { type: String, trim: true },
+            position: { type: Number }, // playlist içindeki orijinal sıra
+            order: { type: Number },    // koçun belirlediği çalışma sırası
+            addedAt: { type: Date, default: Date.now }
+        }],
+        videosTotalSeconds: { type: Number, default: 0 }
     }],
     
     // Deneme sınavı planı
@@ -259,6 +272,19 @@ DailyPlanSchema.pre('save', function(next) {
         // Toplam hedefleri hesapla
         this.stats.totalTargetQuestions = this.subjects.reduce((sum, s) => sum + (s.targetQuestions || 0), 0);
         this.stats.totalTargetTime = this.subjects.reduce((sum, s) => sum + (s.targetTime || 0), 0);
+
+        // Video toplam süreleri güncelle (her subject için)
+        this.subjects.forEach(s => {
+            if (Array.isArray(s.videos) && s.videos.length) {
+                s.videosTotalSeconds = s.videos.reduce((acc, v) => acc + (v.durationSeconds || 0), 0);
+                // targetTime belirtilmemişse videoların toplamına göre dakikaya yuvarla (override yoksa)
+                if (!s.targetTime) {
+                    s.targetTime = Math.ceil(s.videosTotalSeconds / 60); // yukarı yuvarla
+                }
+            } else {
+                s.videosTotalSeconds = s.videosTotalSeconds || 0;
+            }
+        });
 
         // Toplam tamamlananları hesapla
         this.stats.totalCompletedQuestions = this.subjects.reduce((sum, s) => sum + (s.completedQuestions || 0), 0);

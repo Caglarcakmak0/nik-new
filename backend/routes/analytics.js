@@ -25,6 +25,14 @@ const StudyGoal = require("../models/StudyGoal.js");
 router.get("/dashboard", authenticateToken, async (req, res) => {
     try {
         const userId = req.user.userId;
+        const range = (req.query.range || 'weekly').toString(); // daily | weekly | monthly | all
+        const rangeConfig = {
+            daily: { days: 1 },
+            weekly: { days: 7 },
+            monthly: { days: 30 },
+            all: { days: null }
+        };
+        const cfg = rangeConfig[range] || rangeConfig.weekly;
         
         // User stats'larını al
         const user = await Users.findById(userId);
@@ -32,23 +40,34 @@ router.get("/dashboard", authenticateToken, async (req, res) => {
             return res.status(404).json({ message: "Kullanıcı bulunamadı" });
         }
 
-        // Son 7 günün çalışma verilerini al
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-        
-        const recentSessions = await StudySession.find({
-            userId: userId,
-            date: { $gte: sevenDaysAgo }
-        }).sort({ date: -1 });
+        // Seçilen aralığın çalışma oturumlarını al (cfg.days null ise tümü)
+        let rangeSessions;
+        if (cfg.days) {
+            const from = new Date();
+            from.setDate(from.getDate() - cfg.days);
+            rangeSessions = await StudySession.find({
+                userId,
+                date: { $gte: from }
+            }).sort({ date: -1 });
+        } else {
+            rangeSessions = await StudySession.find({ userId }).sort({ date: -1 });
+        }
 
-        // Son 30 günün çalışma verilerini al
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-        
-        const monthlySessions = await StudySession.find({
-            userId: userId,
-            date: { $gte: thirtyDaysAgo }
-        });
+        // Subject distribution için: monthly & all hariç 30 güne bak; monthly 30 gün; all tümü
+        let subjectSessions;
+        if (range === 'all') {
+            subjectSessions = rangeSessions; // already all
+        } else if (range === 'monthly') {
+            subjectSessions = rangeSessions; // 30 gün
+        } else {
+            // weekly/daily -> son 30 gün yinele
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+            subjectSessions = await StudySession.find({
+                userId,
+                date: { $gte: thirtyDaysAgo }
+            });
+        }
 
         // Dashboard metrics hesapla
         const dashboardData = {
@@ -60,23 +79,23 @@ router.get("/dashboard", authenticateToken, async (req, res) => {
                 profileCompleteness: user.profileCompleteness || 0
             },
 
-            // Son 7 gün trendi
+            // Seçilen aralık trendi (anahtar ismi backward compatibility için weeklyTrend tutuldu)
             weeklyTrend: {
-                totalTime: recentSessions.reduce((sum, session) => sum + session.duration, 0),
-                sessionCount: recentSessions.length,
-                averageQuality: recentSessions.length > 0 
-                    ? recentSessions.reduce((sum, session) => sum + session.quality, 0) / recentSessions.length 
+                totalTime: rangeSessions.reduce((sum, session) => sum + session.duration, 0),
+                sessionCount: rangeSessions.length,
+                averageQuality: rangeSessions.length > 0 
+                    ? rangeSessions.reduce((sum, session) => sum + session.quality, 0) / rangeSessions.length 
                     : 0,
-                averageEfficiency: recentSessions.length > 0
-                    ? recentSessions.reduce((sum, session) => sum + session.efficiency, 0) / recentSessions.length
+                averageEfficiency: rangeSessions.length > 0
+                    ? rangeSessions.reduce((sum, session) => sum + session.efficiency, 0) / rangeSessions.length
                     : 0
             },
 
-            // Günlük çalışma dağılımı (son 7 gün)
-            dailyDistribution: generateDailyDistribution(recentSessions),
+            // Günlük çalışma dağılımı (seçilen aralık)
+            dailyDistribution: generateDailyDistribution(rangeSessions, cfg.days),
 
-            // Ders bazında dağılım (son 30 gün)
-            subjectDistribution: generateSubjectDistribution(monthlySessions),
+            // Ders bazında dağılım
+            subjectDistribution: generateSubjectDistribution(subjectSessions),
 
             // Ruh hali dağılımı
             moodDistribution: user.stats.moodStats?.moodDistribution || {},
@@ -97,14 +116,15 @@ router.get("/dashboard", authenticateToken, async (req, res) => {
             })) : [],
 
             // Son aktiviteler
-            recentActivity: recentSessions.slice(0, 5).map(session => ({
+            recentActivity: rangeSessions.slice(0, 5).map(session => ({
                 date: session.date,
                 subject: session.subject,
                 duration: session.duration,
                 quality: session.quality,
                 mood: session.mood,
                 efficiency: session.efficiency
-            }))
+            })),
+            range
         };
 
         res.status(200).json({
@@ -131,19 +151,16 @@ router.get("/dashboard", authenticateToken, async (req, res) => {
 // });
 
 // Helper Functions
-function generateDailyDistribution(sessions) {
+function generateDailyDistribution(sessions, days = 7) {
     const dailyData = {};
     const today = new Date();
-    
-    // Son 7 günü init et
-    for (let i = 6; i >= 0; i--) {
+    const window = days || 7; // default 7 if null (all -> show last 7 for chart simplicity)
+    for (let i = window - 1; i >= 0; i--) {
         const date = new Date(today);
         date.setDate(date.getDate() - i);
         const dateStr = date.toISOString().split('T')[0];
         dailyData[dateStr] = { totalTime: 0, sessionCount: 0, averageQuality: 0 };
     }
-    
-    // Sessions'ları günlere dağıt
     sessions.forEach(session => {
         const dateStr = session.date.toISOString().split('T')[0];
         if (dailyData[dateStr]) {
@@ -152,7 +169,6 @@ function generateDailyDistribution(sessions) {
             dailyData[dateStr].averageQuality = (dailyData[dateStr].averageQuality + session.quality) / 2;
         }
     });
-    
     return dailyData;
 }
 

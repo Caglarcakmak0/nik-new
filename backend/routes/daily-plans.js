@@ -502,23 +502,48 @@ router.put("/:id/live-tracking", authenticateToken, checkRole('student'), async 
 router.get("/coach/live-dashboard", authenticateToken, checkRole('coach', 'admin'), async (req, res) => {
     try {
         const coachId = req.user?.userId;
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const tomorrow = new Date(today);
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        
-        // Bugünkü aktif planları getir
-        const todayPlans = await DailyPlan.find({
+        const { range = 'daily' } = req.query; // daily | weekly | monthly | all
+
+        const now = new Date();
+        const startOfToday = new Date();
+        startOfToday.setHours(0,0,0,0);
+        const endOfToday = new Date(startOfToday); endOfToday.setDate(endOfToday.getDate() + 1);
+
+        let fromDate = null; // inclusive
+        let toDate = null;   // exclusive
+        if (range === 'daily') {
+            fromDate = startOfToday;
+            toDate = endOfToday;
+        } else if (range === 'weekly') {
+            fromDate = new Date(startOfToday); fromDate.setDate(fromDate.getDate() - 6); // last 7 days incl today
+            toDate = endOfToday;
+        } else if (range === 'monthly') {
+            fromDate = new Date(startOfToday); fromDate.setDate(fromDate.getDate() - 29); // last 30 days
+            toDate = endOfToday;
+        } else if (range === 'all') {
+            // leave null to fetch all coach plans (limit timeframe to last 180 days to avoid huge payload)
+            fromDate = new Date(startOfToday); fromDate.setDate(fromDate.getDate() - 179);
+            toDate = endOfToday;
+        }
+
+        const dateFilter = fromDate && toDate ? { $gte: fromDate, $lt: toDate } : undefined;
+
+        const baseQuery = {
             coachId,
-            date: { $gte: today, $lt: tomorrow },
             status: { $in: ['active', 'draft'] }
-        }).populate('userId', 'firstName lastName email avatar');
-        
-        // Live tracking olan planları filtrele
+        };
+        if (dateFilter) baseQuery.date = dateFilter;
+
+        const plans = await DailyPlan.find(baseQuery).populate('userId', 'firstName lastName email avatar');
+
+        const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
         const liveStudents = [];
         const recentActivity = [];
-        
-        for (const plan of todayPlans) {
+
+        // Aggregation helpers for spark lines (counts per day)
+        const dayMap = new Map(); // key: YYYY-MM-DD -> { students:Set, completed:number, progressSum:number, plans:number }
+
+        for (const plan of plans) {
             const student = {
                 studentId: plan.userId._id,
                 studentName: `${plan.userId.firstName || ''} ${plan.userId.lastName || ''}`.trim() || plan.userId.email,
@@ -533,30 +558,52 @@ router.get("/coach/live-dashboard", authenticateToken, checkRole('coach', 'admin
                 targetTime: plan.stats?.totalTargetTime || 0,
                 lastActivity: plan.updatedAt
             };
-            
-            // Son 30 dakika içinde activity var mı?
-            const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+
             if (plan.updatedAt > thirtyMinutesAgo) {
                 liveStudents.push(student);
             }
-            
             recentActivity.push(student);
+
+            const d = new Date(plan.date);
+            const key = d.toISOString().slice(0,10);
+            if (!dayMap.has(key)) {
+                dayMap.set(key, { students: new Set(), completed: 0, progressSum: 0, plans: 0 });
+            }
+            const entry = dayMap.get(key);
+            entry.students.add(plan.userId._id.toString());
+            if (plan.stats?.completionRate === 100) entry.completed += 1;
+            entry.progressSum += (plan.stats?.completionRate || 0);
+            entry.plans += 1;
         }
-        
+
+        // Build chronological series
+        const keys = Array.from(dayMap.keys()).sort();
+        const spark1 = keys.map(k => dayMap.get(k).students.size); // students per day
+        const spark2 = keys.map(k => dayMap.get(k).plans); // plans per day
+        const spark3 = keys.map(k => dayMap.get(k).completed); // completed per day
+        const spark4 = keys.map(k => dayMap.get(k).plans ? Math.round(dayMap.get(k).progressSum / dayMap.get(k).plans) : 0); // avg progress
+
+        // Summary over selected range
+        const distinctStudents = new Set(plans.map(p => p.userId._id.toString()));
+        const totalCompletedPlans = plans.filter(p => p.stats?.completionRate === 100).length;
+        const averageProgress = plans.length ? Math.round(plans.reduce((s,p)=> s + (p.stats?.completionRate || 0),0) / plans.length) : 0;
+
         res.json({
             message: "Koç canlı dashboard başarıyla getirildi",
             data: {
                 liveStudents: liveStudents.sort((a, b) => new Date(b.lastActivity) - new Date(a.lastActivity)),
                 recentActivity: recentActivity.sort((a, b) => new Date(b.lastActivity) - new Date(a.lastActivity)).slice(0, 20),
                 summary: {
-                    totalStudentsToday: todayPlans.length,
+                    totalStudentsToday: distinctStudents.size, // generalized to selected range
                     activeNow: liveStudents.length,
-                    totalCompletedPlans: todayPlans.filter(p => p.stats?.completionRate === 100).length,
-                    averageProgress: todayPlans.length > 0 ? Math.round(todayPlans.reduce((sum, p) => sum + (p.stats?.completionRate || 0), 0) / todayPlans.length) : 0
+                    totalCompletedPlans,
+                    averageProgress,
+                    spark1, spark2, spark3, spark4,
+                    range
                 }
             }
         });
-        
+
     } catch (error) {
         console.error('GET /daily-plans/coach/live-dashboard error:', error);
         res.status(500).json({ message: error.message });

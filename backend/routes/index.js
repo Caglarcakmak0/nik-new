@@ -33,6 +33,7 @@ const StudentRoute = require("./student.js");
 const MotivationRoute = require("./motivation.js");
 const TopicMatrixRoute = require("./topicMatrix.js");
 const NotificationsRoute = require("./notifications.js");
+const YouTubeRoute = require("./youtube.js");
 
 router.use("/users", UsersRoute);
 router.use("/image", ImageRoute);   
@@ -52,5 +53,6 @@ router.use("/student", StudentRoute);
 router.use("/motivation", MotivationRoute);
 router.use("/topic-matrix", TopicMatrixRoute);
 router.use("/notifications", NotificationsRoute);
+router.use("/youtube", YouTubeRoute);
 
 module.exports = router;
