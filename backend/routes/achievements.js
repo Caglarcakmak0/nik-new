@@ -9,16 +9,34 @@ const Notification = require('../models/Notification');
 router.get("/user", authenticateToken, async (req, res) => {
     try {
         const userId = req.user?.userId;
-        
-        if (!userId) {
-            return res.status(401).json({ message: 'User ID not found in token' });
+        if (!userId) return res.status(401).json({ message: 'User ID not found in token' });
+
+        // Query filters
+        const { category, rarity, unlocked, search, sort } = req.query;
+        const filter = { userId };
+        if (category) filter.category = category;
+        if (rarity) filter.rarity = rarity;
+        if (unlocked === 'true') filter.unlockedAt = { $ne: null };
+        if (unlocked === 'false') filter.unlockedAt = null;
+        if (search) {
+            filter.$or = [
+                { title: { $regex: search, $options: 'i' } },
+                { description: { $regex: search, $options: 'i' } }
+            ];
         }
-        
-        // Kullanıcının achievement'larını database'den getir
-        const userAchievements = await Achievement.find({ userId });
-        
-        // Eğer kullanıcının achievement'ı yoksa, default achievement'ları oluştur
-        if (userAchievements.length === 0) {
+
+        // Base fetch
+        let query = Achievement.find(filter);
+        // Sorting options: newest, progress, rarity, title
+        if (sort === 'newest') query = query.sort({ createdAt: -1 });
+        else if (sort === 'rarity') query = query.sort({ rarity: 1, tier: 1 });
+        else if (sort === 'title') query = query.sort({ title: 1 });
+        else if (sort === 'progress') query = query.sort({ unlockedAt: 1, currentValue: -1 });
+
+        const userAchievements = await query.exec();
+
+        // Eğer hiç kayıt yoksa minimal default set üret
+        if (userAchievements.length === 0 && !category && !rarity && !search) {
             const defaultAchievements = [
                 {
                     userId,
@@ -27,7 +45,12 @@ router.get("/user", authenticateToken, async (req, res) => {
                     icon: 'star',
                     category: 'study',
                     rarity: 'common',
-                    points: 50
+                    points: 50,
+                    seriesKey: 'first_session',
+                    tier: 1,
+                    progressType: 'count',
+                    targetValue: 1,
+                    currentValue: 0
                 },
                 {
                     userId,
@@ -36,7 +59,12 @@ router.get("/user", authenticateToken, async (req, res) => {
                     icon: 'fire',
                     category: 'streak',
                     rarity: 'rare',
-                    points: 150
+                    points: 150,
+                    seriesKey: 'streak',
+                    tier: 2,
+                    progressType: 'streak',
+                    targetValue: 7,
+                    currentValue: 0
                 },
                 {
                     userId,
@@ -45,13 +73,15 @@ router.get("/user", authenticateToken, async (req, res) => {
                     icon: 'target',
                     category: 'questions',
                     rarity: 'epic',
-                    points: 500
+                    points: 500,
+                    seriesKey: 'questions_total',
+                    tier: 3,
+                    progressType: 'questions',
+                    targetValue: 1000,
+                    currentValue: 0
                 }
             ];
-            
             const createdAchievements = await Achievement.insertMany(defaultAchievements);
-            
-            // Achievement'ları frontend formatına çevir
             const formattedAchievements = createdAchievements.map(achievement => ({
                 id: achievement._id.toString(),
                 title: achievement.title,
@@ -62,20 +92,23 @@ router.get("/user", authenticateToken, async (req, res) => {
                 points: achievement.points,
                 isUnlocked: !!achievement.unlockedAt,
                 unlockedAt: achievement.unlockedAt,
-                progress: achievement.unlockedAt ? 100 : 0,
-                requirement: {
-                    type: achievement.category,
-                    target: achievement.category === 'study' ? 1 : achievement.category === 'streak' ? 7 : 1000,
-                    current: achievement.unlockedAt ? (achievement.category === 'study' ? 1 : achievement.category === 'streak' ? 7 : 1000) : 0
-                }
+                progress: achievement.targetValue ? Math.min(100, Math.round((achievement.currentValue / achievement.targetValue) * 100)) : (achievement.unlockedAt ? 100 : 0),
+                currentValue: achievement.unlockedAt ? achievement.targetValue : achievement.currentValue || 0,
+                targetValue: achievement.targetValue || 0,
+                progressType: achievement.progressType
             }));
-            
             return res.status(200).json({
                 message: "Achievement'lar başarıyla getirildi",
-                data: formattedAchievements
+                data: formattedAchievements,
+                stats: {
+                    total: formattedAchievements.length,
+                    unlocked: formattedAchievements.filter(a => a.isUnlocked).length,
+                    completionRate: formattedAchievements.length ? Math.round((formattedAchievements.filter(a => a.isUnlocked).length / formattedAchievements.length) * 100) : 0,
+                    byCategory: formattedAchievements.reduce((acc, a) => { acc[a.category] = (acc[a.category]||0)+1; return acc; }, {})
+                }
             });
         }
-        
+
         // Mevcut achievement'ları frontend formatına çevir
         const formattedAchievements = userAchievements.map(achievement => ({
             id: achievement._id.toString(),
@@ -87,17 +120,21 @@ router.get("/user", authenticateToken, async (req, res) => {
             points: achievement.points,
             isUnlocked: !!achievement.unlockedAt,
             unlockedAt: achievement.unlockedAt,
-            progress: achievement.unlockedAt ? 100 : Math.random() * 80, // Gerçek progress hesaplaması yapılacak
-            requirement: {
-                type: achievement.category,
-                target: achievement.category === 'study' ? 1 : achievement.category === 'streak' ? 7 : 1000,
-                current: achievement.unlockedAt ? (achievement.category === 'study' ? 1 : achievement.category === 'streak' ? 7 : 1000) : Math.floor(Math.random() * 500)
-            }
+            progress: achievement.targetValue ? Math.min(100, Math.round((achievement.currentValue / achievement.targetValue) * 100)) : (achievement.unlockedAt ? 100 : 0),
+            currentValue: achievement.unlockedAt ? achievement.targetValue : achievement.currentValue || 0,
+            targetValue: achievement.targetValue || 0,
+            progressType: achievement.progressType
         }));
-        
+        const unlockedCount = formattedAchievements.filter(a => a.isUnlocked).length;
         res.status(200).json({
             message: "Achievement'lar başarıyla getirildi",
-            data: formattedAchievements
+            data: formattedAchievements,
+            stats: {
+                total: formattedAchievements.length,
+                unlocked: unlockedCount,
+                completionRate: formattedAchievements.length ? Math.round((unlockedCount / formattedAchievements.length)*100) : 0,
+                byCategory: formattedAchievements.reduce((acc, a) => { acc[a.category] = (acc[a.category]||0)+1; return acc; }, {})
+            }
         });
         
     } catch (error) {

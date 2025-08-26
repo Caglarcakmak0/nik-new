@@ -1,111 +1,48 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { 
-  Card, 
   Row, 
   Col, 
   Typography, 
-  Table, 
   Tag, 
   Button, 
   Space, 
-  Statistic, 
-  Progress,
-  Select,
-  Input,
   Modal,
   message,
-  Alert,
   Tabs,
-  Avatar,
-  Drawer,
   Form,
-  Switch,
-  Empty,
-  Rate
+  Avatar,
+  Progress
 } from 'antd';
 import { 
   DashboardOutlined,
   UserOutlined,
-  TeamOutlined,
   BarChartOutlined,
-  SecurityScanOutlined,
-  BellOutlined,
   PlusOutlined,
-  EditOutlined,
-  DeleteOutlined,
   EyeOutlined,
   DownloadOutlined,
-  CloudServerOutlined,
-  LineChartOutlined,
-  PieChartOutlined,
-  GlobalOutlined
+  GlobalOutlined,
+  EditOutlined,
+  DeleteOutlined
 } from '@ant-design/icons';
-import { ReloadOutlined } from '@ant-design/icons';
+// removed ReloadOutlined usage moved to AnalyticsTab
 import type { ColumnsType } from 'antd/es/table';
-import { getAdminUsers, updateUser, deleteUser, getAdminFeedbackSummary, getAdminCoachesStatistics,  type FeedbackSummary, createUser, getAdminMotivation, updateAdminMotivation, getAdminUserPlan, updateAdminUserPlan, updateAdminUserLimits } from '../../services/api';
-import { CoachesStatsList } from '../../components/admin';
-import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  PieChart,
-  Pie,
-  Cell
-} from 'recharts';
+import { getAdminUsers, updateUser, deleteUser, getAdminFeedbackSummary, getAdminCoachesStatistics,  type FeedbackSummary, createUser, getAdminMotivation, updateAdminMotivation, getAdminUserPlan, getAdminSystemMetrics, getAdminUserGrowth } from '../../services/api';
+// Split components
+import OverviewTab from './components/OverviewTab';
+import UsersTab from './components/UsersTab';
+// Lazy load heavy analytics (recharts) chunk
+const AnalyticsTab = React.lazy(() => import('./components/AnalyticsTab'));
+import UserDetailsDrawer from './components/UserDetailsDrawer';
+import EditUserModal from './components/EditUserModal';
+import CreateUserModal from './components/CreateUserModal';
+import { User, SystemMetrics, getRoleInfo, getStatusInfo } from './types';
+// charts now handled in AnalyticsTab component
 import './AdminDashboard.scss';
 
 const { Title, Text } = Typography;
-const { Option } = Select;
+// Option removed; select usage handled in UsersTab component
 // Tipler & yardımcılar (her render'da yeniden oluşturulmasını engellemek için komponent dışında)
-interface User {
-  _id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  role: 'student' | 'coach' | 'admin';
-  profileCompleteness: number;
-  lastActivity: string;
-  status: 'active' | 'inactive' | 'banned';
-  registrationDate: string;
-}
-
-interface SystemMetrics {
-  totalUsers: number;
-  totalStudents: number;
-  totalCoaches: number;
-  totalSessions: number;
-  totalQuestions: number;
-  avgSessionTime: number;
-  systemLoad: number;
-  databaseSize: number;
-  activeUsers: number;
-  responseTime: number;
-}
-
-const getRoleInfo = (role: string) => {
-  const roleConfig = {
-    admin: { color: 'red', text: 'Admin' },
-    coach: { color: 'blue', text: 'Koç' },
-    student: { color: 'green', text: 'Öğrenci' }
-  } as const;
-  return roleConfig[role as keyof typeof roleConfig] || { color: 'default', text: role };
-};
-
-const getStatusInfo = (status: string) => {
-  const statusConfig = {
-    active: { color: 'success', text: 'Aktif' },
-    inactive: { color: 'warning', text: 'Pasif' },
-    banned: { color: 'error', text: 'Yasaklı' }
-  } as const;
-  return statusConfig[status as keyof typeof statusConfig] || { color: 'default', text: status };
-};
-
-const pieColors = ['#1890ff', '#faad14', '#52c41a', '#722ed1', '#ff4d4f'];
+// Pie colors moved to child components where needed
 
 const AdminDashboard: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -138,6 +75,8 @@ const AdminDashboard: React.FC = () => {
     activeUsers: 0,
     responseTime: 0
   });
+  const [adminCount, setAdminCount] = useState(0);
+  const [growthPercent, setGrowthPercent] = useState<number | null>(null);
 
   // Motivation state
   const [motivationText, setMotivationText] = useState<string>('');
@@ -343,6 +282,28 @@ const AdminDashboard: React.FC = () => {
           databaseSize: data.databaseSize ?? prev.databaseSize,
           activeUsers: data.activeUsers ?? prev.activeUsers,
         }));
+        // Fetch live system metrics (load & response time)
+        try {
+          const sm = await getAdminSystemMetrics();
+          const sys = sm?.data;
+          if (sys && isMounted) {
+            setSystemMetrics(prev => ({
+              ...prev,
+              systemLoad: sys.systemLoad ?? prev.systemLoad,
+              responseTime: sys.responseTime ?? prev.responseTime,
+              totalUsers: sys.totalUsers ?? prev.totalUsers,
+              totalStudents: sys.totalStudents ?? prev.totalStudents,
+              totalCoaches: sys.totalCoaches ?? prev.totalCoaches,
+              totalSessions: sys.totalSessions ?? prev.totalSessions,
+              activeUsers: sys.activeUsers ?? prev.activeUsers,
+            }));
+          }
+        } catch { /* ignore system metrics errors */ }
+        // Backend monthly growth
+        try {
+          const growth = await getAdminUserGrowth();
+          if (growth?.data && isMounted) setGrowthPercent(growth.data.growthPercent);
+        } catch { /* ignore */ }
       } catch (e) {
         // sessiz geç
       }
@@ -356,6 +317,12 @@ const AdminDashboard: React.FC = () => {
       } catch (_) {
         // no-op
       }
+      // admin count (lightweight request with role filter & limit 1)
+      try {
+        const resp = await getAdminUsers({ role: 'admin', page: 1, limit: 1 });
+        const pagination = resp?.pagination || resp?.data?.pagination;
+        if (pagination?.total != null && isMounted) setAdminCount(pagination.total);
+      } catch { /* ignore */ }
     })();
     return () => { isMounted = false; };
   }, []);
@@ -380,383 +347,15 @@ const AdminDashboard: React.FC = () => {
   useEffect(() => { refreshAnalytics(); }, [refreshAnalytics]);
 
   // Chart data builders (memoize)
-  const categoryChartData = useMemo(() => feedbackSummary ? [
-    { name: 'İletişim', value: feedbackSummary.categoryAverages.communication },
-    { name: 'Program Kalitesi', value: feedbackSummary.categoryAverages.programQuality },
-    { name: 'Memnuniyet', value: feedbackSummary.categoryAverages.overallSatisfaction }
-  ] : [], [feedbackSummary]);
-
-  const issuesChartData = useMemo(() => feedbackSummary ? [
-    { name: 'Aşırı Baskı', value: feedbackSummary.issuesCounts.tooMuchPressure },
-    { name: 'Yetersiz Destek', value: feedbackSummary.issuesCounts.notEnoughSupport },
-    { name: 'İletişim', value: feedbackSummary.issuesCounts.communicationProblems },
-    { name: 'Uygun Değil', value: feedbackSummary.issuesCounts.programNotSuitable }
-  ] : [], [feedbackSummary]);
-
-  const statusChartData = useMemo(() => feedbackSummary ? [
-    { name: 'Yeni', value: feedbackSummary.statusCounts.new },
-    { name: 'Okundu', value: feedbackSummary.statusCounts.read }
-  ] : [], [feedbackSummary]);
-
-  const overviewTab = (
-    <>
-          <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
-            <Col xs={24}>
-              <Card title="Haftalık Motivasyon Sözü" extra={<Text type="secondary">Giriş ekranında gösterilir</Text>}>
-                <Form layout="vertical" onFinish={async () => {
-                  try {
-                    setSavingMotivation(true);
-                    await updateAdminMotivation({ text: motivationText.trim(), author: motivationAuthor.trim() || undefined });
-                    message.success('Motivasyon sözü güncellendi');
-                  } catch (e: any) {
-                    message.error(e?.message || 'Güncelleme sırasında hata oluştu');
-                  } finally {
-                    setSavingMotivation(false);
-                  }
-                }}>
-                  <Form.Item label="Söz" required>
-                    <Input.TextArea
-                      value={motivationText}
-                      onChange={(e) => setMotivationText(e.target.value)}
-                      rows={3}
-                      maxLength={500}
-                      showCount
-                      placeholder="Haftalık motivasyon sözünü yazın"
-                    />
-                  </Form.Item>
-                  <Form.Item label="Yazar">
-                    <Input
-                      value={motivationAuthor}
-                      onChange={(e) => setMotivationAuthor(e.target.value)}
-                      maxLength={100}
-                      placeholder="İsteğe bağlı"
-                    />
-                  </Form.Item>
-                  <Space>
-                    <Button type="primary" htmlType="submit" loading={savingMotivation} icon={<EditOutlined />}>Kaydet</Button>
-                  </Space>
-                </Form>
-              </Card>
-            </Col>
-          </Row>
-          <Alert
-            message="🟢 Sistem Durumu: Sağlıklı"
-            description="Tüm servisler normal çalışıyor. Son kontrol: 2 dakika önce"
-            type="success"
-            showIcon
-            style={{ marginBottom: '24px', borderRadius: '8px' }}
-          />
-
-          <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
-            <Col xs={12} md={8} lg={6}>
-              <Card size="small" className="metric-card users">
-                <Statistic
-                  title="Toplam Kullanıcı"
-                  value={systemMetrics.totalUsers}
-                  prefix={<TeamOutlined />}
-                  valueStyle={{ color: '#1890ff' }}
-                />
-                <Progress percent={78} size="small" showInfo={false} strokeColor="#1890ff" />
-                <Text type="secondary" style={{ fontSize: '11px' }}>Bu ay +124</Text>
-              </Card>
-            </Col>
-            <Col xs={12} md={8} lg={6}>
-              <Card size="small" className="metric-card sessions">
-                <Statistic
-                  title="Toplam Oturum"
-                  value={systemMetrics.totalSessions}
-                  prefix={<LineChartOutlined />}
-                  valueStyle={{ color: '#52c41a' }}
-                />
-                <Progress percent={85} size="small" showInfo={false} strokeColor="#52c41a" />
-                <Text type="secondary" style={{ fontSize: '11px' }}>Bu hafta +567</Text>
-              </Card>
-            </Col>
-            <Col xs={12} md={8} lg={6}>
-              <Card size="small" className="metric-card questions">
-                <Statistic
-                  title="Çözülen Soru"
-                  value={systemMetrics.totalQuestions}
-                  prefix={<PieChartOutlined />}
-                  valueStyle={{ color: '#faad14' }}
-                />
-                <Progress percent={92} size="small" showInfo={false} strokeColor="#faad14" />
-                <Text type="secondary" style={{ fontSize: '11px' }}>Bugün +2.4K</Text>
-              </Card>
-            </Col>
-            <Col xs={12} md={8} lg={6}>
-              <Card size="small" className="metric-card load">
-                <Statistic
-                  title="Sistem Yükü"
-                  value={systemMetrics.systemLoad}
-                  suffix="%"
-                  prefix={<CloudServerOutlined />}
-                  valueStyle={{ color: systemMetrics.systemLoad > 70 ? '#ff4d4f' : '#52c41a' }}
-                />
-                <Progress percent={systemMetrics.systemLoad} size="small" showInfo={false} strokeColor={systemMetrics.systemLoad > 70 ? '#ff4d4f' : '#52c41a'} />
-                <Text type="secondary" style={{ fontSize: '11px' }}>Optimize edildi</Text>
-              </Card>
-            </Col>
-          </Row>
-
-          <Row gutter={24}>
-            <Col xs={24} lg={16}>
-              <Card title="Sistem Performansı">
-                <Row gutter={16}>
-                  <Col span={12}>
-                    <div className="performance-metric">
-                      <Text strong>Aktif Kullanıcılar</Text>
-                      <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#1890ff' }}>
-                        {systemMetrics.activeUsers}
-                      </div>
-                      <Text type="secondary">Şu anda online</Text>
-                    </div>
-                  </Col>
-                  <Col span={12}>
-                    <div className="performance-metric">
-                      <Text strong>Yanıt Süresi</Text>
-                      <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#52c41a' }}>
-                        {systemMetrics.responseTime}ms
-                      </div>
-                      <Text type="secondary">Ortalama API yanıtı</Text>
-                    </div>
-                  </Col>
-                  <Col span={12} style={{ marginTop: '16px' }}>
-                    <div className="performance-metric">
-                      <Text strong>Veritabanı</Text>
-                      <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#722ed1' }}>
-                        {systemMetrics.databaseSize} GB
-                      </div>
-                      <Text type="secondary">Toplam boyut</Text>
-                    </div>
-                  </Col>
-                  <Col span={12} style={{ marginTop: '16px' }}>
-                    <div className="performance-metric">
-                      <Text strong>Oturum Süresi</Text>
-                      <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#faad14' }}>
-                        {systemMetrics.avgSessionTime}dk
-                      </div>
-                      <Text type="secondary">Ortalama süre</Text>
-                    </div>
-                  </Col>
-                </Row>
-              </Card>
-            </Col>
-            
-          </Row>
-    </>
-  );
-
-  const usersTab = (
-    <>
-          <Row gutter={16} style={{ marginBottom: '24px' }}>
-            <Col xs={8} md={6}>
-              <Card size="small" className="user-stat students">
-                <Statistic
-                  title="Öğrenciler"
-                  value={systemMetrics.totalStudents}
-                  prefix={<UserOutlined />}
-                  valueStyle={{ color: '#52c41a' }}
-                />
-              </Card>
-            </Col>
-            <Col xs={8} md={6}>
-              <Card size="small" className="user-stat coaches">
-                <Statistic
-                  title="Koçlar"
-                  value={systemMetrics.totalCoaches}
-                  prefix={<TeamOutlined />}
-                  valueStyle={{ color: '#1890ff' }}
-                />
-              </Card>
-            </Col>
-            <Col xs={8} md={6}>
-              <Card size="small" className="user-stat admins">
-                <Statistic
-                  title="Adminler"
-                  value={16}
-                  prefix={<SecurityScanOutlined />}
-                  valueStyle={{ color: '#ff4d4f' }}
-                />
-              </Card>
-            </Col>
-            <Col xs={24} md={6}>
-              <Card size="small" className="user-stat growth">
-                <Statistic
-                  title="Aylık Büyüme"
-                  value={12.5}
-                  suffix="%"
-                  prefix={<LineChartOutlined />}
-                  valueStyle={{ color: '#722ed1' }}
-                />
-              </Card>
-            </Col>
-          </Row>
-
-          <Card 
-            title="👥 Tüm Kullanıcılar"
-            extra={
-              <Space>
-                <Input.Search
-                  allowClear
-                  placeholder="Ada/E-postaya göre ara"
-                  style={{ width: 260 }}
-                  onSearch={(val) => {
-                    setSearchText(val.trim());
-                  }}
-                />
-                <Select
-                  value={roleFilter || 'all'}
-                  style={{ width: 160 }}
-                  onChange={(val) => setRoleFilter(val === 'all' ? '' : (val as any))}
-                >
-                  <Option value="all">Tüm Roller</Option>
-                  <Option value="student">Öğrenci</Option>
-                  <Option value="coach">Koç</Option>
-                  <Option value="admin">Admin</Option>
-                </Select>
-              </Space>
-            }
-          >
-            <Table
-              columns={userColumns}
-              dataSource={users}
-              rowKey="_id"
-              pagination={{
-                current: usersPagination.current,
-                pageSize: usersPagination.pageSize,
-                total: usersTotal,
-                showSizeChanger: true,
-                showTotal: (total) => `Toplam ${total} kullanıcı`
-              }}
-              loading={loading}
-              size="middle"
-              onChange={handleTableChange}
-            />
-          </Card>
-    </>
-  );
-
-  const analyticsTab = (
-    <>
-          <Space style={{ width: '100%', marginBottom: 12, justifyContent: 'flex-end' }}>
-            <Button icon={<ReloadOutlined />} onClick={refreshAnalytics} loading={analyticsLoading}>
-              Yenile
-            </Button>
-          </Space>
-          <Row gutter={[24, 24]}>
-            <Col xs={24} md={8}>
-              <Card title="Ortalama Puan" loading={analyticsLoading}>
-                <Statistic
-                  title="Genel Ortalama"
-                  value={feedbackSummary?.averageRating || 0}
-                  precision={1}
-                  valueStyle={{ color: '#faad14' }}
-                />
-                <div style={{ marginTop: 8 }}>
-                  <Rate allowHalf disabled value={Number(feedbackSummary?.averageRating || 0)} />
-                </div>
-                <div style={{ marginTop: 12 }}>
-                  <Text type="secondary">
-                    Son feedback: {feedbackSummary?.lastFeedbackDate ? new Date(feedbackSummary.lastFeedbackDate).toLocaleDateString('tr-TR') : '-'}
-                  </Text>
-                </div>
-                <div style={{ marginTop: 8, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                  <Tag color="blue">Yeni: {feedbackSummary?.statusCounts.new ?? 0}</Tag>
-                  <Tag color="green">Okundu: {feedbackSummary?.statusCounts.read ?? 0}</Tag>
-                  <Tag color="gold">Toplam: {feedbackSummary?.totalFeedbacks ?? 0}</Tag>
-                </div>
-              </Card>
-            </Col>
-
-            <Col xs={24} md={8}>
-              <Card title="📌 Durum Dağılımı" loading={analyticsLoading}>
-                {statusChartData.length ? (
-                  <div style={{ height: 220 }}>
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie data={statusChartData} dataKey="value" nameKey="name" outerRadius={80} label>
-                          {statusChartData.map((_, index) => (
-                            <Cell key={`status-${index}`} fill={pieColors[index % pieColors.length]} />
-                          ))}
-                        </Pie>
-                        <Tooltip />
-                        <Legend />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-                ) : (
-                  <Empty description="Veri yok" />
-                )}
-              </Card>
-            </Col>
-
-            <Col xs={24} md={8}>
-              <Card title="🧩 Sorun Dağılımı" loading={analyticsLoading}>
-                {issuesChartData.length ? (
-                  <div style={{ height: 220 }}>
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie data={issuesChartData} dataKey="value" nameKey="name" outerRadius={80} label>
-                          {issuesChartData.map((_, index) => (
-                            <Cell key={`issue-${index}`} fill={pieColors[index % pieColors.length]} />
-                          ))}
-                        </Pie>
-                        <Tooltip />
-                        <Legend />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-                ) : (
-                  <Empty description="Veri yok" />
-                )}
-              </Card>
-            </Col>
-
-            <Col span={24}>
-              <Card title="Kategori Ortalama Puanları" loading={analyticsLoading}>
-                {categoryChartData.length ? (
-                  <div style={{ height: 320 }}>
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={categoryChartData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
-                        <defs>
-                          <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="#1890ff" stopOpacity={0.95} />
-                            <stop offset="100%" stopColor="#69c0ff" stopOpacity={0.9} />
-                          </linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="name" />
-                        <YAxis domain={[0, 5]} tickCount={6} />
-                        <Tooltip />
-                        <Legend />
-                        <Bar dataKey="value" name="Ortalama" fill="url(#barGradient)" radius={[6, 6, 0, 0]} />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                ) : (
-                  <Empty description="Veri yok" />
-                )}
-              </Card>
-            </Col>
-
-            <Col span={24}>
-              <Card title="👥 Koç Özeti" loading={analyticsLoading}>
-                {coachesStats.length ? (
-                  <CoachesStatsList
-                    items={coachesStats
-                      .slice()
-                      .sort((a, b) => (b?.feedbackStats?.totalFeedbacks || 0) - (a?.feedbackStats?.totalFeedbacks || 0))
-                      .slice(0, 5)}
-                  />
-                ) : (
-                  <Empty description="Koç istatistiği bulunamadı" />
-                )}
-              </Card>
-            </Col>
-          </Row>
-    </>
-  );
+  // Child tab components now handle their own layout
+  const derived = useMemo(() => {
+    const usersProgress = systemMetrics.totalUsers > 0 ? (systemMetrics.totalStudents / systemMetrics.totalUsers) * 100 : 0;
+    const sessionsProgress = systemMetrics.totalUsers > 0 ? (systemMetrics.activeUsers / systemMetrics.totalUsers) * 100 : 0;
+    const targetPerUser = 100; // hedef soru/öğrenci
+    const questionsPerUser = systemMetrics.totalUsers > 0 ? systemMetrics.totalQuestions / systemMetrics.totalUsers : 0;
+    const questionsProgress = Math.min(100, (questionsPerUser / targetPerUser) * 100);
+    return { usersProgress, sessionsProgress, questionsProgress };
+  }, [systemMetrics]);
 
   return (
     <div className="admin-dashboard">
@@ -789,318 +388,103 @@ const AdminDashboard: React.FC = () => {
         destroyInactiveTabPane
         size="large"
         items={[
-          { key: 'overview', label: (<><BarChartOutlined />Sistem Genel Bakış</>), children: overviewTab },
-          { key: 'users', label: (<><UserOutlined />Kullanıcı Yönetimi ({usersTotal})</>), children: usersTab },
-          { key: 'analytics', label: (<><GlobalOutlined />Analitik & Raporlar</>), children: analyticsTab }
+          { key: 'overview', label: (<><BarChartOutlined />Sistem Genel Bakış</>), children: (
+            <OverviewTab
+              systemMetrics={systemMetrics}
+              motivationText={motivationText}
+              motivationAuthor={motivationAuthor}
+              savingMotivation={savingMotivation}
+              derived={derived}
+              onChangeMotivation={setMotivationText}
+              onChangeAuthor={setMotivationAuthor}
+              onSave={async () => {
+                try {
+                  setSavingMotivation(true);
+                  await updateAdminMotivation({ text: motivationText.trim(), author: motivationAuthor.trim() || undefined });
+                  message.success('Motivasyon sözü güncellendi');
+                } catch (e: any) { message.error(e?.message || 'Güncelleme sırasında hata oluştu'); } finally { setSavingMotivation(false); }
+              }}
+            />
+          ) },
+          { key: 'users', label: (<><UserOutlined />Kullanıcı Yönetimi ({usersTotal})</>), children: (
+            <UsersTab
+              systemMetrics={systemMetrics}
+              users={users}
+              usersTotal={usersTotal}
+              usersPagination={usersPagination}
+              loading={loading}
+              roleFilter={roleFilter}
+              userColumns={userColumns}
+              onSearch={(val) => setSearchText(val)}
+              onRoleFilterChange={(val) => setRoleFilter(val)}
+              onTableChange={handleTableChange}
+              adminCount={adminCount}
+              growthPercent={growthPercent}
+            />
+          ) },
+          { key: 'analytics', label: (<><GlobalOutlined />Analitik & Raporlar</>), children: (
+            <React.Suspense fallback={<div style={{ padding: 24 }}>Analitik bileşenleri yükleniyor...</div>}>
+              <AnalyticsTab
+                feedbackSummary={feedbackSummary}
+                coachesStats={coachesStats}
+                analyticsLoading={analyticsLoading}
+                refreshAnalytics={refreshAnalytics}
+              />
+            </React.Suspense>
+          ) }
         ]}
       />
 
       {/* User Details Drawer */}
-      <Drawer
-        title={selectedUser ? `${selectedUser.firstName} ${selectedUser.lastName} - Detaylar` : 'Kullanıcı Detayları'}
-        placement="right"
-        size="large"
-        onClose={() => {
-          setUserDrawer(false);
-          setSelectedUser(null);
-        }}
+      <UserDetailsDrawer
         open={userDrawer}
-        afterOpenChange={async (open) => {
-          if (open && selectedUser) {
-            try {
-              setLoadingPlan(true);
-              const res = await getAdminUserPlan(selectedUser._id);
-              setUserPlan(res?.data || res);
-            } catch (_) {
-              setUserPlan(null);
-            } finally {
-              setLoadingPlan(false);
-            }
-          }
-        }}
-      >
-        {selectedUser && (
-          <Space direction="vertical" style={{ width: '100%' }} size="large">
-            <Card size="small">
-              <div style={{ textAlign: 'center' }}>
-                <Avatar size={64} style={{ backgroundColor: '#1890ff', marginBottom: '12px' }}>
-                  {selectedUser.firstName.charAt(0)}
-                </Avatar>
-                <Title level={4}>{selectedUser.firstName} {selectedUser.lastName}</Title>
-                <Text type="secondary">{selectedUser.email}</Text>
-                <br />
-                <Tag color={getRoleInfo(selectedUser.role).color} style={{ marginTop: '8px' }}>
-                  {getRoleInfo(selectedUser.role).text}
-                </Tag>
-              </div>
-            </Card>
-
-            <Card title="Kullanıcı Bilgileri" size="small">
-              <Row gutter={16}>
-                <Col span={12}>
-                  <Text strong>Durum:</Text>
-                  <br />
-                  <Tag color={getStatusInfo(selectedUser.status).color}>
-                    {getStatusInfo(selectedUser.status).text}
-                  </Tag>
-                </Col>
-                <Col span={12}>
-                  <Text strong>Kayıt Tarihi:</Text>
-                  <br />
-                  <Text>{new Date(selectedUser.registrationDate).toLocaleDateString('tr-TR')}</Text>
-                </Col>
-                <Col span={24} style={{ marginTop: '12px' }}>
-                  <Text strong>Profil Tamamlanması:</Text>
-                  <Progress percent={selectedUser.profileCompleteness} style={{ marginTop: '4px' }} />
-                </Col>
-              </Row>
-            </Card>
-
-            <Card title="⚡ Hızlı İşlemler" size="small">
-              <Space direction="vertical" style={{ width: '100%' }}>
-                <Button 
-                  block 
-                  icon={<EditOutlined />}
-                  onClick={() => {
-                    setEditingUser(selectedUser);
-                    setEditModalVisible(true);
-                    editForm.setFieldsValue({
-                      firstName: selectedUser.firstName,
-                      lastName: selectedUser.lastName,
-                      email: selectedUser.email,
-                      role: selectedUser.role,
-                      isActive: selectedUser.status === 'active'
-                    });
-                  }}
-                >
-                  Kullanıcıyı Düzenle
-                </Button>
-                <Button block icon={<BellOutlined />}>
-                  Bildirim Gönder
-                </Button>
-                <Button 
-                  block 
-                  danger 
-                  icon={<DeleteOutlined />}
-                  onClick={() => {
-                    if (!selectedUser) return;
-                    Modal.confirm({
-                      title: 'Kullanıcıyı sil',
-                      content: 'Bu işlem geri alınamaz. Silmek istediğinizden emin misiniz?',
-                      okText: 'Sil',
-                      okButtonProps: { danger: true },
-                      cancelText: 'Vazgeç',
-                      onOk: async () => {
-                        try {
-                          await deleteUser(selectedUser._id);
-                          message.success('Kullanıcı silindi');
-                          setUserDrawer(false);
-                          setSelectedUser(null);
-                          fetchUsers({ page: 1, pageSize: usersPagination.pageSize });
-                        } catch (e: any) {
-                          message.error(e?.message || 'Silme sırasında hata oluştu');
-                        }
-                      }
-                    })
-                  }}
-                >
-                  Hesabı Askıya Al
-                </Button>
-              </Space>
-            </Card>
-            <Card title="Plan Yönetimi" size="small" loading={loadingPlan}>
-              {userPlan ? (
-                <>
-                  <Space direction="vertical" style={{ width: '100%' }}>
-                    <Space>
-                      <Text>Plan:</Text>
-                      <Tag color={userPlan.plan?.tier === 'premium' ? 'gold' : 'default'}>
-                        {userPlan.plan?.tier || 'free'}
-                      </Tag>
-                      <Text type="secondary">Durum:</Text>
-                      <Tag>{userPlan.plan?.status || 'active'}</Tag>
-                    </Space>
-                    <Space>
-                      <Button
-                        type={userPlan.plan?.tier === 'premium' ? 'default' : 'primary'}
-                        onClick={async () => {
-                          try {
-                            await updateAdminUserPlan(selectedUser!._id, { tier: 'premium', resetLimits: true });
-                            message.success('Kullanıcı premium yapıldı');
-                            const res = await getAdminUserPlan(selectedUser!._id);
-                            setUserPlan(res?.data || res);
-                          } catch (e: any) { message.error(e?.message || 'Hata'); }
-                        }}
-                      >
-                        Premium Yap
-                      </Button>
-                      <Button
-                        danger={userPlan.plan?.tier === 'premium'}
-                        onClick={async () => {
-                          try {
-                            await updateAdminUserPlan(selectedUser!._id, { tier: 'free', resetLimits: true });
-                            message.success('Kullanıcı free yapıldı');
-                            const res = await getAdminUserPlan(selectedUser!._id);
-                            setUserPlan(res?.data || res);
-                          } catch (e: any) { message.error(e?.message || 'Hata'); }
-                        }}
-                      >
-                        Free Yap
-                      </Button>
-                    </Space>
-                    <Space direction="vertical" style={{ width: '100%' }}>
-                      <Text strong>Limitler</Text>
-                      <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
-                        <Button size="small" onClick={async () => {
-                          try { await updateAdminUserLimits(selectedUser!._id, { activePlansMax: 1 }); message.success('Limit güncellendi'); } catch(e:any){ message.error(e?.message||'Hata'); }
-                        }}>Plan: 1</Button>
-                        <Button size="small" onClick={async () => {
-                          try { await updateAdminUserLimits(selectedUser!._id, { activePlansMax: 5 }); message.success('Limit güncellendi'); } catch(e:any){ message.error(e?.message||'Hata'); }
-                        }}>Plan: 5</Button>
-                        <Button size="small" onClick={async () => {
-                          try { await updateAdminUserLimits(selectedUser!._id, { examsPerMonth: 2 }); message.success('Limit güncellendi'); } catch(e:any){ message.error(e?.message||'Hata'); }
-                        }}>Aylık Deneme: 2</Button>
-                        <Button size="small" onClick={async () => {
-                          try { await updateAdminUserLimits(selectedUser!._id, { examsPerMonth: 20 }); message.success('Limit güncellendi'); } catch(e:any){ message.error(e?.message||'Hata'); }
-                        }}>Aylık Deneme: 20</Button>
-                      </div>
-                    </Space>
-                  </Space>
-                </>
-              ) : (
-                <Text type="secondary">Plan bilgisi yüklenemedi</Text>
-              )}
-            </Card>
-          </Space>
-        )}
-      </Drawer>
+        user={selectedUser}
+        onClose={() => { setUserDrawer(false); setSelectedUser(null); }}
+        onEdit={(u) => { setEditingUser(u); setEditModalVisible(true); editForm.setFieldsValue({ firstName: u.firstName, lastName: u.lastName, email: u.email, role: u.role, isActive: u.status === 'active' }); }}
+        refreshUsers={() => fetchUsers({ page: 1, pageSize: usersPagination.pageSize })}
+        fetchPlan={async (id: string) => { try { setLoadingPlan(true); const res = await getAdminUserPlan(id); setUserPlan(res?.data || res); } catch { setUserPlan(null); } finally { setLoadingPlan(false); } }}
+        loadingPlan={loadingPlan}
+        userPlan={userPlan}
+        setUserPlan={setUserPlan}
+      />
 
       {/* Edit User Modal */}
-      <Modal
-        title={editingUser ? `${editingUser.firstName} ${editingUser.lastName} - Düzenle` : 'Kullanıcı Düzenle'}
+      <EditUserModal
         open={editModalVisible}
+        user={editingUser}
+        form={editForm}
         onCancel={() => { setEditModalVisible(false); setEditingUser(null); }}
-        okText="Kaydet"
-        onOk={async () => {
+        onSave={async () => {
           try {
             const values = await editForm.validateFields();
             if (!editingUser) return;
-            await updateUser(editingUser._id, {
-              firstName: values.firstName,
-              lastName: values.lastName,
-              email: values.email,
-              role: values.role,
-              isActive: values.isActive,
-            });
+            await updateUser(editingUser._id, { firstName: values.firstName, lastName: values.lastName, email: values.email, role: values.role, isActive: values.isActive });
             message.success('Kullanıcı güncellendi');
             setEditModalVisible(false);
             setEditingUser(null);
             fetchUsers({ page: usersPagination.current, pageSize: usersPagination.pageSize });
-          } catch (e: any) {
-            if (e?.errorFields) return; // form validation
-            message.error(e?.message || 'Güncelleme sırasında hata oluştu');
-          }
+          } catch (e: any) { if (e?.errorFields) return; message.error(e?.message || 'Güncelleme sırasında hata oluştu'); }
         }}
-      >
-        <Form layout="vertical" form={editForm}>
-          <Row gutter={12}>
-            <Col span={12}>
-              <Form.Item name="firstName" label="Ad" rules={[{ required: true, message: 'Ad gerekli' }]}>
-                <Input />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="lastName" label="Soyad" rules={[{ required: true, message: 'Soyad gerekli' }]}>
-                <Input />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Form.Item name="email" label="E-posta" rules={[{ required: true, type: 'email', message: 'Geçerli bir e-posta girin' }]}>
-            <Input />
-          </Form.Item>
-          <Row gutter={12}>
-            <Col span={12}>
-              <Form.Item name="role" label="Rol" rules={[{ required: true }]}> 
-                <Select>
-                  <Option value="student">Öğrenci</Option>
-                  <Option value="coach">Koç</Option>
-                  <Option value="admin">Admin</Option>
-                </Select>
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="isActive" label="Durum" valuePropName="checked">
-                <Switch checkedChildren="Aktif" unCheckedChildren="Pasif" />
-              </Form.Item>
-            </Col>
-          </Row>
-        </Form>
-      </Modal>
+      />
 
       {/* Create User Modal */}
-      <Modal
-        title="Yeni Kullanıcı Oluştur"
+      <CreateUserModal
         open={createModalVisible}
+        form={createForm}
         onCancel={() => { setCreateModalVisible(false); createForm.resetFields(); }}
-        okText="Oluştur"
         confirmLoading={creatingUser}
-        onOk={async () => {
+        onCreate={async () => {
           try {
             const values = await createForm.validateFields();
             setCreatingUser(true);
-            await createUser({
-              firstName: values.firstName?.trim() || undefined,
-              lastName: values.lastName?.trim() || undefined,
-              email: values.email.trim(),
-              password: values.password,
-              role: values.role,
-            });
+            await createUser({ firstName: values.firstName?.trim() || undefined, lastName: values.lastName?.trim() || undefined, email: values.email.trim(), password: values.password, role: values.role });
             message.success('Kullanıcı oluşturuldu');
             setCreateModalVisible(false);
             createForm.resetFields();
             fetchUsers({ page: usersPagination.current, pageSize: usersPagination.pageSize });
-          } catch (e) {
-            if ((e as any)?.errorFields) return; // form validation
-            message.error((e as any)?.message || 'Oluşturma sırasında hata oluştu');
-          } finally {
-            setCreatingUser(false);
-          }
+          } catch (e: any) { if (e?.errorFields) return; message.error(e?.message || 'Oluşturma sırasında hata oluştu'); } finally { setCreatingUser(false); }
         }}
-      >
-        <Form layout="vertical" form={createForm} initialValues={{ role: 'student' }}>
-          <Row gutter={12}>
-            <Col span={12}>
-              <Form.Item name="firstName" label="Ad">
-                <Input />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="lastName" label="Soyad">
-                <Input />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Form.Item name="email" label="E-posta" rules={[{ required: true, type: 'email', message: 'Geçerli bir e-posta girin' }]}>
-            <Input />
-          </Form.Item>
-          <Row gutter={12}>
-            <Col span={12}>
-              <Form.Item name="password" label="Şifre" rules={[{ required: true, message: 'Şifre gerekli' }, { min: 6, message: 'En az 6 karakter' }]}>
-                <Input.Password />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="role" label="Rol" rules={[{ required: true }]}> 
-                <Select>
-                  <Option value="student">Öğrenci</Option>
-                  <Option value="coach">Koç</Option>
-                  <Option value="admin">Admin</Option>
-                </Select>
-              </Form.Item>
-            </Col>
-          </Row>
-        </Form>
-      </Modal>
+      />
     </div>
   );
 };

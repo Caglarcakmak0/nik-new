@@ -48,6 +48,102 @@ const setAdminCacheHeaders = (res) => {
 
 router.use(authenticateToken, checkRole('admin'));
 
+// ==== ADMIN SYSTEM METRICS ====
+router.get('/system/metrics', async (req, res) => {
+  try {
+    const StudySession = require('../models/StudySession');
+    const app = req.app;
+    const perf = typeof app.getPerformanceSnapshot === 'function' ? app.getPerformanceSnapshot() : null;
+    // Kullanıcı ve oturum temel sayıları paralel çek
+    const [totalUsers, totalStudents, totalCoaches, totalSessions] = await Promise.all([
+      Users.countDocuments({}),
+      Users.countDocuments({ role: 'student' }),
+      Users.countDocuments({ role: 'coach' }),
+      StudySession.countDocuments({})
+    ]);
+
+    // Ortalama oturum süresi (dakika) ve toplam soru sayısı (correct+wrong+blank)
+    // Büyük koleksiyonlarda tam collection scan pahalı olabilir; gerekirse zaman filtresi eklenebilir.
+    let avgSessionTime = 0;
+    let totalQuestions = 0;
+    try {
+      const durationAgg = await StudySession.aggregate([
+        { $group: { _id: null, totalDuration: { $sum: '$duration' }, count: { $sum: 1 } } }
+      ]);
+      if (durationAgg && durationAgg[0]) {
+        avgSessionTime = durationAgg[0].count > 0 ? durationAgg[0].totalDuration / durationAgg[0].count : 0;
+      }
+
+      const questionAgg = await StudySession.aggregate([
+        { $match: { questionStats: { $exists: true } } },
+        { $group: { _id: null, total: { $sum: { $add: [
+          { $ifNull: ['$questionStats.correctAnswers', 0] },
+          { $ifNull: ['$questionStats.wrongAnswers', 0] },
+          { $ifNull: ['$questionStats.blankAnswers', 0] }
+        ] } } } }
+      ]);
+      if (questionAgg && questionAgg[0]) {
+        totalQuestions = questionAgg[0].total || 0;
+      }
+    } catch (aggErr) {
+      console.warn('Metrics aggregation warning:', aggErr.message);
+    }
+    const weekAgo = new Date();
+    weekAgo.setDate(weekAgo.getDate() - 7);
+    const activeUsers = await Users.countDocuments({ 'stats.lastActivity': { $gte: weekAgo } });
+
+    const payload = {
+      totalUsers,
+      totalStudents,
+      totalCoaches,
+      totalSessions,
+      activeUsers,
+      avgSessionTime: Number(avgSessionTime.toFixed(2)),
+      totalQuestions,
+      systemLoad: perf?.systemLoad ?? 0,
+      responseTime: perf?.avgResponseTime ?? 0,
+      responseTimeP95: perf?.p95ResponseTime ?? 0,
+      uptimeSeconds: perf?.uptimeSeconds ?? process.uptime(),
+      memory: perf?.memory,
+      sampleCount: perf?.sampleCount ?? 0
+    };
+    return res.json({ message: 'Sistem metrikleri', data: payload });
+  } catch (error) {
+    console.error('GET /admin/system/metrics error:', error);
+    return res.status(500).json({ message: error.message });
+  }
+});
+
+// GET /api/admin/system/user-growth - current month growth based on user creation
+router.get('/system/user-growth', async (req, res) => {
+  try {
+    const now = new Date();
+    const startCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startPrevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const [totalUsers, baselineUsers] = await Promise.all([
+      Users.countDocuments({}),
+      Users.countDocuments({ createdAt: { $lt: startCurrentMonth } })
+    ]);
+    const monthKey = `${startCurrentMonth.getFullYear()}-${String(startCurrentMonth.getMonth()+1).padStart(2,'0')}`;
+    let growthPercent = 0;
+    if (baselineUsers > 0) {
+      growthPercent = ((totalUsers - baselineUsers) / baselineUsers) * 100;
+    }
+    return res.json({
+      message: 'Aylık kullanıcı büyümesi',
+      data: {
+        month: monthKey,
+        totalUsers,
+        baselineUsers,
+        growthPercent
+      }
+    });
+  } catch (error) {
+    console.error('GET /admin/system/user-growth error:', error);
+    return res.status(500).json({ message: error.message });
+  }
+});
+
 /**
  * GET /api/admin/users
  * Admin kullanıcı listesi (arama, role filtresi, sayfalama)

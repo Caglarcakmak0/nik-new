@@ -274,6 +274,32 @@ export const getAdminFeedbackSummary = async (): Promise<{ message: string; data
   return apiRequest('/admin/statistics/feedback-summary');
 };
 
+// System metrics
+export type AdminSystemMetrics = {
+  totalUsers: number;
+  totalStudents: number;
+  totalCoaches: number;
+  totalSessions: number;
+  activeUsers: number;
+  avgSessionTime: number;
+  totalQuestions: number;
+  systemLoad: number;
+  responseTime: number;
+  responseTimeP95: number;
+  uptimeSeconds: number;
+  sampleCount: number;
+  memory?: { rssMB: number; heapUsedMB: number; heapTotalMB: number };
+};
+
+export const getAdminSystemMetrics = async (): Promise<{ message: string; data: AdminSystemMetrics }> => {
+  return apiRequest('/admin/system/metrics');
+};
+
+export type AdminUserGrowth = { month: string; totalUsers: number; baselineUsers: number; growthPercent: number };
+export const getAdminUserGrowth = async (): Promise<{ message: string; data: AdminUserGrowth }> => {
+  return apiRequest('/admin/system/user-growth');
+};
+
 // ==== Admin - Users ====
 export type AdminUserListItem = {
   _id: string;

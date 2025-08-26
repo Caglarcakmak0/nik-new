@@ -1,10 +1,13 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Card, List, Button, Segmented, Tag, Space, Popconfirm, Statistic, Row, Col, Tabs, App } from 'antd';
+import { Card, List, Button, Segmented, Tag, Space, Popconfirm, Statistic, Row, Col, Tabs, App, Divider, Modal } from 'antd';
 import { RocketOutlined, ThunderboltOutlined, HistoryOutlined, TrophyOutlined, FireOutlined, RiseOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import 'dayjs/locale/tr';
-import { getStudyRoomActivity, getActiveDuels, inviteDuel, respondDuel, apiRequest, getStudentPrograms, type StudyRoomActivityItem, type Duel } from '../../../../services/api';
+import { getStudyRoomActivity, getActiveDuels, inviteDuel, respondDuel, apiRequest, getStudentPrograms, type Duel } from '../../../../services/api';
+import { useGamification } from '../../../../hooks/useGamification';
+import XPBar from '../../../../components/XPBar';
+import DailyChallenges from '../../../../components/DailyChallenges';
 import { useAuth } from '../../../../contexts/AuthContext';
 import Leaderboard from '../../../StudyPlanPage/bones/Leaderboard/Leaderboard';
 
@@ -20,8 +23,7 @@ const formatMinutes = (min: number) => {
 
 const StudyRoom: React.FC = () => {
   const [period, setPeriod] = useState<'daily' | 'weekly'>('daily');
-  const [loading, setLoading] = useState(false);
-  const [activity, setActivity] = useState<StudyRoomActivityItem[]>([]);
+  // Removed unused 'loading' and 'activity' after refactor
   const [duels, setDuels] = useState<Duel[]>([]);
   const [studyRoomSessions, setStudyRoomSessions] = useState<any[]>([]);
   const [allSessions, setAllSessions] = useState<any[]>([]);
@@ -29,26 +31,24 @@ const StudyRoom: React.FC = () => {
   const [programWeeklyTime, setProgramWeeklyTime] = useState<number>(0);
   const [programAllTime, setProgramAllTime] = useState<number>(0);
   const { user } = useAuth();
+  const { stats: gamification, events: xpEvents, challenges, refetch } = useGamification();
+  const [eventsVisible, setEventsVisible] = useState(false);
   const { message } = App.useApp();
 
   const fetchData = async () => {
-    setLoading(true);
     try {
-      const [act, activeDuels, sessions, allSess] = await Promise.all([
+      const [_, activeDuels, sessions, allSess] = await Promise.all([
         getStudyRoomActivity(period),
         getActiveDuels(),
         fetchStudyRoomSessions(),
         fetchAllSessions()
       ]);
-      setActivity(act.data || []);
       setDuels(activeDuels.data || []);
       setStudyRoomSessions(sessions);
       setAllSessions(allSess);
       await fetchCoachProgramTotals();
     } catch (e: any) {
       message.error(e?.message || 'Veri alınamadı');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -105,16 +105,7 @@ const StudyRoom: React.FC = () => {
     fetchData();
   }, [period]);
 
-  const handleInvite = async (opponentId: string) => {
-    try {
-      if (!opponentId || opponentId === user?._id) return;
-      await inviteDuel(opponentId, period);
-      message.success('Düello daveti gönderildi');
-      fetchData();
-    } catch (e: any) {
-      message.error(e?.message || 'Davet gönderilemedi');
-    }
-  };
+  // handleInvite logic centralized in Leaderboard prop usage
 
   // Birleşik istatistikler: sol panel oturumları + koç programı toplamları (çift sayım önlenerek)
   const myStudyRoomStats = useMemo(() => {
@@ -146,7 +137,7 @@ const StudyRoom: React.FC = () => {
   return (
     <Space direction="vertical" size="large" style={{ width: '100%' }}>
       {/* Kişisel Çalışma Odası Stats */}
-      <Card
+  <Card
         title={
           <Space>
             <TrophyOutlined /> Benim Çalışma Odası Performansım
@@ -194,6 +185,30 @@ const StudyRoom: React.FC = () => {
             />
           </Col>
         </Row>
+        <Divider />
+        <Row gutter={[16,16]}>
+          <Col xs={24} md={12}>
+            {gamification && (
+              <XPBar
+                totalXP={gamification.totalXP}
+                currentLevel={gamification.currentLevel}
+                currentLevelXP={gamification.currentLevelXP}
+                nextLevelXP={gamification.nextLevelXP}
+              />
+            )}
+          </Col>
+          <Col xs={24} md={12}>
+            {gamification && (
+              <Space size="large" style={{ width: '100%', justifyContent: 'space-around' }}>
+                <Statistic title="Streak" value={gamification.streak} suffix="gün" valueStyle={{ fontSize: 18 }} />
+                <Statistic title="Max Streak" value={gamification.maxStreak} suffix="gün" valueStyle={{ fontSize: 18 }} />
+                <Statistic title="Rozet" value={gamification.totalAchievements} valueStyle={{ fontSize: 18 }} />
+              </Space>
+            )}
+          </Col>
+        </Row>
+  <Button size="small" style={{ marginTop: 12 }} onClick={() => setEventsVisible(true)}>XP Olayları</Button>
+  {challenges && <DailyChallenges data={challenges} onClaimed={refetch} />}
       </Card>
 
       <Card
@@ -316,6 +331,20 @@ const StudyRoom: React.FC = () => {
       )}
 
       {/* Timer kaldırıldı */}
+      <Modal title="XP Olayları" open={eventsVisible} onCancel={() => setEventsVisible(false)} footer={null} width={520}>
+        <List
+          size="small"
+          dataSource={xpEvents}
+          renderItem={(e) => (
+            <List.Item>
+              <Space style={{ width: '100%', justifyContent: 'space-between' }}>
+                <span>{e.type}</span>
+                <Tag color={e.amount > 0 ? 'green' : 'red'}> {e.amount > 0 ? '+' : ''}{e.amount} XP</Tag>
+              </Space>
+            </List.Item>
+          )}
+        />
+      </Modal>
     </Space>
   );
 };

@@ -127,6 +127,12 @@ export const allMenuItems: MenuItemEx[] = [
     label: "Hatırlatma Kartları",
     roles: ["student"],
   },
+  {
+    key: "/study-plan/achievements",
+    icon: <TrophyOutlined />,
+    label: "Rozetlerim",
+    roles: ["student"],
+  },
 
   // Admin sayfaları
   {

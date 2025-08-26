@@ -4,6 +4,10 @@ const authenticateToken = require("../auth.js");
 const UserStats = require("../models/UserStats.js");
 const StudySession = require("../models/StudySession.js");
 const DailyPlan = require("../models/DailyPlan.js");
+const UserDailyChallenge = require('../models/UserDailyChallenge');
+const { getOrGenerate, claim: claimChallenge } = require('../services/dailyChallengeService');
+const Achievement = require('../models/Achievement');
+const XPEvent = require('../models/XPEvent.js');
 
 // GET /gamification/user-stats - Kullanıcının gamification istatistikleri
 router.get("/user-stats", authenticateToken, async (req, res) => {
@@ -15,7 +19,7 @@ router.get("/user-stats", authenticateToken, async (req, res) => {
         }
         
         // UserStats'ı database'den getir
-        let userStats = await UserStats.findOne({ userId });
+    let userStats = await UserStats.findOne({ userId });
         
         // Eğer yoksa, yeni oluştur
         if (!userStats) {
@@ -36,8 +40,8 @@ router.get("/user-stats", authenticateToken, async (req, res) => {
                 userId,
                 totalXP,
                 currentLevel,
-                nextLevelXP: currentLevel * 1000,
-                currentLevelXP: totalXP % 1000,
+                nextLevelXP: totalXP, // placeholder threshold (will be recalculated when xpService runs)
+                currentLevelXP: 0,
                 streak: 0, // Gerçek hesaplama yapılacak
                 maxStreak: 0,
                 totalAchievements: 0,
@@ -80,6 +84,92 @@ router.get("/user-stats", authenticateToken, async (req, res) => {
     } catch (error) {
         console.error('GET /gamification/user-stats error:', error);
         res.status(500).json({ message: error.message });
+    }
+});
+
+// GET /gamification/xp-events - XP event feed
+router.get('/xp-events', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user?.userId;
+        if (!userId) return res.status(401).json({ message: 'User ID not found in token' });
+        const { limit = 50, offset = 0, type } = req.query;
+        const q = { userId };
+        if (type) q.type = type;
+        const events = await XPEvent.find(q)
+            .sort({ createdAt: -1 })
+            .skip(Number(offset))
+            .limit(Math.min(Number(limit), 100));
+        res.status(200).json({
+            message: 'XP events fetched',
+            data: events.map(e => ({
+                id: e._id,
+                type: e.type,
+                amount: e.amount,
+                createdAt: e.createdAt,
+                meta: e.meta
+            }))
+        });
+    } catch (err) {
+        console.error('GET /gamification/xp-events error:', err);
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// GET /gamification/daily-challenges
+router.get('/daily-challenges', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user?.userId;
+        if (!userId) return res.status(401).json({ message: 'User ID not found in token' });
+        const doc = await getOrGenerate(userId);
+        res.status(200).json({ message: 'Challenges', data: doc });
+    } catch (e) {
+        console.error('GET /gamification/daily-challenges error:', e);
+        res.status(500).json({ message: e.message });
+    }
+});
+
+// POST /gamification/claim-challenge
+router.post('/claim-challenge', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user?.userId;
+        const { key } = req.body;
+        if (!userId) return res.status(401).json({ message: 'User ID not found in token' });
+        if (!key) return res.status(400).json({ message: 'key required' });
+        const result = await claimChallenge(userId, key);
+        if (result.error) return res.status(400).json({ message: result.error });
+        // Award XP
+        const { addXP } = require('../services/xpService');
+        await addXP(userId, result.challenge.xpReward, 'daily_challenge_claim', { key });
+        res.status(200).json({ message: 'Claimed', data: result.challenge });
+    } catch (e) {
+        console.error('POST /gamification/claim-challenge error:', e);
+        res.status(500).json({ message: e.message });
+    }
+});
+
+// GET /gamification/overview - aggregate
+router.get('/overview', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user?.userId;
+        if (!userId) return res.status(401).json({ message: 'User ID not found in token' });
+        const [stats, events, challenges, recentAchievements] = await Promise.all([
+            UserStats.findOne({ userId }),
+            XPEvent.find({ userId }).sort({ createdAt: -1 }).limit(10),
+            getOrGenerate(userId),
+            Achievement.find({ userId, unlockedAt: { $ne: null } }).sort({ unlockedAt: -1 }).limit(5)
+        ]);
+        res.status(200).json({
+            message: 'Overview',
+            data: {
+                stats,
+                events: events.map(e => ({ id: e._id, type: e.type, amount: e.amount, createdAt: e.createdAt, meta: e.meta })),
+                challenges,
+                recentAchievements: recentAchievements.map(a => ({ id: a._id, title: a.title, points: a.points, unlockedAt: a.unlockedAt, icon: a.icon, rarity: a.rarity }))
+            }
+        });
+    } catch (e) {
+        console.error('GET /gamification/overview error:', e);
+        res.status(500).json({ message: e.message });
     }
 });
 

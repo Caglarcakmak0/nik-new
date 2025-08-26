@@ -17,7 +17,7 @@ router.get("/user-stats", authenticateToken, async (req, res) => {
         const PracticeExam = require('../models/PracticeExam');
         
         // Kullanıcının stats'ını getir
-        let userStats = await UserStats.findOne({ userId }).populate('userId', 'firstName lastName email avatar');
+    let userStats = await UserStats.findOne({ userId }).populate('userId', 'firstName lastName email avatar');
         
         if (!userStats) {
             userStats = await UserStats.create({
@@ -96,6 +96,14 @@ router.get("/user-stats", authenticateToken, async (req, res) => {
             points: ach.points
         }));
         
+        // Kullanıcı dokümanı silinmiş olabilir; populate null dönebilir
+        if (!userStats.userId) {
+            // Kullanıcı belgesi yoksa sadece id ile minimal bir obje oluştur
+            console.warn('[leaderboard/user-stats] Populated user missing for stats document', userStats._id);
+            // Silinmiş kullanıcıyı tamamen hariç tutmak yerine placeholder üret
+            userStats.userId = { _id: userId, firstName: 'Silinmiş', lastName: 'Kullanıcı', email: 'deleted@user' };
+        }
+
         const result = {
             _id: userStats.userId._id.toString(),
             name: `${userStats.userId.firstName || ''} ${userStats.userId.lastName || ''}`.trim() || 'Kullanıcı',
@@ -213,7 +221,15 @@ router.get("/:period", authenticateToken, async (req, res) => {
 
         // Kullanıcıların seviye/streak bilgileri ve isimleri
         const statsDocs = await UserStats.find({ userId: { $in: allUserIds } }).populate('userId', 'firstName lastName email avatar');
-        const userIdToUserStats = new Map(statsDocs.map(doc => [ String(doc.userId._id), doc ]));
+        // userId populate'ı başarısız (null) gelen dokümanları filtrele ki _id okunurken patlamasın
+        const userIdToUserStats = new Map();
+        statsDocs.forEach(doc => {
+            if (doc.userId && doc.userId._id) {
+                userIdToUserStats.set(String(doc.userId._id), doc);
+            } else {
+                console.warn('[leaderboard] UserStats has missing user reference (possibly deleted user). statsId=', doc._id);
+            }
+        });
 
         // Her kullanıcı için skor hesapla ve achievements'ları getir
         const entries = await Promise.all(allUserIds.map(async (uid) => {

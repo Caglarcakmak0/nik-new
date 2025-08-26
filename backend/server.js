@@ -45,6 +45,53 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
+// === Request Timing & Performance Metrics (in-memory) ===
+const os = require('os');
+const responseTimes = [];// rolling window (last 200)
+app.use((req, res, next) => {
+    const start = process.hrtime.bigint();
+    res.on('finish', () => {
+        const diff = Number(process.hrtime.bigint() - start) / 1e6; // ms
+        responseTimes.push(diff);
+        if (responseTimes.length > 200) responseTimes.shift();
+    });
+    next();
+});
+
+// Expose a lightweight function other modules (admin route) can use
+app.getPerformanceSnapshot = () => {
+    const rt = responseTimes.slice();
+    const avg = rt.length ? rt.reduce((a, b) => a + b, 0) / rt.length : 0;
+    const p95 = (() => {
+        if (!rt.length) return 0;
+        const sorted = [...rt].sort((a,b)=>a-b);
+        return sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * 0.95))];
+    })();
+    const mem = process.memoryUsage();
+    const loadArr = os.loadavg ? os.loadavg() : [0,0,0];
+    const cpuCount = os.cpus ? os.cpus().length : 1;
+    let systemLoad = 0;
+    if (loadArr && loadArr[0] && cpuCount) {
+        systemLoad = Math.min(100, (loadArr[0] / cpuCount) * 100);
+    } else {
+        // Fallback: use RSS memory ratio
+        systemLoad = Math.min(100, (mem.rss / os.totalmem()) * 100);
+    }
+    return {
+        avgResponseTime: avg,
+        p95ResponseTime: p95,
+        sampleCount: rt.length,
+        systemLoad,
+        memory: {
+            rssMB: +(mem.rss / 1024 / 1024).toFixed(2),
+            heapUsedMB: +(mem.heapUsed / 1024 / 1024).toFixed(2),
+            heapTotalMB: +(mem.heapTotal / 1024 / 1024).toFixed(2)
+        },
+        uptimeSeconds: process.uptime(),
+        cpuCount
+    };
+};
+
 // Static file serving for uploaded images (cache for 1 year)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
     maxAge: '365d',

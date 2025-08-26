@@ -49,11 +49,49 @@ router.post("/", authenticateToken, checkRole(['student', 'coach']), async (req,
       tags: tags || []
     });
     
-   const savedSession = await studySession.save();
-    res.status(201).json({
-        message: "Study session başarıyla kaydedildi",
-        data: savedSession
-    });
+        const savedSession = await studySession.save();
+
+        // Gamification side-effects (non-blocking best-effort)
+        try {
+            const { addXP } = require('../services/xpService');
+            const { applySessionProgress } = require('../services/achievementProgressService');
+            // XP hesaplama basit (ileride geliştirilebilir)
+                    const formula = require('../services/xpFormula');
+                    const durationXP = Math.round((savedSession.duration || 0) * formula.STUDY_MINUTE_XP);
+                    let questionXP = 0;
+                    if (savedSession.questionStats) {
+                        const correct = (savedSession.questionStats.correctAnswers || 0);
+                        const wrong = (savedSession.questionStats.wrongAnswers || 0);
+                        const blank = (savedSession.questionStats.blankAnswers || 0);
+                        questionXP = correct * formula.QUESTION_CORRECT_XP + wrong * formula.QUESTION_WRONG_XP + blank * formula.QUESTION_BLANK_XP;
+                    }
+            const totalXP = durationXP + questionXP;
+            if (totalXP > 0) {
+                await addXP(userId, totalXP, 'study_session', { sessionId: savedSession._id, duration: savedSession.duration });
+            }
+            const unlocked = await applySessionProgress(userId, savedSession);
+                    // Daily challenges progress
+                    const { incrementProgress } = require('../services/dailyChallengeService');
+                    const progressUpdates = [];
+                    if (savedSession.duration) progressUpdates.push({ key: 'daily_study_minutes', value: savedSession.duration });
+                    if (savedSession.questionStats) {
+                        const qs = (savedSession.questionStats.correctAnswers || 0) + (savedSession.questionStats.wrongAnswers || 0) + (savedSession.questionStats.blankAnswers || 0);
+                        if (qs) progressUpdates.push({ key: 'daily_questions', value: qs });
+                    }
+                    if (progressUpdates.length) await incrementProgress(userId, progressUpdates);
+            if (unlocked.length) {
+                // Update UserStats totalAchievements
+                const UserStats = require('../models/UserStats');
+                await UserStats.updateOne({ userId }, { $inc: { totalAchievements: unlocked.length } });
+            }
+        } catch (e) {
+            console.error('Gamification side-effect error:', e);
+        }
+
+        res.status(201).json({
+            message: "Study session başarıyla kaydedildi",
+            data: savedSession
+        });
   } catch (error) {
     console.error('POST /study-sessions error:', error);
     res.status(500).json({ message: error.message });

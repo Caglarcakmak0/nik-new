@@ -1,52 +1,34 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Card,
   Typography,
   Space,
-  Progress,
   Row,
   Col,
-  Badge,
   Statistic,
-  Avatar,
   Tag,
-  Tooltip,
   Button,
   Modal,
   List,
-  Timeline,
-  Divider
+  Divider,
+  Badge
 } from 'antd';
 import {
   TrophyOutlined,
   StarOutlined,
   FireOutlined,
   ThunderboltOutlined,
-  CrownOutlined,
   GiftOutlined,
-  RiseOutlined,
-  AimOutlined,
   ClockCircleOutlined,
-  BookOutlined,
-  CheckCircleOutlined,
   InfoCircleOutlined
 } from '@ant-design/icons';
-import { useAuth } from '../../../../contexts/AuthContext';
-import { apiRequest } from '../../../../services/api';
-import dayjs from 'dayjs';
+import { useGamification } from '../../../../hooks/useGamification';
+import XPBar from '../../../../components/XPBar';
+import DailyChallenges from '../../../../components/DailyChallenges';
+import { levelProgress } from '../../../../utils/levelCurve';
 import './GamificationSystem.scss';
 
 const { Title, Text } = Typography;
-
-interface UserLevel {
-  level: number;
-  title: string;
-  minXP: number;
-  maxXP: number;
-  perks: string[];
-  color: string;
-  icon: React.ReactNode;
-}
 
 interface XPSource {
   action: string;
@@ -56,40 +38,16 @@ interface XPSource {
   multiplier?: number;
 }
 
-interface DailyChallenge {
-  id: string;
-  title: string;
-  description: string;
-  target: number;
-  current: number;
-  xpReward: number;
-  isCompleted: boolean;
-  category: string;
-  deadline: string;
-}
-
-interface UserStats {
-  totalXP: number;
-  currentLevel: number;
-  nextLevelXP: number;
-  currentLevelXP: number;
-  streak: number;
-  maxStreak: number;
-  totalAchievements: number;
-  weeklyXP: number;
-  monthlyXP: number;
-  dailyChallenges: DailyChallenge[];
-}
-
-const levels: UserLevel[] = [
-  { level: 1, title: 'Yeni Başlayan', minXP: 0, maxXP: 1000, perks: ['Temel özellikler'], color: '#d9d9d9', icon: <BookOutlined /> },
-  { level: 2, title: 'Öğrenci', minXP: 1000, maxXP: 2500, perks: ['İstatistikler', 'Günlük hedefler'], color: '#52c41a', icon: <TargetOutlined /> },
-  { level: 3, title: 'Çalışkan', minXP: 2500, maxXP: 5000, perks: ['AI önerileri', 'İleri analitik'], color: '#1890ff', icon: <RiseOutlined /> },
-  { level: 4, title: 'Azimli', minXP: 5000, maxXP: 10000, perks: ['Özel rozetler', 'Liderlik tablosu'], color: '#722ed1', icon: <FireOutlined /> },
-  { level: 5, title: 'Uzman', minXP: 10000, maxXP: 20000, perks: ['Mentor modu', 'Özel yarışmalar'], color: '#fa541c', icon: <CrownOutlined /> },
-  { level: 6, title: 'Usta', minXP: 20000, maxXP: 40000, perks: ['Elite rozetler', 'Özel içerikler'], color: '#faad14', icon: <StarOutlined /> },
-  { level: 7, title: 'Efsane', minXP: 40000, maxXP: Infinity, perks: ['Tüm özellikler', 'Efsanevi statü'], color: '#fa8c16', icon: <TrophyOutlined /> }
-];
+// Legacy levels removed; dynamic curve used now. Provide simple titles by tier bands.
+const dynamicLevelTitle = (level: number) => {
+  if (level < 5) return 'Yeni Başlayan';
+  if (level < 10) return 'Öğrenci';
+  if (level < 15) return 'Çalışkan';
+  if (level < 20) return 'Azimli';
+  if (level < 30) return 'Uzman';
+  if (level < 40) return 'Usta';
+  return 'Efsane';
+};
 
 const xpSources: XPSource[] = [
   { action: 'question_correct', points: 5, description: 'Doğru cevap', category: 'study' },
@@ -102,55 +60,16 @@ const xpSources: XPSource[] = [
 ];
 
 const GamificationSystem: React.FC = () => {
-  const { user } = useAuth();
-  const [loading, setLoading] = useState(false);
-  const [userStats, setUserStats] = useState<UserStats | null>(null);
+  const { stats, events, challenges, refetch } = useGamification();
+  const [eventsVisible, setEventsVisible] = useState(false);
   const [levelModalVisible, setLevelModalVisible] = useState(false);
-  const [xpHistoryVisible, setXpHistoryVisible] = useState(false);
-  const [xpHistory, setXpHistory] = useState<any[]>([]);
 
-  // Kullanıcı istatistiklerini getir
-  const fetchUserStats = async () => {
-    try {
-      setLoading(true);
-      const response = await apiRequest('/gamification/user-stats');
-      setUserStats(response.data);
-    } catch (error) {
-      console.error('User stats fetch error:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  if (!stats) return <div>Loading...</div>;
 
-  // XP geçmişini getir
-  const fetchXPHistory = async () => {
-    try {
-      const response = await apiRequest('/gamification/xp-history');
-      setXpHistory(response.data || []);
-      setXpHistoryVisible(true);
-    } catch (error) {
-      console.error('XP history fetch error:', error);
-    }
-  };
-
-  useEffect(() => {
-    fetchUserStats();
-  }, []);
-
-  if (!userStats) {
-    return <div>Loading...</div>;
-  }
-
-  const currentLevel = levels.find(l => l.level === userStats.currentLevel) || levels[0];
-  const nextLevel = levels.find(l => l.level === userStats.currentLevel + 1);
-  
-  // Progress hesaplama
-  const levelProgress = nextLevel ? 
-    ((userStats.totalXP - currentLevel.minXP) / (nextLevel.minXP - currentLevel.minXP)) * 100 : 100;
-
-  // Günlük zorlukları tamamlama oranı
-  const challengeCompletionRate = userStats.dailyChallenges.length > 0 ?
-    (userStats.dailyChallenges.filter(c => c.isCompleted).length / userStats.dailyChallenges.length) * 100 : 0;
+  const lp = levelProgress(stats.currentLevel, stats.currentLevelXP, stats.nextLevelXP);
+  const title = dynamicLevelTitle(stats.currentLevel);
+  // Derived values
+  const xpToNext = stats ? (stats.nextLevelXP - stats.currentLevelXP) : 0;
 
   return (
     <div className="gamification-system">
@@ -159,21 +78,17 @@ const GamificationSystem: React.FC = () => {
         <Row align="middle" gutter={24}>
           <Col span={8}>
             <div className="level-display">
-              <Badge 
-                count={currentLevel.level} 
-                style={{ backgroundColor: currentLevel.color }}
-                offset={[-10, 10]}
-              >
-                <div className="level-avatar" style={{ backgroundColor: currentLevel.color }}>
-                  {currentLevel.icon}
+              <Badge count={stats.currentLevel} style={{ backgroundColor: '#faad14' }} offset={[-10, 10]}>
+                <div className="level-avatar" style={{ backgroundColor: '#faad14' }}>
+                  <TrophyOutlined />
                 </div>
               </Badge>
               <div style={{ marginTop: 12, textAlign: 'center' }}>
                 <Title level={4} style={{ margin: 0, color: 'white' }}>
-                  {currentLevel.title}
+                  {title}
                 </Title>
                 <Text style={{ color: 'rgba(255,255,255,0.8)' }}>
-                  Seviye {currentLevel.level}
+                  Seviye {stats.currentLevel}
                 </Text>
               </div>
             </div>
@@ -185,7 +100,7 @@ const GamificationSystem: React.FC = () => {
                 <Col span={8}>
                   <Statistic
                     title="Toplam XP"
-                    value={userStats.totalXP.toLocaleString()}
+                    value={stats.totalXP.toLocaleString()}
                     prefix={<ThunderboltOutlined />}
                     valueStyle={{ color: 'white' }}
                   />
@@ -193,7 +108,7 @@ const GamificationSystem: React.FC = () => {
                 <Col span={8}>
                   <Statistic
                     title="Seri"
-                    value={userStats.streak}
+                    value={stats.streak}
                     prefix={<FireOutlined />}
                     suffix="gün"
                     valueStyle={{ color: 'white' }}
@@ -202,7 +117,7 @@ const GamificationSystem: React.FC = () => {
                 <Col span={8}>
                   <Statistic
                     title="Rozetler"
-                    value={userStats.totalAchievements}
+                    value={stats.totalAchievements}
                     prefix={<GiftOutlined />}
                     valueStyle={{ color: 'white' }}
                   />
@@ -215,19 +130,10 @@ const GamificationSystem: React.FC = () => {
                     Seviye İlerlemesi
                   </Text>
                   <Text style={{ color: 'rgba(255,255,255,0.8)' }}>
-                    {nextLevel ? `${Math.round(levelProgress)}%` : 'Max Level'}
+                    {Math.round(lp.percent)}%
                   </Text>
                 </div>
-                <Progress
-                  percent={Math.min(levelProgress, 100)}
-                  strokeColor="#faad14"
-                  trailColor="rgba(255,255,255,0.2)"
-                />
-                {nextLevel && (
-                  <Text style={{ fontSize: '12px', color: 'rgba(255,255,255,0.6)' }}>
-                    {nextLevel.minXP - userStats.totalXP} XP daha → {nextLevel.title}
-                  </Text>
-                )}
+                <XPBar totalXP={stats.totalXP} currentLevel={stats.currentLevel} currentLevelXP={stats.currentLevelXP} nextLevelXP={stats.nextLevelXP} />
               </div>
             </Space>
           </Col>
@@ -245,70 +151,14 @@ const GamificationSystem: React.FC = () => {
               >
                 Seviye Detayları
               </Button>
-              <Button 
-                ghost 
-                icon={<ClockCircleOutlined />}
-                onClick={fetchXPHistory}
-              >
-                XP Geçmişi
-              </Button>
+              <Button ghost icon={<ClockCircleOutlined />} onClick={() => setEventsVisible(true)}>XP Olayları</Button>
             </Space>
           </Col>
         </Row>
       </Card>
 
       {/* Daily Challenges */}
-      <Card
-        title={
-          <Space>
-            <TargetOutlined />
-            <span>Günlük Meydan Okumalar</span>
-            <Tag color="blue">{Math.round(challengeCompletionRate)}% tamamlandı</Tag>
-          </Space>
-        }
-        style={{ marginBottom: 24 }}
-      >
-        <Row gutter={[16, 16]}>
-          {userStats.dailyChallenges.map((challenge) => (
-            <Col xs={24} sm={12} lg={8} key={challenge.id}>
-              <Card
-                size="small"
-                className={`challenge-card ${challenge.isCompleted ? 'completed' : ''}`}
-                actions={[
-                  <Space>
-                    <ThunderboltOutlined />
-                    <Text strong>{challenge.xpReward} XP</Text>
-                  </Space>
-                ]}
-              >
-                <Card.Meta
-                  title={
-                    <Space>
-                      <Text strong>{challenge.title}</Text>
-                      {challenge.isCompleted && (
-                        <CheckCircleOutlined style={{ color: '#52c41a' }} />
-                      )}
-                    </Space>
-                  }
-                  description={
-                    <Space direction="vertical" style={{ width: '100%' }}>
-                      <Text type="secondary">{challenge.description}</Text>
-                      <Progress
-                        percent={(challenge.current / challenge.target) * 100}
-                        size="small"
-                        strokeColor={challenge.isCompleted ? '#52c41a' : '#1890ff'}
-                      />
-                      <Text type="secondary" style={{ fontSize: '12px' }}>
-                        {challenge.current} / {challenge.target}
-                      </Text>
-                    </Space>
-                  }
-                />
-              </Card>
-            </Col>
-          ))}
-        </Row>
-      </Card>
+  {challenges && <DailyChallenges data={challenges} onClaimed={refetch} />}
 
       {/* XP Sources */}
       <Card
@@ -342,7 +192,7 @@ const GamificationSystem: React.FC = () => {
                                   source.category === 'streak' ? 'Seri' : 'Bonus'}
                       </Text>
                       {source.multiplier && (
-                        <Tag size="small" color="orange">
+                        <Tag color="orange">
                           {source.multiplier}x çarpan
                         </Tag>
                       )}
@@ -358,88 +208,78 @@ const GamificationSystem: React.FC = () => {
       {/* Level Details Modal */}
       <Modal
         title="Seviye Sistemi"
-        visible={levelModalVisible}
+        open={levelModalVisible}
         onCancel={() => setLevelModalVisible(false)}
         footer={null}
-        width={700}
+        width={640}
       >
-        <div className="level-details">
-          <List
-            dataSource={levels}
-            renderItem={(level) => (
-              <List.Item className={level.level === userStats.currentLevel ? 'current-level' : ''}>
-                <List.Item.Meta
-                  avatar={
-                    <Badge 
-                      count={level.level} 
-                      style={{ backgroundColor: level.color }}
-                    >
-                      <div 
-                        className="level-icon"
-                        style={{ backgroundColor: level.color }}
-                      >
-                        {level.icon}
-                      </div>
-                    </Badge>
-                  }
-                  title={
-                    <Space>
-                      <Text strong>{level.title}</Text>
-                      {level.level === userStats.currentLevel && (
-                        <Tag color="blue">Mevcut Seviye</Tag>
-                      )}
-                    </Space>
-                  }
-                  description={
-                    <Space direction="vertical" size={8}>
-                      <Text type="secondary">
-                        {level.minXP.toLocaleString()} - {level.maxXP === Infinity ? '∞' : level.maxXP.toLocaleString()} XP
-                      </Text>
-                      <div>
-                        <Text strong>Avantajlar:</Text>
-                        <ul style={{ margin: '4px 0 0 20px' }}>
-                          {level.perks.map((perk, index) => (
-                            <li key={index}>{perk}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    </Space>
-                  }
-                />
-              </List.Item>
-            )}
-          />
-        </div>
+        <Space direction="vertical" style={{ width: '100%' }} size="large">
+          <div>
+            <Title level={5} style={{ marginTop: 0 }}>Mevcut Durum</Title>
+            <Row gutter={16}>
+              <Col span={12}>
+                <Statistic title="Seviye" value={stats.currentLevel} />
+              </Col>
+              <Col span={12}>
+                <Statistic title="Seviye %" value={Math.round(lp.percent)} suffix="%" />
+              </Col>
+            </Row>
+            <Row gutter={16} style={{ marginTop: 12 }}>
+              <Col span={12}>
+                <Statistic title="Bu Seviyede XP" value={stats.currentLevelXP} />
+              </Col>
+              <Col span={12}>
+                <Statistic title="Sonraki Seviyeye" value={xpToNext} suffix="XP" />
+              </Col>
+            </Row>
+          </div>
+          <div>
+            <Title level={5}>Seviye Ünvanları</Title>
+            <List
+              size="small"
+              dataSource={[
+                { range: '1-4', title: 'Yeni Başlayan' },
+                { range: '5-9', title: 'Öğrenci' },
+                { range: '10-14', title: 'Çalışkan' },
+                { range: '15-19', title: 'Azimli' },
+                { range: '20-29', title: 'Uzman' },
+                { range: '30-39', title: 'Usta' },
+                { range: '40+', title: 'Efsane' }
+              ]}
+              renderItem={(item) => (
+                <List.Item>
+                  <Space>
+                    <Tag>{item.range}</Tag>
+                    <Text>{item.title}</Text>
+                  </Space>
+                </List.Item>
+              )}
+            />
+          </div>
+          <div>
+            <Title level={5}>Formül</Title>
+            <Text type="secondary">
+              Seviye ilerlemesi dinamik bir eğri ile hesaplanır. Her seviye için gereken toplam XP kümülatif olarak artar,
+              bu sayede ilk seviyeler hızlı, ileri seviyeler daha zorlu hissedilir. Çalışma oturumları, doğru cevaplar,
+              günlük görevler, seri (streak) bonusu ve rozetler XP sağlar.
+            </Text>
+          </div>
+        </Space>
       </Modal>
 
       {/* XP History Modal */}
-      <Modal
-        title="XP Geçmişi"
-        visible={xpHistoryVisible}
-        onCancel={() => setXpHistoryVisible(false)}
-        footer={null}
-        width={600}
-      >
-        <Timeline 
-          mode="left"
-          items={xpHistory.map((entry, index) => ({
-            key: index,
-            color: entry.xp > 0 ? 'green' : 'red',
-            label: dayjs(entry.date).format('HH:mm'),
-            children: (
-              <Space direction="vertical" size={4}>
-                <Space>
-                  <Text strong>{entry.action}</Text>
-                  <Tag color={entry.xp > 0 ? 'green' : 'red'}>
-                    {entry.xp > 0 ? '+' : ''}{entry.xp} XP
-                  </Tag>
-                </Space>
-                <Text type="secondary" style={{ fontSize: '12px' }}>
-                  {entry.description}
-                </Text>
+      <Modal title="XP Olayları" open={eventsVisible} onCancel={() => setEventsVisible(false)} footer={null} width={520}>
+        <List
+          size="small"
+          dataSource={events}
+          renderItem={(e: any) => (
+            <List.Item>
+              <Space style={{ width: '100%', justifyContent: 'space-between' }}>
+                <span>{e.type}</span>
+                <Tag color={e.amount > 0 ? 'green' : 'red'}>{e.amount > 0 ? '+' : ''}{e.amount} XP</Tag>
               </Space>
-            )
-          }))}
+            </List.Item>
+          )}
         />
       </Modal>
     </div>

@@ -39,6 +39,7 @@ import AssignmentManager from "./views/Admin/AssignmentManager";
 import Statistics from "./views/Admin/Statistics";
 import ErrorPage from "./components/ErrorPage/ErrorPage";
 import FlashcardsPage from "./views/Flashcards/Flashcards";
+import AchievementsPage from "./views/StudyPlanPage/bones/Achievements/AchievementsPage";
 // Routing bileşeni (tema sağlayıcıdan bağımsız)
 function ThemedApp() {
   return (
@@ -151,6 +152,14 @@ function ThemedApp() {
                           element={
                             <ProtectedRoute allowedRoles={["student"]}>
                               <FlashcardsPage />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/study-plan/achievements"
+                          element={
+                            <ProtectedRoute allowedRoles={["student"]}>
+                              <AchievementsPage />
                             </ProtectedRoute>
                           }
                         />

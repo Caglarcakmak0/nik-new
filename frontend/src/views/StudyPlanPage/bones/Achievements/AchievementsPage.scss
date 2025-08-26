@@ -1,0 +1,64 @@
+@use 'sass:color';
+
+.achievements-modern {
+  --card-bg: rgba(255,255,255,0.6);
+  --card-bg-dark: rgba(0,0,0,0.3);
+  --border-radius: 14px;
+  --transition: 0.25s cubic-bezier(.4,.0,.2,1);
+
+  .achievements-header {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-bottom: 28px;
+    @media (min-width: 900px) { flex-direction: row; justify-content: space-between; align-items: flex-end; }
+    .title-row { .page-title { margin:0; letter-spacing:.5px; }
+      .icon-badge { width:54px; height:54px; border-radius:18px; display:flex; align-items:center; justify-content:center; font-size:28px; background:linear-gradient(135deg,#ffce54,#ff8f1f); color:#442800; box-shadow:0 6px 18px -6px rgba(255,140,0,.55); }
+      .subtitle { display:block; margin-top:4px; font-size:13px; }
+    }
+    .filters { display:flex; flex-wrap:wrap; gap:12px; align-items:center; }
+  }
+
+  .achievement-grid { margin-top:4px; }
+
+  .ach-card { position:relative; border-radius: var(--border-radius); overflow:hidden; backdrop-filter: blur(6px);
+    background: linear-gradient(145deg,rgba(255,255,255,0.85),rgba(245,245,245,0.6));
+    &.locked { opacity:.92; }
+    &:hover { transform:translateY(-4px); box-shadow:0 12px 28px -10px rgba(0,0,0,.18); }
+    transition:transform var(--transition), box-shadow var(--transition);
+  }
+  :global(.theme-dark) & .ach-card { background: linear-gradient(145deg,rgba(30,30,30,0.9),rgba(50,50,50,0.55)); }
+
+  .card-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+  .rarity-tag { border-radius:999px; padding:2px 10px; font-size:11px; letter-spacing:.3px; text-transform:uppercase; font-weight:600; background:rgba(0,0,0,0.06); border:none; }
+  .rarity-tag.gradient { background:linear-gradient(120deg,#ffe28a,#ff9d42); color:#4a2f00; box-shadow:0 0 0 1px rgba(255,160,40,.4); }
+
+  .rarity-common .rarity-tag { background:rgba(120,120,120,.15); color:#555; }
+  .rarity-rare .rarity-tag { background:rgba(70,140,255,.18); color:#2f61d4; }
+  .rarity-epic .rarity-tag { background:rgba(150,70,255,.20); color:#7f35dd; }
+  .rarity-legendary .rarity-tag { background:linear-gradient(120deg,#ffe28a,#ff9d42); color:#4a2f00; }
+  .rarity-mythic .rarity-tag { background:linear-gradient(120deg,#ffb3ec,#9f6bff); color:#3d1c5d; }
+
+  .completion-badge { width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#ffd666,#ffa940); color:#412600; font-size:15px; box-shadow:0 4px 12px -4px rgba(255,175,0,.55); }
+
+  .icon-row { display:flex; gap:12px; margin-bottom:10px; align-items:flex-start; }
+  .icon-shell { width:56px; height:56px; border-radius:16px; display:flex; align-items:center; justify-content:center; font-size:28px; background:linear-gradient(135deg,#ececec,#ffffff); color:#888; box-shadow: inset 0 0 0 1px rgba(0,0,0,.05); }
+  .icon-shell.icon-active { background:linear-gradient(135deg,#ffce54,#ff8f1f); color:#3b2600; box-shadow:0 6px 14px -6px rgba(255,140,0,.6); }
+  :global(.theme-dark) & .icon-shell { background:linear-gradient(135deg,#393939,#2a2a2a); color:#aaa; }
+  :global(.theme-dark) & .icon-shell.icon-active { color:#241400; }
+
+  .titles { flex:1; min-width:0; }
+  .ach-title { font-weight:600; font-size:15px; line-height:1.25; margin-bottom:4px; }
+  .ach-desc { font-size:12.5px; line-height:1.45; color: var(--ant-color-text-tertiary); }
+
+  .progress-block { margin-top:6px; .progress-line { display:flex; justify-content:space-between; font-size:12px; margin-bottom:2px; .label { color: var(--ant-color-text-tertiary); } .value { font-weight:500; } }
+    .meta-row { display:flex; justify-content:space-between; font-size:12px; margin-top:4px; .xp { font-weight:600; color:#fa8c16; } .pct { color: var(--ant-color-text-tertiary); }
+    }
+  }
+
+  .lock-overlay { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:28px; color:rgba(0,0,0,.35); backdrop-filter: blur(1px); pointer-events:none; }
+  :global(.theme-dark) & .lock-overlay { color:rgba(255,255,255,.25); }
+
+  .loading-block { text-align:center; padding:60px 0; }
+  .empty { margin-top:40px; }
+}
