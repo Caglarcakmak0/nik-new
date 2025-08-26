@@ -20,7 +20,8 @@ const QuickDYBEntry: React.FC<QuickDYBEntryProps> = ({ dayModalDate, selectedDay
   const [editingSubjectIndex, setEditingSubjectIndex] = useState<number | null>(null);
   const [subjectNameDraft, setSubjectNameDraft] = useState('');
   const [tempDYB, setTempDYB] = useState<Record<string, { correct: number; wrong: number; blank: number }>>({});
-  const [autoPlanDates, setAutoPlanDates] = useState<Set<string>>(new Set());
+  // Oturumlardan otomatik plan oluşturma kaldırıldı; kullanıcıya buton sunacağız
+  const [suggestSessionsPlan, setSuggestSessionsPlan] = useState(false);
 
   const textPrimary = isDark ? '#f1f5f9' : '#1f2937';
   const textSecondary = isDark ? '#94a3b8' : '#6b7280';
@@ -184,14 +185,11 @@ const QuickDYBEntry: React.FC<QuickDYBEntryProps> = ({ dayModalDate, selectedDay
     } finally { setDayPlanLoading(false); }
   };
 
-  // Oturum var ama plan yoksa DYB için otomatik plan oluştur
+  // Oturum var ama plan yoksa sadece öneri göster
   useEffect(() => {
-    const key = dayModalDate.format('YYYY-MM-DD');
-    if (dayPlan) return;
-    if (!selectedDayData || !selectedDayData.sessions || selectedDayData.sessions.length === 0) return;
-    if (autoPlanDates.has(key)) return;
-    setAutoPlanDates(prev => new Set(prev).add(key));
-    createPlanFromSessions(dayModalDate, selectedDayData.sessions);
+    if (dayPlan) { setSuggestSessionsPlan(false); return; }
+    if (!selectedDayData?.sessions?.length) { setSuggestSessionsPlan(false); return; }
+    setSuggestSessionsPlan(true);
   }, [dayPlan, selectedDayData, dayModalDate]);
 
   // Plan yoksa ve oturumlar varsa geçici DYB state hazırla
@@ -217,7 +215,14 @@ const QuickDYBEntry: React.FC<QuickDYBEntryProps> = ({ dayModalDate, selectedDay
         <Space style={{ fontWeight: 600, fontSize: 15, color: textPrimary }}>
           <BookOutlined style={{ color: '#0ea5e9' }} /> Hızlı D/Y/B Girişi
         </Space>
-        {dayPlanLoading && <Spin size="small" />}
+        <Space>
+          {suggestSessionsPlan && !dayPlan && !dayPlanLoading && (
+            <Button size="small" type="dashed" onClick={() => createPlanFromSessions(dayModalDate, selectedDayData.sessions)}>
+              Oturumlardan Plan Oluştur
+            </Button>
+          )}
+          {dayPlanLoading && <Spin size="small" />}
+        </Space>
       </div>
 
       {dayPlan && dayPlan.subjects && dayPlan.subjects.length > 0 ? (

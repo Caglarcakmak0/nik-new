@@ -867,3 +867,51 @@ export const submitFlashcardPractice = async (id: string, correct: boolean) => {
   return apiRequest(`/flashcards/${id}/practice`, { method: 'POST', body: JSON.stringify({ correct }) });
 };
 
+// ==== Advanced Analytics (Server Aggregated) ====
+export interface AdvancedAnalyticsResponse {
+  range: 'daily' | 'weekly' | 'monthly';
+  from: string;
+  to: string;
+  timeSeries: Array<{ date: string; totalTime: number; sessionCount: number; avgQuality: number }>;
+  subjectStats: Array<{
+    subject: string;
+    totalTime: number;
+    sessionCount: number;
+    avgQuality: number;
+    correctAnswers: number;
+    wrongAnswers: number;
+    blankAnswers: number;
+  }>;
+  techniqueDistribution: Array<{ technique: string; count: number }>;
+  questionStatsSummary: {
+    totalTargetQuestions: number;
+    totalAttempted: number;
+    totalCorrect: number;
+    totalWrong: number;
+    totalBlank: number;
+    avgCompletionRate: number;
+    accuracyPercent: number;
+  };
+  overall: {
+    totalStudyTime: number;
+    sessionCount: number;
+    averageQuality: number;
+    averageEfficiency: number;
+    completionRate: number;
+    consistencyScore: number;
+    focusScore: number;
+    velocityScore: number;
+  };
+  sessions?: any[]; // optional raw sessions when includeSessions=true
+  meta: { generatedAt: string };
+}
+
+export const getAdvancedAnalytics = async (params: { range?: 'daily' | 'weekly' | 'monthly'; subjects?: string[]; includeSessions?: boolean } = {}): Promise<{ message: string; data: AdvancedAnalyticsResponse }> => {
+  const search = new URLSearchParams();
+  if (params.range) search.set('range', params.range);
+  if (params.subjects && params.subjects.length) search.set('subjects', params.subjects.join(','));
+  if (params.includeSessions) search.set('includeSessions', 'true');
+  const qs = search.toString();
+  return apiRequest(`/analytics/advanced${qs ? `?${qs}` : ''}`);
+};
+

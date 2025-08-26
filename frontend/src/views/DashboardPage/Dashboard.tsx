@@ -14,7 +14,7 @@ import {
   ThunderboltOutlined
 } from '@ant-design/icons';
 import { useAuth } from '../../contexts/AuthContext';
-import { apiRequest, getLeaderboardUserStats } from '../../services/api';
+import { apiRequest, getLeaderboardUserStats, getAdvancedAnalytics, AdvancedAnalyticsResponse } from '../../services/api';
 import type { LeaderboardUserStats } from '../../services/api';
 import { ActiveGoals } from './bones';
 const AdvancedAnalytics = React.lazy(() => import('../StudyPlanPage/bones/AdvancedAnalytics/AdvancedAnalytics'));
@@ -64,6 +64,8 @@ const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [userLeaderboard, setUserLeaderboard] = useState<LeaderboardUserStats | null>(null);
   const [range, setRange] = useState<AnalyticsRange>('weekly');
+  const [advLoading, setAdvLoading] = useState(false);
+  const [advancedData, setAdvancedData] = useState<AdvancedAnalyticsResponse | null>(null);
   // Map dashboard analytics range to study stats period
   const studyPeriodMap: Record<AnalyticsRange, 'today' | 'week' | 'month' | 'all'> = {
     daily: 'today',
@@ -71,7 +73,7 @@ const Dashboard: React.FC = () => {
     monthly: 'month',
     all: 'all'
   };
-  const { stats: studyStats, totalTimeSeries, sessionCountSeries, qualitySeries, streakSeries } = useStudyStats(studyPeriodMap[range]);
+  const { stats: studyStats, /*sessions*/ totalTimeSeries, sessionCountSeries, qualitySeries, streakSeries } = useStudyStats(studyPeriodMap[range]);
   // No local computed streak; backend provides overview.currentStreak
 
   // Dashboard verilerini al
@@ -91,6 +93,21 @@ const Dashboard: React.FC = () => {
 
   useEffect(() => {
     fetchDashboardData();
+    // advanced analytics
+    (async () => {
+      setAdvLoading(true);
+      try {
+  // Advanced endpoint 'all' desteklemiyor; 'all' seçilirse monthly'e fallback
+  const advRange = range === 'all' ? 'monthly' : range;
+  const res = await getAdvancedAnalytics({ range: advRange as any, includeSessions: true });
+        setAdvancedData(res.data);
+      } catch (e) {
+        console.error('Advanced analytics fetch error', e);
+        setAdvancedData(null);
+      } finally {
+        setAdvLoading(false);
+      }
+    })();
   }, [range]);
 
   useEffect(() => {
@@ -225,187 +242,71 @@ const Dashboard: React.FC = () => {
           </Row>
           {/* Eski Study Plan Analytics içeriği - lazy yüklü */}
           <React.Suspense fallback={<Card loading style={{ minHeight:180 }} />}> 
-            {dashboardData && (
-              <Card style={{ marginTop: 32 }} title="Detaylı Analizler">
-                <AdvancedAnalytics 
-                  plan={{
-                    _id: 'dash-proxy',
-                    date: new Date().toISOString(),
-                    title: 'Dashboard Analytics',
-                    subjects: [
-                      {
-                        subject: 'Matematik',
-                        targetQuestions: 40,
-                        targetTime: 120,
-                        topics: ['Denklemler', 'Fonksiyonlar'],
-                        priority: 1,
-                        completedQuestions: 38,
-                        correctAnswers: 32,
-                        wrongAnswers: 4,
-                        blankAnswers: 2,
-                        studyTime: 110,
+            {dashboardData && advancedData && (
+              <Card style={{ marginTop: 32 }} title="Detaylı Analizler (Gerçek Veriler)">
+                <AdvancedAnalytics
+                  plan={(() => {
+                    // Server aggregated veriyi StudyPlanLike şekline map et
+                    const subjMap = advancedData.subjectStats;
+                    const sessionsList = (advancedData.sessions || []).map(s => ({
+                      ...s,
+                      _id: s._id || s.id
+                    }));
+                    // sessions'i subject'e göre grupla
+                    const grouped: Record<string, any[]> = {};
+                    sessionsList.forEach((s: any) => {
+                      const subj = s.subject || 'diger';
+                      if (!grouped[subj]) grouped[subj] = [];
+                      grouped[subj].push(s);
+                    });
+                    const subjects = subjMap.map(ss => {
+                      const sessList = grouped[ss.subject] || [];
+                      const correct = ss.correctAnswers || 0;
+                      const wrong = ss.wrongAnswers || 0;
+                      const blank = ss.blankAnswers || 0;
+                      return {
+                        subject: ss.subject,
+                        targetQuestions: 0,
+                        targetTime: ss.totalTime,
+                        topics: [],
+                        priority: 5,
+                        completedQuestions: correct + wrong + blank,
+                        correctAnswers: correct,
+                        wrongAnswers: wrong,
+                        blankAnswers: blank,
+                        studyTime: ss.totalTime,
                         status: 'completed',
-                        sessionIds: [
-                          {
-                            _id: 'mat-1',
-                            subject: 'Matematik',
-                            duration: 55,
-                            date: dayjs().subtract(1,'day').toDate(),
-                            quality: 4.2,
-                            technique: 'Soru Çözümü',
-                            mood: 'focused',
-                            efficiency: 1.9,
-                            distractions: 1,
-                            questionStats: {
-                              targetQuestions: 20,
-                              correctAnswers: 17,
-                              wrongAnswers: 2,
-                              blankAnswers: 1,
-                              netScore: 16,
-                              completionRate: 95
-                            }
-                          },
-                          {
-                            _id: 'mat-2',
-                            subject: 'Matematik',
-                            duration: 55,
-                            date: dayjs().subtract(3,'day').toDate(),
-                            quality: 3.8,
-                            technique: 'Konu Tekrarı',
-                            mood: 'normal',
-                            efficiency: 1.6,
-                            distractions: 2,
-                            questionStats: {
-                              targetQuestions: 20,
-                              correctAnswers: 15,
-                              wrongAnswers: 3,
-                              blankAnswers: 2,
-                              netScore: 13.5,
-                              completionRate: 90
-                            }
-                          }
-                        ]
-                      },
-                      {
-                        subject: 'Fizik',
-                        targetQuestions: 20,
-                        targetTime: 60,
-                        topics: ['Kuvvet', 'Enerji'],
-                        priority: 2,
-                        completedQuestions: 18,
-                        correctAnswers: 12,
-                        wrongAnswers: 5,
-                        blankAnswers: 1,
-                        studyTime: 55,
-                        status: 'completed',
-                        sessionIds: [
-                          {
-                            _id: 'fiz-1',
-                            subject: 'Fizik',
-                            duration: 30,
-                            date: dayjs().subtract(2,'day').toDate(),
-                            quality: 4.5,
-                            technique: 'Video',
-                            mood: 'focused',
-                            efficiency: 1.2,
-                            distractions: 0,
-                            questionStats: {
-                              targetQuestions: 10,
-                              correctAnswers: 7,
-                              wrongAnswers: 2,
-                              blankAnswers: 1,
-                              netScore: 6.5,
-                              completionRate: 90
-                            }
-                          },
-                          {
-                            _id: 'fiz-2',
-                            subject: 'Fizik',
-                            duration: 25,
-                            date: dayjs().subtract(4,'day').toDate(),
-                            quality: 3.9,
-                            technique: 'Soru Çözümü',
-                            mood: 'normal',
-                            efficiency: 1.1,
-                            distractions: 1,
-                            questionStats: {
-                              targetQuestions: 10,
-                              correctAnswers: 5,
-                              wrongAnswers: 4,
-                              blankAnswers: 1,
-                              netScore: 3.5,
-                              completionRate: 80
-                            }
-                          }
-                        ]
-                      },
-                      {
-                        subject: 'Kimya',
-                        targetQuestions: 15,
-                        targetTime: 45,
-                        topics: ['Atom', 'Molekül'],
-                        priority: 3,
-                        completedQuestions: 14,
-                        correctAnswers: 10,
-                        wrongAnswers: 3,
-                        blankAnswers: 1,
-                        studyTime: 40,
-                        status: 'completed',
-                        sessionIds: [
-                          {
-                            _id: 'kim-1',
-                            subject: 'Kimya',
-                            duration: 20,
-                            date: dayjs().subtract(1,'day').toDate(),
-                            quality: 4.0,
-                            technique: 'Konu Tekrarı',
-                            mood: 'good',
-                            efficiency: 1.3,
-                            distractions: 0,
-                            questionStats: {
-                              targetQuestions: 8,
-                              correctAnswers: 6,
-                              wrongAnswers: 1,
-                              blankAnswers: 1,
-                              netScore: 5.5,
-                              completionRate: 87
-                            }
-                          },
-                          {
-                            _id: 'kim-2',
-                            subject: 'Kimya',
-                            duration: 20,
-                            date: dayjs().subtract(5,'day').toDate(),
-                            quality: 3.7,
-                            technique: 'Soru Çözümü',
-                            mood: 'normal',
-                            efficiency: 1.1,
-                            distractions: 1,
-                            questionStats: {
-                              targetQuestions: 7,
-                              correctAnswers: 4,
-                              wrongAnswers: 2,
-                              blankAnswers: 1,
-                              netScore: 3,
-                              completionRate: 85
-                            }
-                          }
-                        ]
+                        sessionIds: sessList
+                      };
+                    });
+                    const totalStudyTime = advancedData.overall.totalStudyTime;
+                    const { accuracyPercent } = advancedData.questionStatsSummary;
+                    const totalCompletedQuestions = advancedData.questionStatsSummary.totalAttempted;
+                    const successRate = Math.round(accuracyPercent);
+                    return {
+                      _id: 'adv-analytics-plan',
+                      date: advancedData.from,
+                      title: 'Gelişmiş Analiz Dönemi',
+                      subjects,
+                      stats: {
+                        totalTargetQuestions: 0,
+                        totalCompletedQuestions,
+                        totalTargetTime: 0,
+                        totalStudyTime,
+                        completionRate: 0,
+                        netScore: 0, // advanced endpoint henüz netScore döndürmüyor
+                        successRate
                       }
-                    ],
-                    stats: {
-                      totalTargetQuestions: 75,
-                      totalCompletedQuestions: 70,
-                      totalTargetTime: 225,
-                      totalStudyTime: 205,
-                      completionRate: 93,
-                      netScore: 42.5,
-                      successRate: 75
-                    }
-                  } as any}
+                    } as any;
+                  })()}
                   selectedDate={dayjs() as any}
-                  onRefresh={() => { /* dashboard refresh */ fetchDashboardData(); }}
+                  onRefresh={() => { fetchDashboardData(); }}
                 />
+              </Card>
+            )}
+            {dashboardData && !advancedData && (
+              <Card style={{ marginTop: 32 }} loading={advLoading} title="Detaylı Analizler">
+                {!advLoading && <span>Veri alınamadı.</span>}
               </Card>
             )}
           </React.Suspense>
