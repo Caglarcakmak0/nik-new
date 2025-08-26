@@ -2,18 +2,15 @@ import {
   DashboardOutlined,
   UserOutlined,
   ClockCircleOutlined,
-  BarChartOutlined,
   CalendarOutlined,
   TeamOutlined,
   FileTextOutlined,
   BookOutlined,
-  ExperimentOutlined,
   BulbOutlined,
   QuestionCircleOutlined,
   CompassOutlined,
   TrophyOutlined,
-  HistoryOutlined,
-  TableOutlined
+  HistoryOutlined
 } from "@ant-design/icons";
 import type { MenuItemEx, Role } from "./menuTypes";
 
@@ -74,75 +71,42 @@ export const allMenuItems: MenuItemEx[] = [
   },
 
   // Öğrenciye özel sayfalar
+  // Çalışma araçları üst seviye (alt menü kaldırıldı)
   {
-    key: "/study-tracker",
-    icon: <ExperimentOutlined />,
-  label: "Çalışma Zamanlayıcı",
+    key: "/study-tracker/timer",
+    icon: <ClockCircleOutlined />,
+    label: "Zamanlayıcı",
     roles: ["student"],
-    children: [
-      {
-        key: "/study-tracker/timer",
-        icon: <ClockCircleOutlined />,
-  label: "Serbest Zamanlayıcı",
-        roles: ["student"],
-      },
-      {
-        key: "/study-tracker/sessions",
-        icon: <HistoryOutlined />,
-        label: "Oturum Geçmişi",
-        roles: ["student"],
-      },
-      {
-        key: "/study-tracker/calendar",
-        icon: <CalendarOutlined />,
-        label: "Takvim",
-        roles: ["student"],
-      },
-      {
-        key: "/study-tracker/study-room",
-        icon: <TrophyOutlined />,
-        label: "Çalışma Odası",
-        roles: ["student"],
-      },
-      {
-        key: "/study-tracker/statistics",
-        icon: <BarChartOutlined />,
-        label: "İstatistikler",
-        roles: ["student"],
-      },
-      {
-        key: "/study-tracker/coach-programs",
-        icon: <UserOutlined />,
-  label: "Günlük Programlar",
-        roles: ["student"],
-      },
-    ]
+  },
+  {
+    key: "/study-tracker/sessions",
+    icon: <HistoryOutlined />,
+    label: "Oturum Geçmişi",
+    roles: ["student"],
+  },
+  {
+    key: "/study-tracker/calendar",
+    icon: <CalendarOutlined />,
+    label: "Takvim",
+    roles: ["student"],
+  },
+  {
+    key: "/study-tracker/study-room",
+    icon: <TrophyOutlined />,
+    label: "Çalışma Odası",
+    roles: ["student"],
+  },
+  {
+    key: "/study-tracker/coach-programs",
+    icon: <UserOutlined />,
+    label: "Günlük Programlar",
+    roles: ["student"],
   },
   {
     key: "/study-plan",
     icon: <BookOutlined />,
     label: "Çalışma Programı",
     roles: ["student"],
-    children: [
-      {
-        key: "/study-plan/daily",
-        icon: <TableOutlined />,
-        label: "Günlük Tablo",
-        roles: ["student"],
-      },
-      {
-        key: "/study-plan/monthly",
-        icon: <CalendarOutlined />,
-        label: "Aylık Görünüm",
-        roles: ["student"],
-      },
-      {
-        key: "/study-plan/analytics",
-        icon: <BarChartOutlined />,
-        label: "İstatistikler",
-        roles: ["student"],
-      }
-    ]
   },
   {
     key: "/topic-matrix",
@@ -150,16 +114,17 @@ export const allMenuItems: MenuItemEx[] = [
   label: "Konu Takibi",
     roles: ["student", "coach"],
   },
-  {
-    key: "/student/exams",
-    icon: <TrophyOutlined />,
-    label: "Denemelerim",
-    roles: ["student"],
-  },
+  // Denemelerim sayfası kaldırıldı; deneme ekleme/görüntüleme StudyCalendar modalına taşındı
   {
     key: "/student/coach",
     icon: <BulbOutlined />,
     label: "Koçum",
+    roles: ["student"],
+  },
+  {
+    key: "/flashcards",
+    icon: <BookOutlined />,
+    label: "Hatırlatma Kartları",
     roles: ["student"],
   },
 

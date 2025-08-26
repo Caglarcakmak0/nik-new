@@ -18,13 +18,10 @@ import Goals from "./views/GoalsPage/Goals";
 import StudyTrackerSessions from "./views/StudyTrackerPage/subpages/StudyTrackerSessions";
 import StudyTrackerCalendar from "./views/StudyTrackerPage/subpages/StudyTrackerCalendar";
 import StudyTrackerRoom from "./views/StudyTrackerPage/subpages/StudyTrackerRoom";
-import StudyTrackerStatistics from "./views/StudyTrackerPage/subpages/StudyTrackerStatistics";
 import StudyTrackerCoachPrograms from "./views/StudyTrackerPage/subpages/StudyTrackerCoachPrograms";
 import StudyTrackerTimer from "./views/StudyTrackerPage/subpages/StudyTrackerTimer";
 import DailyPlanPage from "./views/StudyPlanPage/subpages/DailyPlanPage";
-import MonthlyPlanPage from "./views/StudyPlanPage/subpages/MonthlyPlanPage";
-import AnalyticsPlanPage from "./views/StudyPlanPage/subpages/AnalyticsPlanPage";
-import StudentExams from "./views/StudentExams/StudentExams";
+// Eski StudentExams bileşeni kaldırıldı (denemeler takvim modalında yönetiliyor)
 import TopicMatrix from "./views/TopicMatrix/TopicMatrix";
 import CoachDashboard from "./views/CoachDashboard/CoachDashboard";
 import { AppLayout } from "./components/layout";
@@ -41,6 +38,7 @@ import CoachDetail from "./views/Admin/CoachDetail";
 import AssignmentManager from "./views/Admin/AssignmentManager";
 import Statistics from "./views/Admin/Statistics";
 import ErrorPage from "./components/ErrorPage/ErrorPage";
+import FlashcardsPage from "./views/Flashcards/Flashcards";
 // Routing bileşeni (tema sağlayıcıdan bağımsız)
 function ThemedApp() {
   return (
@@ -86,14 +84,7 @@ function ThemedApp() {
                           }
                         />
                          {/* StudentProgramDetail route'u kaldırıldı */}
-                        <Route
-                          path="/student/exams"
-                          element={
-                            <ProtectedRoute allowedRoles={["student"]}>
-                              <StudentExams />
-                            </ProtectedRoute>
-                          }
-                        />
+                        {/* /student/exams route'u kaldırıldı - denemeler StudyCalendar DayModal üzerinden yönetiliyor */}
                         {/* Study Tracker nested pages */}
                         <Route
                           path="/study-tracker"
@@ -132,14 +123,6 @@ function ThemedApp() {
                           }
                         />
                         <Route
-                          path="/study-tracker/statistics"
-                          element={
-                            <ProtectedRoute allowedRoles={["student"]}>
-                              <StudyTrackerStatistics />
-                            </ProtectedRoute>
-                          }
-                        />
-                        <Route
                           path="/study-tracker/coach-programs"
                           element={
                             <ProtectedRoute allowedRoles={["student"]}>
@@ -149,29 +132,9 @@ function ThemedApp() {
                         />
                         <Route
                           path="/study-plan"
-                          element={<Navigate to="/study-plan/daily" replace />}
-                        />
-                        <Route
-                          path="/study-plan/daily"
                           element={
                             <ProtectedRoute allowedRoles={["student"]}>
                               <DailyPlanPage />
-                            </ProtectedRoute>
-                          }
-                        />
-                        <Route
-                          path="/study-plan/monthly"
-                          element={
-                            <ProtectedRoute allowedRoles={["student"]}>
-                              <MonthlyPlanPage />
-                            </ProtectedRoute>
-                          }
-                        />
-                        <Route
-                          path="/study-plan/analytics"
-                          element={
-                            <ProtectedRoute allowedRoles={["student"]}>
-                              <AnalyticsPlanPage />
                             </ProtectedRoute>
                           }
                         />
@@ -180,6 +143,14 @@ function ThemedApp() {
                           element={
                             <ProtectedRoute allowedRoles={["student", "coach"]}>
                               <TopicMatrix />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/flashcards"
+                          element={
+                            <ProtectedRoute allowedRoles={["student"]}>
+                              <FlashcardsPage />
                             </ProtectedRoute>
                           }
                         />

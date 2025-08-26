@@ -518,6 +518,43 @@ export const updateStudentExam = async (id: string, payload: Partial<{
   });
 };
 
+// ==== Reminders (Calendar Notes) ====
+export interface ReminderItem {
+  _id: string;
+  date: string; // ISO
+  text: string;
+  subject?: string;
+  isDone: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export const getReminders = async (params: { from?: string; to?: string } = {}) => {
+  const search = new URLSearchParams();
+  if (params.from) search.set('from', params.from);
+  if (params.to) search.set('to', params.to);
+  const qs = search.toString();
+  return apiRequest(`/reminders${qs ? `?${qs}` : ''}`);
+};
+
+export const createReminder = async (payload: { date: string; text: string; subject?: string }) => {
+  return apiRequest('/reminders', {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  });
+};
+
+export const updateReminder = async (id: string, payload: Partial<{ date: string; text: string; subject?: string; isDone: boolean }>) => {
+  return apiRequest(`/reminders/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(payload)
+  });
+};
+
+export const deleteReminder = async (id: string) => {
+  return apiRequest(`/reminders/${id}`, { method: 'DELETE' });
+};
+
 export const deleteStudentExam = async (id: string) => {
   return apiRequest(`/student/exams/${id}`, { method: 'DELETE' });
 };
@@ -721,12 +758,25 @@ export const getYouTubePlaylistItems = async (playlistId: string, params: { page
   return apiRequest(`/youtube/playlist-items?playlistId=${encodeURIComponent(playlistId)}${search.toString() ? `&${search.toString()}` : ''}`);
 };
 
+export const getYouTubeVideos = async (ids: string[]) => {
+  if (!ids || ids.length === 0) return { message: 'OK', data: { videos: [] } };
+  const qs = `?ids=${encodeURIComponent(ids.join(','))}`;
+  return apiRequest(`/youtube/videos${qs}`);
+};
+
 // === Coach Subject Preferences & Videos ===
 export const getCoachSubjectPreferences = async (studentId: string, subject?: string) => {
   const search = new URLSearchParams();
   search.set('studentId', studentId);
   if (subject) search.set('subject', subject);
   return apiRequest(`/coach/subject-preferences?${search.toString()}`);
+};
+
+// Student-facing: get the current user's saved subject preferences (playlist) - uses token to identify student
+export const getMySubjectPreferences = async (subject?: string) => {
+  const search = new URLSearchParams();
+  if (subject) search.set('subject', subject);
+  return apiRequest(`/daily-plans/subject-preferences${search.toString() ? `?${search.toString()}` : ''}`);
 };
 
 export const createCoachSubjectPreference = async (payload: { studentId: string; subject: string; teacherName?: string; playlistId: string; playlistTitle?: string; channelId?: string; channelTitle?: string }) => {
@@ -743,5 +793,51 @@ export const getCoachUsedVideos = async (studentId: string, subject: string, day
 
 export const patchCoachProgramSubjectVideos = async (planId: string, subjectIndex: number, payload: { add?: any[]; remove?: string[]; reorder?: { videoId: string; order: number }[] }) => {
   return apiRequest(`/coach/programs/${planId}/subjects/${subjectIndex}/videos`, { method: 'PATCH', body: JSON.stringify(payload) });
+};
+
+// ==== Flashcards (Topic-based Soru-Cevap Kartları) ====
+export type Flashcard = {
+  _id: string;
+  subject?: string;
+  topic: string;
+  question: string;
+  answer: string;
+  tags?: string[];
+  stats?: { timesShown: number; timesCorrect: number; difficulty: number; lastReviewedAt?: string; nextReviewAt?: string };
+  successRate?: number;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export const createFlashcard = async (payload: { subject?: string; topic: string; question: string; answer: string; tags?: string[]; difficulty?: number; }) => {
+  return apiRequest('/flashcards', { method: 'POST', body: JSON.stringify(payload) });
+};
+
+export const listFlashcards = async (params: { topic?: string; subject?: string; search?: string } = {}) => {
+  const search = new URLSearchParams();
+  if (params.topic) search.set('topic', params.topic);
+  if (params.subject) search.set('subject', params.subject);
+  if (params.search) search.set('search', params.search);
+  const qs = search.toString();
+  return apiRequest(`/flashcards${qs ? `?${qs}` : ''}`);
+};
+
+export const updateFlashcard = async (id: string, payload: { subject?: string; topic?: string; question?: string; answer?: string; tags?: string[]; difficulty?: number; isActive?: boolean }) => {
+  return apiRequest(`/flashcards/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
+};
+
+export const deleteFlashcard = async (id: string) => {
+  return apiRequest(`/flashcards/${id}`, { method: 'DELETE' });
+};
+
+export const getPracticeFlashcards = async (topic: string, limit = 10) => {
+  const search = new URLSearchParams();
+  search.set('topic', topic);
+  search.set('limit', String(limit));
+  return apiRequest(`/flashcards/practice/random?${search.toString()}`);
+};
+
+export const submitFlashcardPractice = async (id: string, correct: boolean) => {
+  return apiRequest(`/flashcards/${id}/practice`, { method: 'POST', body: JSON.stringify({ correct }) });
 };
 

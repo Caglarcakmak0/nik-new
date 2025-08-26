@@ -1,6 +1,6 @@
 import React from 'react';
 import { Typography } from 'antd';
-import { StudyCalendar } from '../bones';
+import StudyCalendar from '../../StudyCalendar';
 import '../StudyTracker.scss';
 
 const { Title } = Typography;

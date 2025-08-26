@@ -8,8 +8,27 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&display=swap" rel="stylesheet">
-    <script type="module" crossorigin src="/assets/index-7c9601f7.js"></script>
-    <link rel="stylesheet" href="/assets/index-809537f2.css">
+    <script>
+      (function() {
+        try {
+          var key = 'app-theme';
+            var stored = localStorage.getItem(key);
+            if (!stored) {
+              // fallback to system preference
+              stored = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            }
+            if (stored === 'dark') {
+              document.documentElement.classList.add('preload-theme');
+              document.body.classList.add('theme-dark');
+            }
+        } catch(e) { /* silent */ }
+      })();
+    </script>
+    <style>
+      body.theme-dark { background:#0d0f14; color:#e6e6e6; }
+    </style>
+    <script type="module" crossorigin src="/assets/index-4cf9cada.js"></script>
+    <link rel="stylesheet" href="/assets/index-dec98fd6.css">
   </head>
   <body>
     <div id="root"></div>

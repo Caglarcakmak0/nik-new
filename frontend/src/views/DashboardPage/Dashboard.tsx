@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import dayjs from 'dayjs';
 import { 
   Card, 
   Typography, 
@@ -16,9 +17,10 @@ import { useAuth } from '../../contexts/AuthContext';
 import { apiRequest, getLeaderboardUserStats } from '../../services/api';
 import type { LeaderboardUserStats } from '../../services/api';
 import { ActiveGoals } from './bones';
-import { StudyStatistics } from '../StudyTrackerPage/bones';
+const AdvancedAnalytics = React.lazy(() => import('../StudyPlanPage/bones/AdvancedAnalytics/AdvancedAnalytics'));
 import { AnalyticsMiniCard, AnalyticsRangeCard } from '../../components/feature/analytics';
 import type { AnalyticsRange } from '../../components/feature/analytics/AnalyticsRangeCard';
+import { useStudyStats, formatMinutes } from '../../hooks/useStudyStats';
 
 
 const { Title, Text } = Typography;
@@ -62,6 +64,14 @@ const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [userLeaderboard, setUserLeaderboard] = useState<LeaderboardUserStats | null>(null);
   const [range, setRange] = useState<AnalyticsRange>('weekly');
+  // Map dashboard analytics range to study stats period
+  const studyPeriodMap: Record<AnalyticsRange, 'today' | 'week' | 'month' | 'all'> = {
+    daily: 'today',
+    weekly: 'week',
+    monthly: 'month',
+    all: 'all'
+  };
+  const { stats: studyStats, totalTimeSeries, sessionCountSeries, qualitySeries, streakSeries } = useStudyStats(studyPeriodMap[range]);
   // No local computed streak; backend provides overview.currentStreak
 
   // Dashboard verilerini al
@@ -93,8 +103,9 @@ const Dashboard: React.FC = () => {
   }, []);
 
   // Spark verileri hazırla (mini card için). Boşsa [] döner.
-  const dailyTimeSeries = dashboardData ? Object.values((dashboardData as any).dailyDistribution || {}).map((d: any) => d.totalTime) : [];
-  const dailySessionSeries = dashboardData ? Object.values((dashboardData as any).dailyDistribution || {}).map((d: any) => d.sessionCount) : [];
+  // Replaced: we now derive series from study tracker statistics hook
+  const dailyTimeSeries = totalTimeSeries;
+  const dailySessionSeries = sessionCountSeries;
 
   return (
     <div>
@@ -121,37 +132,33 @@ const Dashboard: React.FC = () => {
             <AnalyticsRangeCard value={range} onChange={setRange} />
           </div>
           <Row gutter={16} style={{ marginBottom: 24 }}>
-            <Col xs={12} md={5} style={{ marginBottom: 12, marginRight: 12 }}>
+            <Col xs={12} md={6} style={{ marginBottom: 12 }}>
               <AnalyticsMiniCard
                 title="Toplam Çalışma Süresi"
-                subValue={(dashboardData.overview.totalStudyTime || 0) + ' dk'}
+                subValue={studyStats ? formatMinutes(studyStats.totalTime) : '0d'}
                 data={dailyTimeSeries}
-                color="#1890ff"
               />
             </Col>
-            <Col xs={12} md={5} style={{ marginBottom: 12, marginRight: 12 }}>
+            <Col xs={12} md={6} style={{ marginBottom: 12 }}>
               <AnalyticsMiniCard
                 title="Mevcut Seri"
-                subValue={dashboardData.overview.currentStreak + ' gün'}
-                data={dailySessionSeries}
-                color="#fa8c16"
+                subValue={(studyStats?.streak || 0) + ' gün'}
+                data={streakSeries}
                 positive
               />
             </Col>
-            <Col xs={12} md={5} style={{ marginBottom: 12, marginRight: 12 }}>
+            <Col xs={12} md={6} style={{ marginBottom: 12 }}>
               <AnalyticsMiniCard
-                title="Aktif Hedefler"
-                subValue={dashboardData.overview.activeGoals}
+                title="Oturum Sayısı"
+                subValue={studyStats?.sessionsCount || 0}
                 data={dailySessionSeries}
-                color="#722ed1"
               />
             </Col>
-            <Col xs={12} md={5} style={{ marginBottom: 12, marginRight: 12 }}>
+            <Col xs={12} md={6} style={{ marginBottom: 12 }}>
               <AnalyticsMiniCard
-                title="Profil Tamamlanma"
-                subValue={'%' + (dashboardData.overview.profileCompleteness || 0)}
-                data={dailyTimeSeries}
-                color="#52c41a"
+                title="Ortalama Kalite"
+                subValue={(studyStats?.averageQuality || 0) + '/5'}
+                data={qualitySeries}
                 positive
               />
             </Col>
@@ -192,26 +199,216 @@ const Dashboard: React.FC = () => {
                     </div>
                   </Card>
                   
-                  {/* Profil Tamamlama Card */}
+                  {/* Haftalık Hedef Card (profil tamamlanma yerine) */}
                   <Card style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                      <Text type="secondary">Profil Tamamlanma</Text>
-                      <br />
-                      <Progress 
-                        percent={dashboardData?.overview.profileCompleteness || 0}
-                        size="small"
-                        status={
-                          (dashboardData?.overview.profileCompleteness || 0) < 50 ? 'exception' : 'normal'
-                        }
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 8 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                        <Text type="secondary">Haftalık Hedef</Text>
+
+                      </div>
+                      <Progress
+                        percent={Math.round(studyStats?.weeklyProgress || 0)} 
+                        strokeColor={{
+                          '0%': '#ff4d4f',
+                          '50%': '#faad14',
+                          '100%': '#52c41a'
+                        }}
                       />
+                      <Text type="secondary" style={{ fontSize: 12 }}>
+                        {formatMinutes(studyStats?.totalTime || 0)} / {formatMinutes(studyStats?.weeklyGoal || 1200)}
+                      </Text>
                     </div>
                   </Card>
                 </Space>
               </div>
             </Col>
           </Row>
-          {/* Study Tracker İstatistikler Sekmesi */}
-          <StudyStatistics />
+          {/* Eski Study Plan Analytics içeriği - lazy yüklü */}
+          <React.Suspense fallback={<Card loading style={{ minHeight:180 }} />}> 
+            {dashboardData && (
+              <Card style={{ marginTop: 32 }} title="Detaylı Analizler">
+                <AdvancedAnalytics 
+                  plan={{
+                    _id: 'dash-proxy',
+                    date: new Date().toISOString(),
+                    title: 'Dashboard Analytics',
+                    subjects: [
+                      {
+                        subject: 'Matematik',
+                        targetQuestions: 40,
+                        targetTime: 120,
+                        topics: ['Denklemler', 'Fonksiyonlar'],
+                        priority: 1,
+                        completedQuestions: 38,
+                        correctAnswers: 32,
+                        wrongAnswers: 4,
+                        blankAnswers: 2,
+                        studyTime: 110,
+                        status: 'completed',
+                        sessionIds: [
+                          {
+                            _id: 'mat-1',
+                            subject: 'Matematik',
+                            duration: 55,
+                            date: dayjs().subtract(1,'day').toDate(),
+                            quality: 4.2,
+                            technique: 'Soru Çözümü',
+                            mood: 'focused',
+                            efficiency: 1.9,
+                            distractions: 1,
+                            questionStats: {
+                              targetQuestions: 20,
+                              correctAnswers: 17,
+                              wrongAnswers: 2,
+                              blankAnswers: 1,
+                              netScore: 16,
+                              completionRate: 95
+                            }
+                          },
+                          {
+                            _id: 'mat-2',
+                            subject: 'Matematik',
+                            duration: 55,
+                            date: dayjs().subtract(3,'day').toDate(),
+                            quality: 3.8,
+                            technique: 'Konu Tekrarı',
+                            mood: 'normal',
+                            efficiency: 1.6,
+                            distractions: 2,
+                            questionStats: {
+                              targetQuestions: 20,
+                              correctAnswers: 15,
+                              wrongAnswers: 3,
+                              blankAnswers: 2,
+                              netScore: 13.5,
+                              completionRate: 90
+                            }
+                          }
+                        ]
+                      },
+                      {
+                        subject: 'Fizik',
+                        targetQuestions: 20,
+                        targetTime: 60,
+                        topics: ['Kuvvet', 'Enerji'],
+                        priority: 2,
+                        completedQuestions: 18,
+                        correctAnswers: 12,
+                        wrongAnswers: 5,
+                        blankAnswers: 1,
+                        studyTime: 55,
+                        status: 'completed',
+                        sessionIds: [
+                          {
+                            _id: 'fiz-1',
+                            subject: 'Fizik',
+                            duration: 30,
+                            date: dayjs().subtract(2,'day').toDate(),
+                            quality: 4.5,
+                            technique: 'Video',
+                            mood: 'focused',
+                            efficiency: 1.2,
+                            distractions: 0,
+                            questionStats: {
+                              targetQuestions: 10,
+                              correctAnswers: 7,
+                              wrongAnswers: 2,
+                              blankAnswers: 1,
+                              netScore: 6.5,
+                              completionRate: 90
+                            }
+                          },
+                          {
+                            _id: 'fiz-2',
+                            subject: 'Fizik',
+                            duration: 25,
+                            date: dayjs().subtract(4,'day').toDate(),
+                            quality: 3.9,
+                            technique: 'Soru Çözümü',
+                            mood: 'normal',
+                            efficiency: 1.1,
+                            distractions: 1,
+                            questionStats: {
+                              targetQuestions: 10,
+                              correctAnswers: 5,
+                              wrongAnswers: 4,
+                              blankAnswers: 1,
+                              netScore: 3.5,
+                              completionRate: 80
+                            }
+                          }
+                        ]
+                      },
+                      {
+                        subject: 'Kimya',
+                        targetQuestions: 15,
+                        targetTime: 45,
+                        topics: ['Atom', 'Molekül'],
+                        priority: 3,
+                        completedQuestions: 14,
+                        correctAnswers: 10,
+                        wrongAnswers: 3,
+                        blankAnswers: 1,
+                        studyTime: 40,
+                        status: 'completed',
+                        sessionIds: [
+                          {
+                            _id: 'kim-1',
+                            subject: 'Kimya',
+                            duration: 20,
+                            date: dayjs().subtract(1,'day').toDate(),
+                            quality: 4.0,
+                            technique: 'Konu Tekrarı',
+                            mood: 'good',
+                            efficiency: 1.3,
+                            distractions: 0,
+                            questionStats: {
+                              targetQuestions: 8,
+                              correctAnswers: 6,
+                              wrongAnswers: 1,
+                              blankAnswers: 1,
+                              netScore: 5.5,
+                              completionRate: 87
+                            }
+                          },
+                          {
+                            _id: 'kim-2',
+                            subject: 'Kimya',
+                            duration: 20,
+                            date: dayjs().subtract(5,'day').toDate(),
+                            quality: 3.7,
+                            technique: 'Soru Çözümü',
+                            mood: 'normal',
+                            efficiency: 1.1,
+                            distractions: 1,
+                            questionStats: {
+                              targetQuestions: 7,
+                              correctAnswers: 4,
+                              wrongAnswers: 2,
+                              blankAnswers: 1,
+                              netScore: 3,
+                              completionRate: 85
+                            }
+                          }
+                        ]
+                      }
+                    ],
+                    stats: {
+                      totalTargetQuestions: 75,
+                      totalCompletedQuestions: 70,
+                      totalTargetTime: 225,
+                      totalStudyTime: 205,
+                      completionRate: 93,
+                      netScore: 42.5,
+                      successRate: 75
+                    }
+                  } as any}
+                  selectedDate={dayjs() as any}
+                  onRefresh={() => { /* dashboard refresh */ fetchDashboardData(); }}
+                />
+              </Card>
+            )}
+          </React.Suspense>
         </Space>
       )}
     </div>

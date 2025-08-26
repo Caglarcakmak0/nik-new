@@ -1,0 +1,83 @@
+@import '../../../../styles/variables';
+@import '../../../../styles/mixins';
+
+.calendar-view {
+  // Ant Design Calendar date cell styling overrides
+  .ant-picker-calendar {
+    .ant-picker-calendar-date {
+      position: relative;
+      
+      // Date value area - tarihleri sağa, butonu sola
+      .ant-picker-calendar-date-value {
+        position: relative;
+        display: flex;
+        justify-content: flex-end; // Tarihleri sağa hizala
+        align-items: flex-start;
+        padding: 2px;
+        
+        // Reminder button positioned in top-left
+        .calendar-reminder-btn {
+          position: absolute !important;
+          top: 2px !important;
+          left: 2px !important; // Sol tarafa
+          width: 18px !important;
+          height: 18px !important;
+          padding: 0 !important;
+          min-width: 18px !important;
+          border-radius: 4px !important;
+          z-index: 15 !important;
+          border: none !important;
+          
+          // Theme-based styling
+          &[data-theme="light"] {
+            background: #e2e8f0 !important;
+            color: #334155 !important;
+          }
+          
+          &[data-theme="dark"] {
+            background: #334155 !important;
+            color: #e2e8f0 !important;
+          }
+          
+          // Icon styling
+          .anticon {
+            font-size: 12px !important;
+            color: inherit !important;
+          }
+
+          // Hover effects
+          &:hover {
+            opacity: 0.8 !important;
+            transform: scale(1.1) !important;
+          }
+          
+          &:active {
+            transform: scale(0.95) !important;
+          }
+        }
+      }
+
+      // Content area - buton için yer bırak
+      .ant-picker-calendar-date-content {
+        position: relative;
+        
+        .calendar-day-content {
+          padding-left: 24px; // Buton için sol tarafta yer bırak
+        }
+      }
+    }
+  }
+}
+
+// Calendar cell content styling
+.calendar-day-content {
+  position: relative;
+  min-height: 54px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  }
+}

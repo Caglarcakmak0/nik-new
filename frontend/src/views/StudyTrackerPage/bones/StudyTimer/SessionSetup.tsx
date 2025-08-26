@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import './SessionSetup.scss';
 import { 
   Modal, 
   Form, 
@@ -184,7 +185,6 @@ const SessionSetup: React.FC<SessionSetupProps> = ({
       });
     } else {
       // Koç modunda sadece mola ve oturum sayısını güncelle, süre koçtan geliyor
-      const defaults = TECHNIQUE_INFO[technique as keyof typeof TECHNIQUE_INFO].default;
       if (technique === 'Pomodoro') {
         // Varsayılan şablon 25/5
         form.setFieldsValue({ studyDuration: 25, breakDuration: 5, targetSessions: 1 });

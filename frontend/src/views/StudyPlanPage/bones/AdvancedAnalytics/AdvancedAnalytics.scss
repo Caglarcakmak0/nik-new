@@ -1,6 +1,6 @@
 // Minimalist & Eye-Friendly Analytics Design
 .advanced-analytics-modern {
-  background: #fafbfc;
+  background: transparent;
   min-height: 100vh;
   padding: 20px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -145,7 +145,7 @@
               .ant-statistic-content-value {
                 font-size: 20px;
                 font-weight: 600;
-                color: #1f2937;
+                color: #1f2937; // light theme default
                 line-height: 1.2;
               }
             }
@@ -263,6 +263,46 @@
 
       .chart-content {
         padding: 16px;
+
+        // Yeni grid yerleşimi: grafikler yan yana (responsive)
+        .chart-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+          gap: 20px;
+          align-items: stretch;
+        }
+
+        .chart-item {
+          background: #fafbfc;
+          border: 1px solid #f1f5f9;
+          border-radius: 12px;
+          padding: 12px 12px 4px;
+          display: flex;
+          flex-direction: column;
+          position: relative;
+          min-height: 280px;
+          transition: background .2s ease, box-shadow .2s ease, border-color .2s ease;
+
+          &:hover {
+            background: #ffffff;
+            border-color: #e2e8f0;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+          }
+
+          &.chart-item--large {
+            grid-column: span 2;
+            min-height: 320px;
+
+            @media (max-width: 1200px) {
+              grid-column: span 1;
+            }
+          }
+
+          .recharts-responsive-container {
+            flex: 1;
+          }
+
+        }
 
         .chart-placeholder {
           height: 200px;
@@ -397,6 +437,7 @@
         gap: 6px;
         border-bottom: 1px solid #f1f5f9;
         background: #f8fafc;
+        border-radius: 8px;
 
         .subject-icon {
           color: #6b7280;
@@ -408,6 +449,13 @@
 
         .subject-title {
           flex: 1;
+        }
+
+        // Dark mode override
+        @at-root .theme-dark .advanced-analytics-modern .subject-header {
+          background: #1f2937 !important;
+          border-bottom-color: #374151 !important;
+        }
           font-size: 11px;
           font-weight: 600;
           color: #1f2937;
@@ -484,12 +532,18 @@
               color: #6b7280;
               text-transform: uppercase;
               letter-spacing: 0.1px;
+              @media (prefers-color-scheme: dark) {
+                color: #fff;
+              }
             }
 
             .progress-value {
               font-size: 9px;
               font-weight: 600;
               color: #1f2937;
+              @media (prefers-color-scheme: dark) {
+                color: #fff;
+              }
             }
           }
 
@@ -945,13 +999,12 @@
       }
     }
   }
-}
 
 // Light Mode Support
 .theme-light {
   .advanced-analytics-modern {
-    background: #fafbfc;
-    
+    background: transparent;
+
     .analytics-header {
       background: #ffffff;
       border-color: #e8eaed;
@@ -1172,10 +1225,30 @@
   }
 }
 
+/* Ensure progress title/value colors for each theme */
+.theme-light .advanced-analytics-modern {
+  .progress-title {
+    color: #6b7280 !important; /* muted gray for labels in light theme */
+  }
+  .progress-value {
+    color: #1f2937 !important; /* dark text for values in light theme */
+  }
+}
+
+/* Dark theme overrides for progress labels/values */
+.theme-dark .advanced-analytics-modern {
+  .progress-title {
+    color: #d1d5db !important; /* lighter gray label in dark theme */
+  }
+  .progress-value {
+    color: #f9fafb !important; /* white-ish value text in dark theme */
+  }
+}
+
 // Dark Mode Support
  .theme-dark {
   .advanced-analytics-modern {
-    background: #111827;
+    background: transparent;
      
      .analytics-header {
       background: #1f2937;
@@ -1223,6 +1296,17 @@
       background: #1f2937;
       border-color: #374151;
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+
+      // Dark charts
+      .chart-item {
+        background: #23272f !important;
+        border-color: #363b44 !important;
+        &:hover {
+          background: #23272f !important;
+          border-color: #505463 !important;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.4) !important;
+        }
+      }
 
       .metric-content .metric-details .ant-statistic {
         .ant-statistic-title {
@@ -1469,6 +1553,15 @@
 
     .detailed-section .main-chart-card .chart-content .chart-placeholder {
       height: 150px;
+    }
+  }
+}
+
+// Explicit dark theme overrides for statistic value colors
+.theme-dark {
+  .advanced-analytics-modern {
+    .ant-statistic-content-value {
+      color: #ffffff !important;
     }
   }
 }

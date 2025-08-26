@@ -1,27 +1,13 @@
 import React, { useRef, useState } from 'react';
-import { Layout, Menu, Button, Avatar, Typography, Dropdown, Badge, Tooltip, Segmented, List } from 'antd';
+import { Layout, Menu, Button, Avatar, Typography, Dropdown, Badge, Tooltip, Switch } from 'antd';
 import {
-  AimOutlined,
-  SettingOutlined,
-  LogoutOutlined,
-  MenuUnfoldOutlined,
-  MenuFoldOutlined,
-  BellOutlined,
-  UserOutlined,
-  SunOutlined,
-  MoonOutlined,
-  DashboardOutlined,
-  BookOutlined,
-  TrophyOutlined,
-  BarChartOutlined,
-  TeamOutlined,
-  CalendarOutlined
+  AimOutlined, SettingOutlined, LogoutOutlined, MenuUnfoldOutlined, MenuFoldOutlined, BellOutlined, UserOutlined, SunOutlined, MoonOutlined
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useTheme } from '../../../contexts/ThemeContext';
-import { getPageTitle, getRouteMenuByRole } from '../../../routes/routeMenu';
-import { toAbsoluteUrl, getNotifications, markNotificationRead, markAllNotificationsRead, AppNotification } from '../../../services/api';
+import { getRouteMenuByRole } from '../../../routes/routeMenu';
+import { toAbsoluteUrl, getNotifications } from '../../../services/api';
 import { useDesign } from '../../../contexts/DesignContext';
 import OnboardingTour from '../../common/OnboardingTour';
 import logoImage from '../../../assets/logoNik.png'; // NİK logo dosyası
@@ -49,20 +35,14 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
 
   // Turu yeniden başlatmak için state (menüden tetiklenecek)
   const [forceOpenKey, setForceOpenKey] = useState<number>(0);
-  const [notifications, setNotifications] = useState<AppNotification[]>([]);
-  const [notifHasMore, setNotifHasMore] = useState<boolean>(false);
-  const [notifNextCursor, setNotifNextCursor] = useState<string | null | undefined>(null);
-  const [notifLoading, setNotifLoading] = useState<boolean>(false);
   const [unreadCount, setUnreadCount] = useState<number>(0);
   const [notificationCenterVisible, setNotificationCenterVisible] = useState(false);
-  const [loadingNotifications, setLoadingNotifications] = useState(false);
   const { themeMode, isDark, toggleTheme } = useTheme();
-  const { designMode, setDesignMode } = useDesign();
-  const isDevEnv = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-  
-  // Get role-based menu items
+  const { designMode } = useDesign();
   const menuItems = getRouteMenuByRole(user?.role);
   const planLabel = user?.role === 'student' ? ((user?.plan?.tier as any) === 'premium' ? 'Premium' : 'Free') : null;
+  const isDevEnv = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+  const [globalMock, setGlobalMock] = useState(false);
 
   // Menu click handler
   const handleMenuClick = ({ key }: { key: string }) => {
@@ -135,31 +115,12 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   }, [location.pathname]);
 
   // Bildirimleri yükle
-  const loadNotifications = async (unreadOnly = false, cursor?: string) => {
+  const loadNotifications = async (unreadOnly = false) => {
     try {
-      setLoadingNotifications(true);
-      const response = await getNotifications({ 
-        unreadOnly, 
-        limit: 10, 
-        cursor 
-      });
-      
-      if (cursor) {
-        setNotifications(prev => [...prev, ...response.data]);
-      } else {
-        setNotifications(response.data);
-      }
-      
-      setNotifHasMore(response.paging.hasMore);
-      setNotifNextCursor(response.paging.nextCursor || null);
-      
-      // Okunmamış sayısını güncelle
-      const unread = response.data.filter(n => !n.readAt).length;
-      setUnreadCount(unread);
+  const response = await getNotifications({ unreadOnly, limit: 10 });
+  setUnreadCount(response.data.filter(n => !n.readAt).length);
     } catch (error) {
       console.error('Bildirimler yüklenemedi:', error);
-    } finally {
-      setLoadingNotifications(false);
     }
   };
 
@@ -292,6 +253,20 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
               
           {/* Sağ taraf - User info */}
           <div className="header-right">
+            <div style={{ display:'flex', alignItems:'center', gap:8, marginRight:12 }}>
+              <Tooltip title={globalMock ? 'Mock veri aktif - kapatmak için tıkla' : 'Mock veriye geç'}>
+                <Switch
+                  size="small"
+                  checked={globalMock}
+                  onChange={(v) => {
+                    setGlobalMock(v);
+                    // Uygulama genelinde dinlemek için custom event
+                    window.dispatchEvent(new CustomEvent('global-mock-mode', { detail: { enabled: v } }));
+                  }}
+                />
+              </Tooltip>
+              <Text style={{ fontSize:11, opacity:0.75 }}>{globalMock ? 'MOCK' : 'REAL'}</Text>
+            </div>
             {/* Theme Toggle */}
             <Tooltip title={getThemeTooltip()}>
               <Button

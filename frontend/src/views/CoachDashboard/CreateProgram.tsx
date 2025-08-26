@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
-import { Card, Form, DatePicker, Select, Button, InputNumber, Input, Space, message, Row, Col, Tooltip, Skeleton, Typography, Switch, Divider, List, Segmented, Slider, theme } from 'antd';
+import { Card, Form, DatePicker, Select, Button, InputNumber, Input, Space, message, Row, Col, Tooltip, Skeleton, Typography, Switch, Divider, List, Segmented, Slider } from 'antd';
 import { PlusCircleOutlined } from '@ant-design/icons';
 import dayjs, { Dayjs } from 'dayjs';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -9,6 +9,8 @@ import CreateProgramTour from '../../components/tour/CoachTour/CreateProgramTour
 import './CreateProgram.scss';
 
 type AssignedVideo = {
+  // Lokal benzersiz kimlik (aynı video birden çok kez eklenebilsin)
+  uid?: string;
   videoId: string;
   playlistId?: string;
   title: string;
@@ -59,7 +61,7 @@ const CreateProgram: React.FC = () => {
   const [hideUsed, setHideUsed] = useState<boolean>(false);
   const videoScrollRef = useRef<HTMLDivElement | null>(null);
   const [creatingPreference, setCreatingPreference] = useState(false);
-  const { token } = theme.useToken();
+  // const { token } = theme.useToken(); // (kaldırıldı: şimdilik kullanılmıyor)
   // Tema algısı: body üzerinde theme-dark sınıfını dinle (daha tutarlı)
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => document.body.classList.contains('theme-dark'));
   useEffect(() => {
@@ -125,11 +127,10 @@ const CreateProgram: React.FC = () => {
     }
     const subjectEntry = current[idx];
     subjectEntry.videos = subjectEntry.videos || [];
-    if (subjectEntry.videos.some(v => v.videoId === video.id)) {
-      message.info('Bu video zaten eklendi');
-      return;
-    }
+    // Aynı video tekrar eklenebilir; her ekleme ayrı uid alır
+    const genUid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,8);
     const newVid: AssignedVideo = {
+      uid: genUid(),
       videoId: video.id,
       playlistId: manualPlaylistId || studentPreference?.playlistId,
       title: video.title,
@@ -145,6 +146,16 @@ const CreateProgram: React.FC = () => {
       subjectEntry.duration = Math.ceil(totalSeconds / 60) || subjectEntry.duration;
     }
     current[idx] = { ...subjectEntry };
+    form.setFieldsValue({ subjects: [...current] });
+  };
+
+  const removeVideoFromSubject = (subjectIndex: number, uid: string) => {
+    const current: SubjectForm[] = form.getFieldValue('subjects') || [];
+    if (!current[subjectIndex]) return;
+    const vids = (current[subjectIndex].videos || []).filter(v => v.uid !== uid);
+    // order değerlerini yeniden sırala
+    vids.forEach((v, i) => { v.order = i; });
+    current[subjectIndex].videos = vids;
     form.setFieldsValue({ subjects: [...current] });
   };
 
@@ -176,10 +187,18 @@ const CreateProgram: React.FC = () => {
   const subjectVideoMinutes = (index: number) => {
     const list: SubjectForm[] = form.getFieldValue('subjects') || [];
     const vids = list[index]?.videos || [];
-    return Math.ceil(vids.reduce((s, v) => s + (v.durationSeconds || 0), 0) / 60);
+  return Math.ceil(vids.reduce((s, v) => s + (v.durationSeconds || 0), 0) / 60);
   };
 
   const durationPresets = [25, 40, 60, 90];
+
+  const formatMinutesToHours = (mins?: number | null) => {
+    const m = Number(mins) || 0;
+    if (m < 60) return `${m} dk`;
+    const hrs = Math.floor(m / 60);
+    const rem = m % 60;
+    return rem === 0 ? `${hrs} saat` : `${hrs} saat ${rem} dk`;
+  };
 
 
   useEffect(() => {
@@ -380,17 +399,17 @@ const CreateProgram: React.FC = () => {
                               min={15}
                               max={480}
                               step={15}
-                              tooltip={{ formatter: (v)=> v + ' dk' }}
+                tooltip={{ formatter: (v)=> formatMinutesToHours(Number(v)) }}
                               value={subjects[name]?.duration || 60}
                               onChange={(v)=> setDuration(name, Number(v)) }
                               className={durationPresets.includes(subjects[name]?.duration) ? 'is-preset' : 'is-custom'}
                             />
                             <div className="duration-numbers">
-                              <span className="duration-current">{subjects[name]?.duration || 0} dk</span>
-                              <span className="duration-videos">Video Toplamı: {subjectVideoMinutes(name)} dk</span>
+                <span className="duration-current">{formatMinutesToHours(subjects[name]?.duration)}</span>
+                <span className="duration-videos">Video Toplamı: {formatMinutesToHours(subjectVideoMinutes(name))}</span>
                               {subjects[name]?.duration ? (
                                 <span className="duration-diff">
-                                  {(subjectVideoMinutes(name) - (subjects[name]?.duration||0)) === 0 ? 'Tam uyum' : (subjectVideoMinutes(name) > (subjects[name]?.duration||0) ? '+' : '') + (subjectVideoMinutes(name) - (subjects[name]?.duration||0)) + ' dk'}
+                  {(subjectVideoMinutes(name) - (subjects[name]?.duration||0)) === 0 ? 'Tam uyum' : (subjectVideoMinutes(name) > (subjects[name]?.duration||0) ? '+' : '') + formatMinutesToHours(Math.abs(subjectVideoMinutes(name) - (subjects[name]?.duration||0))).replace(' dk','')}
                                 </span>
                               ) : null}
                             </div>
@@ -400,13 +419,17 @@ const CreateProgram: React.FC = () => {
                       {subjects[name]?.videos && subjects[name].videos!.length > 0 && (
                         <Card size="small" style={{ background:'#f5f5f5' }} title={<span style={{ fontSize:12 }}>Atanan Videolar ({subjects[name].videos!.length})</span>} bodyStyle={{ padding:8 }}>
                           <div style={{ display:'flex', flexDirection:'column', gap:4 }}>
-                            {subjects[name].videos!.sort((a,b)=> (a.order||0)-(b.order||0)).map(v => (
-                              <div key={v.videoId} style={{ display:'flex', justifyContent:'space-between', gap:8, alignItems:'center', fontSize:11 }}>
-                                <span style={{ flex:1, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{v.title}</span>
-                                <span style={{ color:'#888' }}>{Math.ceil((v.durationSeconds||0)/60)} dk</span>
-                              </div>
-                            ))}
+                            {subjects[name].videos!
+                              .sort((a,b)=> (a.order||0)-(b.order||0))
+                              .map(v => (
+                                <div key={v.uid || v.videoId + String(v.order)} style={{ display:'flex', gap:8, alignItems:'center', fontSize:11 }}>
+                                  <span style={{ flex:1, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{v.title}</span>
+                                  <span style={{ color:'#888' }}>{Math.ceil((v.durationSeconds||0)/60)} dk</span>
+                                  <Button size="small" danger type="link" style={{ padding:0 }} onClick={()=> removeVideoFromSubject(name, v.uid || '')}>Sil</Button>
+                                </div>
+                              ))}
                           </div>
+                          <div style={{ marginTop:4, fontSize:10, color:'#888' }}>Aynı video birden çok kez eklenebilir.</div>
                         </Card>
                       )}
                       <div>

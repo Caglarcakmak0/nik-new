@@ -1,0 +1,1 @@
+export const chartPalette = ['#1890ff', '#52c41a', '#faad14', '#eb2f96', '#13c2c2', '#722ed1', '#f5222d', '#a0d911'];

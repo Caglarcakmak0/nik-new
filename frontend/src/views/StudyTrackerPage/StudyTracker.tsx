@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { Typography, Space, Card, Button } from 'antd';
 import { useNavigate } from 'react-router-dom';
-import { HistoryOutlined, CalendarOutlined, TrophyOutlined, BarChartOutlined, UserOutlined } from '@ant-design/icons';
+import { HistoryOutlined, CalendarOutlined, TrophyOutlined, UserOutlined } from '@ant-design/icons';
 import { useAuth } from '../../contexts/AuthContext';
 import './StudyTracker.scss';
 import dayjs from "dayjs";  
@@ -31,7 +31,6 @@ const StudyTracker: React.FC = () => {
             <Button icon={<HistoryOutlined />} onClick={() => navigate('/study-tracker/sessions')}>Oturum Geçmişi</Button>
             <Button icon={<CalendarOutlined />} onClick={() => navigate('/study-tracker/calendar')}>Takvim</Button>
             <Button icon={<TrophyOutlined />} onClick={() => navigate('/study-tracker/study-room')}>Çalışma Odası</Button>
-            <Button icon={<BarChartOutlined />} onClick={() => navigate('/study-tracker/statistics')}>İstatistikler</Button>
             <Button icon={<UserOutlined />} onClick={() => navigate('/study-tracker/coach-programs')}>Günlük Programlar</Button>
           </Space>
         </Card>

@@ -18,10 +18,8 @@ import { useLocation } from 'react-router-dom';
 import { useAuth, useIsStudent, useIsCoach } from '../../contexts/AuthContext';
 import { apiRequest } from '../../services/api';
 import DailyTable from './bones/DailyTable/DailyTable';
-import MonthlyCalendar from './bones/MonthlyCalendar/MonthlyCalendar';
 
 import CreatePlanModal from './bones/CreatePlan/CreatePlanModal';
-import AdvancedAnalytics from './bones/AdvancedAnalytics/AdvancedAnalytics';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import StudyPlanTour from '../../components/tour/StudentTour/StudyPlanTour';
@@ -70,11 +68,7 @@ interface DailyPlan {
   dailyGoal?: string;
 }
 
-interface StudyPlanProps {
-  initialTab?: string; // 'daily' | 'monthly' | 'analytics'
-}
-
-const StudyPlan: React.FC<StudyPlanProps> = ({ initialTab }) => {
+const StudyPlan: React.FC = () => {
   const { user: _user } = useAuth();
   const isFree = (_user?.plan?.tier as any) === 'free';
   const isStudent = useIsStudent();
@@ -82,7 +76,7 @@ const StudyPlan: React.FC<StudyPlanProps> = ({ initialTab }) => {
   const [loading, setLoading] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Dayjs>(dayjs());
   const [currentPlan, setCurrentPlan] = useState<DailyPlan | null>(null);
-  const [activeTab, setActiveTab] = useState<string>(initialTab || 'daily');
+  const [activeTab, setActiveTab] = useState<string>('daily');
   const location = useLocation();
   const [showCreateModal, setShowCreateModal] = useState(false);
 
@@ -91,7 +85,7 @@ const StudyPlan: React.FC<StudyPlanProps> = ({ initialTab }) => {
   const datePickerRef = useRef<HTMLDivElement | null>(null);
   const tabsRef = useRef<HTMLDivElement | null>(null);
   const dailyTableRef = useRef<HTMLDivElement | null>(null);
-  const monthlyCalendarRef = useRef<HTMLDivElement | null>(null);
+  // monthly calendar removed
 
   // Günlük plan getir (GERÇEK API)
   const fetchDailyPlan = async (date: Dayjs) => {
@@ -192,20 +186,14 @@ const StudyPlan: React.FC<StudyPlanProps> = ({ initialTab }) => {
   // URL'ye göre tab senkronize et (ayrı sayfalar)
   useEffect(() => {
     const path = location.pathname;
-    if (path.startsWith('/study-plan/')) {
-      const seg = path.split('/')[2];
-      if (seg && ['daily','monthly','analytics'].includes(seg)) {
-        setActiveTab(seg);
-      }
-    } else if (path === '/study-plan') {
+    if (path === '/study-plan' || path.startsWith('/study-plan/daily')) {
       if (activeTab !== 'daily') setActiveTab('daily');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname]);
 
   useEffect(() => {
-    const base = '/study-plan';
-    const target = activeTab === 'daily' ? `${base}/daily` : `${base}/${activeTab}`;
+    const target = '/study-plan/daily';
     if (window.location.pathname !== target) {
       window.history.replaceState({}, '', target);
     }
@@ -278,22 +266,8 @@ const StudyPlan: React.FC<StudyPlanProps> = ({ initialTab }) => {
                 />
               </div>
             )}
-            {activeTab === 'monthly' && (
-              <div ref={monthlyCalendarRef as any} className="stagger-item">
-                <MonthlyCalendar
-                  selectedDate={selectedDate}
-                  onDateSelect={setSelectedDate}
-                  currentPlan={currentPlan}
-                />
-              </div>
-            )}
-            {activeTab === 'analytics' && (
-              <AdvancedAnalytics
-                plan={currentPlan}
-                selectedDate={selectedDate}
-                onRefresh={() => fetchDailyPlan(selectedDate)}
-              />
-            )}
+            {/* Monthly calendar removed; merged into Study Tracker */}
+            {/* Analytics sekmesi kaldırıldı; ilgili içerik Dashboard'a taşındı */}
           </div>
         ) : (
           // Plan yok - Boş durum
@@ -367,7 +341,7 @@ const StudyPlan: React.FC<StudyPlanProps> = ({ initialTab }) => {
           getHeaderEl: () => (headerRef.current as any) || null,
           getDatePickerEl: () => (datePickerRef.current as any) || null,
           getDailyTabEl: () => document.getElementById('tab-daily-label') as HTMLElement | null,
-          getMonthlyTabEl: () => document.getElementById('tab-monthly-label') as HTMLElement | null,
+          getMonthlyTabEl: () => null,
         }}
       />
     </div>

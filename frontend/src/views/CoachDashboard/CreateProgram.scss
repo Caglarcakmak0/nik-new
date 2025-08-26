@@ -131,6 +131,8 @@
   .video-item.dark { background:#1e2530; border:1px solid #2e3a47; }
   .video-item.dark:hover { background:#273141; border-color:#3a4856; box-shadow:0 2px 6px -1px rgba(0,0,0,0.55); }
   .video-item.is-used { opacity:.55; }
+  /* Previously added videos should have an orange border (orange-500) */
+  .video-item.is-used { border-color: #f97316 !important; box-shadow: 0 4px 14px rgba(249,115,22,0.12); }
   .video-item.dark .video-title { color:#f1f5f9 !important; }
   .video-item.light .video-title { color:#1e293b !important; }
   .video-item.dark .video-duration-badge { background:rgba(0,0,0,0.55); }

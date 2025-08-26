@@ -1,0 +1,14 @@
+.flashcards-page { padding: 8px; }
+.flashcards-side .ant-card { margin-bottom: 12px; }
+.flashcard-item { height: 100%; display:flex; flex-direction:column; }
+.flashcard-item .markdown-answer { font-size: 12px; line-height:1.4; max-height:140px; overflow:auto; }
+.flashcard-item .meta-row { margin-top:8px; display:flex; justify-content:space-between; font-size:11px; opacity:0.75; }
+.practice-area { max-width:720px; margin:0 auto; }
+.practice-question { margin-top:12px; }
+.practice-answer-box { min-height:120px; background:rgba(255,255,255,0.04); border:1px dashed #555; padding:12px; border-radius:8px; display:flex; align-items:center; justify-content:center; }
+.practice-answer-box .hidden-answer { opacity:0.6; font-size:13px; display:flex; align-items:center; gap:6px; }
+.practice-answer-box .markdown-answer { width:100%; max-height:260px; overflow:auto; }
+.practice-answer-box .markdown-answer.reveal { animation:fadeIn .3s ease; }
+.practice-head { display:flex; gap:8px; margin:8px 0; }
+.practice-footer { margin-top:12px; font-size:12px; opacity:.6; text-align:right; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(4px);} to { opacity:1; transform:translateY(0);} }

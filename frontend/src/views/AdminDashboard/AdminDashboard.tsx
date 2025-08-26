@@ -153,7 +153,43 @@ const AdminDashboard: React.FC = () => {
   // Paralel istek çakışmalarını iptal etmek için abort controller referansları
   const usersAbortRef = useRef<AbortController | null>(null);
 
-  // Users table columns (memoize: state setter'lar stable olduğundan sadece bağımlılıklar değişince yeniden oluşur)
+  // fetchUsers tanımı userColumns'tan önce olmalı (TDZ hatasını önlemek için userColumns aşağı taşındı)
+
+  const fetchUsers = useCallback(async (opts?: { page?: number; pageSize?: number }) => {
+    try {
+      // Mevcut isteği iptal et
+      if (usersAbortRef.current) usersAbortRef.current.abort();
+      const controller = new AbortController();
+      usersAbortRef.current = controller;
+      setLoading(true);
+      const page = opts?.page ?? usersPagination.current;
+      const pageSize = opts?.pageSize ?? usersPagination.pageSize;
+  const res = await getAdminUsers({ q: searchText || undefined, role: roleFilter || undefined, page, limit: pageSize });
+      const items = Array.isArray(res?.data) ? res.data : (res?.data?.data || []);
+      const pagination = res?.pagination || res?.data?.pagination || undefined;
+      const finalList: User[] = items.map((u: any) => ({
+        _id: u._id,
+        firstName: u.firstName || '',
+        lastName: u.lastName || '',
+        email: u.email,
+        role: u.role,
+        profileCompleteness: u.profileCompleteness ?? 0,
+        lastActivity: u.lastActivity,
+        status: u.status,
+        registrationDate: u.registrationDate,
+      }));
+      setUsers(finalList);
+      setUsersTotal(pagination?.total ?? finalList.length);
+      setUsersPagination({ current: page, pageSize });
+    } catch (e: any) {
+      if (e?.name === 'AbortError') return; // iptal edildi
+      message.error(e?.message || 'Kullanıcılar yüklenemedi');
+    } finally {
+      setLoading(false);
+    }
+  }, [roleFilter, searchText, usersPagination.current, usersPagination.pageSize]);
+
+  // Users table columns (fetchUsers artık tanımlandıktan sonra)
   const userColumns: ColumnsType<User> = useMemo(() => [
     {
       title: 'Kullanıcı',
@@ -163,11 +199,11 @@ const AdminDashboard: React.FC = () => {
           <Avatar style={{ backgroundColor: getRoleInfo(record.role).color === 'red' ? '#ff4d4f' : getRoleInfo(record.role).color === 'blue' ? '#1890ff' : '#52c41a' }}>
             {record.firstName.charAt(0)}
           </Avatar>
-            <div>
-              <Text strong>{record.firstName} {record.lastName}</Text>
-              <br />
-              <Text type="secondary" style={{ fontSize: '12px' }}>{record.email}</Text>
-            </div>
+          <div>
+            <Text strong>{record.firstName} {record.lastName}</Text>
+            <br />
+            <Text type="secondary" style={{ fontSize: '12px' }}>{record.email}</Text>
+          </div>
         </div>
       )
     },
@@ -278,40 +314,6 @@ const AdminDashboard: React.FC = () => {
       )
     }
   ], [editForm, fetchUsers, usersPagination.current, usersPagination.pageSize]);
-
-  const fetchUsers = useCallback(async (opts?: { page?: number; pageSize?: number }) => {
-    try {
-      // Mevcut isteği iptal et
-      if (usersAbortRef.current) usersAbortRef.current.abort();
-      const controller = new AbortController();
-      usersAbortRef.current = controller;
-      setLoading(true);
-      const page = opts?.page ?? usersPagination.current;
-      const pageSize = opts?.pageSize ?? usersPagination.pageSize;
-      const res = await getAdminUsers({ q: searchText || undefined, role: roleFilter || undefined, page, limit: pageSize, signal: (controller as any).signal });
-      const items = Array.isArray(res?.data) ? res.data : (res?.data?.data || []);
-      const pagination = res?.pagination || res?.data?.pagination || undefined;
-      const finalList: User[] = items.map((u: any) => ({
-        _id: u._id,
-        firstName: u.firstName || '',
-        lastName: u.lastName || '',
-        email: u.email,
-        role: u.role,
-        profileCompleteness: u.profileCompleteness ?? 0,
-        lastActivity: u.lastActivity,
-        status: u.status,
-        registrationDate: u.registrationDate,
-      }));
-      setUsers(finalList);
-      setUsersTotal(pagination?.total ?? finalList.length);
-      setUsersPagination({ current: page, pageSize });
-    } catch (e: any) {
-      if (e?.name === 'AbortError') return; // iptal edildi
-      message.error(e?.message || 'Kullanıcılar yüklenemedi');
-    } finally {
-      setLoading(false);
-    }
-  }, [roleFilter, searchText, usersPagination.current, usersPagination.pageSize]);
 
   const handleTableChange = (pagination: any) => {
     const { current, pageSize } = pagination;
