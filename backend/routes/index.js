@@ -34,6 +34,8 @@ const MotivationRoute = require("./motivation.js");
 const TopicMatrixRoute = require("./topicMatrix.js");
 const NotificationsRoute = require("./notifications.js");
 const YouTubeRoute = require("./youtube.js");
+const RemindersRoute = require('./reminders.js');
+const FlashcardsRoute = require('./flashcards.js');
 
 router.use("/users", UsersRoute);
 router.use("/image", ImageRoute);   
@@ -54,5 +56,7 @@ router.use("/motivation", MotivationRoute);
 router.use("/topic-matrix", TopicMatrixRoute);
 router.use("/notifications", NotificationsRoute);
 router.use("/youtube", YouTubeRoute);
+router.use('/reminders', RemindersRoute);
+router.use('/flashcards', FlashcardsRoute);
 
 module.exports = router;

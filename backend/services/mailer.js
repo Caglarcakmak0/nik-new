@@ -8,6 +8,10 @@ const os = require('os');
 
 dotenv.config();
 
+// Mailing geçici olarak devre dışı bırakılmak istenirse .env içine MAIL_DISABLED=true ekleyin.
+// SMTP bilgileri eksikse artık throw etmiyoruz; gönderimler atlanacak.
+const MAIL_DISABLED = String(process.env.MAIL_DISABLED || '').toLowerCase() === 'true';
+
 function createTransporter() {
   const host = process.env.SMTP_HOST;
   const port = Number(process.env.SMTP_PORT || 587);
@@ -20,8 +24,13 @@ function createTransporter() {
   const maxConnections = Number(process.env.SMTP_POOL_MAX_CONNECTIONS || 2);
   const maxMessages = Number(process.env.SMTP_POOL_MAX_MESSAGES || 100);
   const tlsRejectUnauthorized = String(process.env.SMTP_TLS_REJECT_UNAUTHORIZED || 'true').toLowerCase() === 'true';
+  if (MAIL_DISABLED) {
+    console.warn('[mail] MAIL_DISABLED=true -> mailer devre dışı.');
+    return null;
+  }
   if (!host || !user || !pass) {
-    throw new Error('SMTP yapılandırması eksik. Lütfen .env dosyasını kontrol edin.');
+    console.warn('[mail] SMTP yapılandırması eksik, mailer devre dışı (geçici). host/user/pass gerekli.');
+    return null;
   }
   const secure = port === 465;
   const transport = nodemailer.createTransport({
@@ -44,6 +53,7 @@ function createTransporter() {
 }
 
 const transporter = createTransporter();
+const TRANSPORTER_ACTIVE = !!transporter;
 
 function readFileSafe(filePath) {
   return fs.readFileSync(filePath, 'utf8');
@@ -96,6 +106,14 @@ function buildSimpleHtml(templateName, data = {}) {
 }
 
 async function sendTemplatedMail({ to, subject, template, data = {}, attachments = [] }) {
+  if (!TRANSPORTER_ACTIVE || MAIL_DISABLED) {
+    if (MAIL_DISABLED) {
+      console.log('[mail] SKIP (MAIL_DISABLED) ->', { to, subject, template });
+    } else {
+      console.log('[mail] SKIP (no transporter) ->', { to, subject, template });
+    }
+    return { skipped: true };
+  }
   const useSimple = String(process.env.EMAIL_SIMPLE || 'true').toLowerCase() === 'true';
   const html = useSimple ? buildSimpleHtml(template, data) : renderTemplate(template, data);
   const fromAddress = process.env.SMTP_FROM || process.env.SMTP_USER;

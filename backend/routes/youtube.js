@@ -106,3 +106,45 @@ router.get('/playlist-items', async (req, res) => {
 });
 
 module.exports = router;
+
+// GET videos by ids (comma separated) - returns snippet + contentDetails mapped
+router.get('/videos', async (req, res) => {
+  try {
+    if (!YT_API_KEY) {
+      return res.status(500).json({ message: 'YouTube API anahtarı yapılandırılmamış (YOUTUBE_API_KEY).' });
+    }
+    const { ids } = req.query;
+    if (!ids) return res.status(400).json({ message: 'ids parametresi gerekli, virgülle ayrılmış videoId listesi.' });
+    const idList = String(ids).split(',').map(s => s.trim()).filter(Boolean).slice(0,50);
+    if (!idList.length) return res.status(400).json({ message: 'Geçersiz ids parametresi.' });
+
+    const base = 'https://www.googleapis.com/youtube/v3/videos';
+    const params = new URLSearchParams({
+      key: YT_API_KEY,
+      id: idList.join(','),
+      part: 'snippet,contentDetails'
+    });
+
+    const resp = await _fetch(`${base}?${params.toString()}`);
+    const json = await resp.json();
+    if (!resp.ok) return res.status(resp.status).json({ message: json.error?.message || 'YouTube videos fetch hatası' });
+
+    const videos = (json.items || []).map(v => {
+      const iso = v.contentDetails?.duration;
+      const seconds = parseDuration(iso);
+      return {
+        id: v.id,
+        title: v.snippet?.title,
+        thumbnail: v.snippet?.thumbnails?.medium?.url || v.snippet?.thumbnails?.default?.url,
+        duration: formatDuration(seconds),
+        durationSeconds: seconds,
+        channelTitle: v.snippet?.channelTitle
+      };
+    });
+
+    return res.json({ message: 'OK', data: { videos } });
+  } catch (e) {
+    console.error('/youtube/videos error', e);
+    return res.status(500).json({ message: 'YouTube videos fetch başarısız', error: e?.message });
+  }
+});

@@ -9,17 +9,31 @@ const swaggerJsdoc = require('swagger-jsdoc');
 const app = express();
 const port = process.env.PORT || 8000;
 
-dotenv.config();
+// .env yükleme: önce backend klasörü, bulunmazsa proje kökü (bir üst klasör)
+dotenv.config({ path: path.join(__dirname, '.env') });
+if (!process.env.MONGO_URL) {
+    dotenv.config({ path: path.join(__dirname, '..', '.env') });
+}
+
+// Alternatif adları destekle
+const MONGO_URL = process.env.MONGO_URL || process.env.MONGODB_URI || process.env.MONGO_URI;
 
 
 const connect = async () => {
+    if (!MONGO_URL) {
+        console.error('[startup] Mongo bağlantı URL bulunamadı. Lütfen .env içine MONGO_URL ekleyin. Örnek:');
+        console.error('MONGO_URL=mongodb://localhost:27017/portal');
+        console.error('Ayrıca MONGODB_URI veya MONGO_URI isimleri de desteklenir.');
+        throw new Error('Missing MONGO_URL');
+    }
     try {
-        await mongoose.connect(process.env.MONGO_URL);
-        console.log("Connected MongoDb");
+        await mongoose.connect(MONGO_URL);
+        console.log('Connected MongoDb');
     } catch (error) {
+        console.error('[startup] Mongo bağlantı hatası:', error?.message);
         throw error;
     }
-}
+};
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json({ limit: '50mb' }));
@@ -82,16 +96,16 @@ const { startPerformanceNotificationsJob } = require('./jobs/performanceNotifica
 const { startLeaderboardNotificationsJob } = require('./jobs/leaderboardNotifications');
 
 app.listen(port, async () => {
+    console.log(`[startup] Server listening on port ${port}. Mongo bağlanıyor...`);
     try {
         await connect();
-        console.log(`Server is running at port ${port}.`);
-        // Başlat: periyodik hesaplama (env ile override edilebilir)
+        console.log(`[startup] Ready -> http://localhost:${port}`);
         startCoachPerformanceJob();
-        // Başlat: performans bildirimleri (öğle/akşam)
         startPerformanceNotificationsJob();
         startLeaderboardNotificationsJob();
     } catch (error) {
         console.error('MongoDB connection error:', error);
+        console.error('Uygulama Mongo olmadan çalışmayacak. Düzeltip yeniden başlatın.');
         process.exit(1);
     }
-})
+});

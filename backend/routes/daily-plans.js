@@ -6,6 +6,7 @@ const DailyPlan = require("../models/DailyPlan.js");
 const StudySession = require("../models/StudySession.js");
 const Notification = require('../models/Notification');
 const Users = require('../models/Users');
+const StudentSubjectPreference = require('../models/StudentSubjectPreference');
 const { requirePlan } = require('../middlewares/plan');
 
 // GET - Kullanıcının günlük planları
@@ -73,6 +74,23 @@ router.get("/by-date/:date", authenticateToken, checkRole('student', 'coach', 'a
     } catch (error) {
         console.error('GET /daily-plans/by-date error:', error);
         res.status(500).json({ message: error.message });
+    }
+});
+
+// GET /api/daily-plans/subject-preferences?subject=
+// Student kendi tercihlerini görebilsin (öğrencinin kendi token'ı ile)
+router.get('/subject-preferences', authenticateToken, checkRole('student', 'coach', 'admin'), async (req, res) => {
+    try {
+        const userId = req.user?.userId;
+        const { subject } = req.query;
+        if (!userId) return res.status(401).json({ message: 'User ID bulunamadı' });
+        const q = { studentId: userId, isActive: true };
+        if (subject) q.subject = subject;
+        const prefs = await StudentSubjectPreference.find(q).sort({ updatedAt: -1 });
+        res.json({ message: 'Tercihler (öğrenci)', data: prefs });
+    } catch (e) {
+        console.error('GET /daily-plans/subject-preferences error', e);
+        res.status(500).json({ message: e.message });
     }
 });
 
