@@ -4,7 +4,6 @@ import type { ColumnsType, TablePaginationConfig } from 'antd/es/table';
 import dayjs, { Dayjs } from 'dayjs';
 import { apiRequest } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
-import ProgramManagerTour from '../../components/tour/CoachTour/ProgramManagerTour';
 
 const { Option } = Select;
 
@@ -352,15 +351,7 @@ const ProgramManager: React.FC = () => {
         </div>
       </Card>
 
-      <ProgramManagerTour
-        userId={user?._id}
-        targets={{
-          getFiltersEl: () => (filtersRef.current as any) || null,
-          getTableEl: () => (tableRef.current as any) || null,
-          getEditModalEl: () => document.querySelector('.ant-modal') as HTMLElement | null,
-          getDeleteMockEl: () => (mockBtnRef.current as any) || null,
-        }}
-      />
+
 
       <Modal
         title="Programı Düzenle"

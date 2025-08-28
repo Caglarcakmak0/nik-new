@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Modal, Input, Button, Space, Typography, message, Popconfirm } from 'antd';
+import { useTheme } from '../../../../contexts/ThemeContext';
 import { CheckOutlined, EditOutlined, TrophyOutlined } from '@ant-design/icons';
 import QualityRating from './QualityRating';
 import MoodSelector from './MoodSelector';
@@ -42,6 +43,7 @@ const SessionFeedback: React.FC<SessionFeedbackProps> = ({
     distractions: 0,
     notes: ''
   });
+  const { isDark } = useTheme();
 
   const [loading, setLoading] = useState(false);
 
@@ -111,12 +113,12 @@ const SessionFeedback: React.FC<SessionFeedbackProps> = ({
             width: '60px',
             height: '60px',
             borderRadius: '50%',
-            background: '#667eea',
+            background: isDark ? 'linear-gradient(135deg,#4f46e5,#4338ca)' : '#667eea',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             margin: '0 auto 16px auto',
-            boxShadow: '0 8px 24px rgba(102, 126, 234, 0.3)'
+            boxShadow: isDark ? '0 8px 24px rgba(79,70,229,0.45)' : '0 8px 24px rgba(102, 126, 234, 0.3)'
           }}>
             <TrophyOutlined style={{ 
               fontSize: '24px', 
@@ -125,14 +127,14 @@ const SessionFeedback: React.FC<SessionFeedbackProps> = ({
           </div>
           <Title level={3} style={{ 
             margin: 0, 
-            color: '#333',
+            color: isDark ? '#f1f5f9' : '#333',
             fontWeight: '600'
           }}>
             Çalışma Oturumu Tamamlandı!
           </Title>
           <Text style={{ 
             fontSize: '14px',
-            color: '#666',
+            color: isDark ? '#94a3b8' : '#666',
             marginTop: '4px',
             display: 'block'
           }}>
@@ -196,23 +198,24 @@ const SessionFeedback: React.FC<SessionFeedbackProps> = ({
       styles={{ 
         body: { 
           padding: '0 24px 24px 24px',
-          background: '#f8f9ff'
-        }
+          background: isDark ? 'linear-gradient(145deg,#0f172a,#1e293b)' : '#f8f9ff'
+        },
+        mask: isDark ? { backdropFilter: 'blur(2px)' } : undefined
       }}
     >
       <div className="session-feedback">
         {/* Session Summary */}
         {sessionData && (
           <div className="session-feedback__summary" style={{
-            background: 'rgba(255,255,255,0.8)',
+            background: isDark ? 'rgba(30,41,59,0.85)' : 'rgba(255,255,255,0.8)',
             padding: '16px',
             borderRadius: '12px',
             marginBottom: '24px',
-            border: '1px solid rgba(102, 126, 234, 0.1)'
+            border: isDark ? '1px solid rgba(99,102,241,0.25)' : '1px solid rgba(102, 126, 234, 0.1)'
           }}>
             <Text style={{ 
               fontSize: '14px',
-              color: '#667eea',
+              color: isDark ? '#818cf8' : '#667eea',
               fontWeight: '500'
             }}>
               {getSessionSummary()}
@@ -223,11 +226,11 @@ const SessionFeedback: React.FC<SessionFeedbackProps> = ({
         <Space direction="vertical" size="large" style={{ width: '100%' }}>
           {/* Quality Rating */}
           <div className="session-feedback__section" style={{
-            background: 'white',
+            background: isDark ? '#1e293b' : 'white',
             padding: '20px',
             borderRadius: '16px',
-            boxShadow: '0 4px 16px rgba(0,0,0,0.05)',
-            border: '1px solid #f0f0f0'
+            boxShadow: isDark ? '0 4px 16px rgba(0,0,0,0.4)' : '0 4px 16px rgba(0,0,0,0.05)',
+            border: isDark ? '1px solid #334155' : '1px solid #f0f0f0'
           }}>
             <QualityRating
               value={feedback.quality}
@@ -238,11 +241,11 @@ const SessionFeedback: React.FC<SessionFeedbackProps> = ({
 
           {/* Mood Selection */}
           <div className="session-feedback__section" style={{
-            background: 'white',
+            background: isDark ? '#1e293b' : 'white',
             padding: '20px',
             borderRadius: '16px',
-            boxShadow: '0 4px 16px rgba(0,0,0,0.05)',
-            border: '1px solid #f0f0f0'
+            boxShadow: isDark ? '0 4px 16px rgba(0,0,0,0.4)' : '0 4px 16px rgba(0,0,0,0.05)',
+            border: isDark ? '1px solid #334155' : '1px solid #f0f0f0'
           }}>
             <MoodSelector
               value={feedback.mood}
@@ -253,11 +256,11 @@ const SessionFeedback: React.FC<SessionFeedbackProps> = ({
 
           {/* Distraction Counter */}
           <div className="session-feedback__section" style={{
-            background: 'white',
+            background: isDark ? '#1e293b' : 'white',
             padding: '20px',
             borderRadius: '16px',
-            boxShadow: '0 4px 16px rgba(0,0,0,0.05)',
-            border: '1px solid #f0f0f0'
+            boxShadow: isDark ? '0 4px 16px rgba(0,0,0,0.4)' : '0 4px 16px rgba(0,0,0,0.05)',
+            border: isDark ? '1px solid #334155' : '1px solid #f0f0f0'
           }}>
             <DistractionCounter
               value={feedback.distractions}
@@ -268,11 +271,11 @@ const SessionFeedback: React.FC<SessionFeedbackProps> = ({
 
           {/* Notes */}
           <div className="session-feedback__section" style={{
-            background: 'white',
+            background: isDark ? '#1e293b' : 'white',
             padding: '20px',
             borderRadius: '16px',
-            boxShadow: '0 4px 16px rgba(0,0,0,0.05)',
-            border: '1px solid #f0f0f0'
+            boxShadow: isDark ? '0 4px 16px rgba(0,0,0,0.4)' : '0 4px 16px rgba(0,0,0,0.05)',
+            border: isDark ? '1px solid #334155' : '1px solid #f0f0f0'
           }}>
             <div className="session-feedback__label" style={{
               display: 'flex',
@@ -280,11 +283,11 @@ const SessionFeedback: React.FC<SessionFeedbackProps> = ({
               marginBottom: '12px',
               fontSize: '14px',
               fontWeight: '600',
-              color: '#333'
+              color: isDark ? '#e2e8f0' : '#333'
             }}>
               <EditOutlined style={{ 
                 marginRight: 8,
-                color: '#667eea'
+                color: isDark ? '#818cf8' : '#667eea'
               }} />
               Notlar (İsteğe Bağlı)
             </div>
@@ -297,7 +300,9 @@ const SessionFeedback: React.FC<SessionFeedbackProps> = ({
               showCount
               style={{
                 borderRadius: '12px',
-                border: '1px solid #e9ecef',
+                border: isDark ? '1px solid #475569' : '1px solid #e9ecef',
+                background: isDark ? '#0f172a' : 'white',
+                color: isDark ? '#f1f5f9' : 'inherit',
                 resize: 'none'
               }}
             />
@@ -308,17 +313,17 @@ const SessionFeedback: React.FC<SessionFeedbackProps> = ({
           <div style={{ 
             textAlign: 'center',
             padding: '16px',
-            background: 'rgba(255,255,255,0.6)',
+            background: isDark ? 'rgba(30,41,59,0.7)' : 'rgba(255,255,255,0.6)',
             borderRadius: '12px',
-            border: '1px solid rgba(102, 126, 234, 0.1)',
+            border: isDark ? '1px solid rgba(99,102,241,0.25)' : '1px solid rgba(102, 126, 234, 0.1)',
             marginBottom: 12
           }}>
-            <Text style={{ fontSize: 12, color: '#666', lineHeight: '1.5' }}>
+            <Text style={{ fontSize: 12, color: isDark ? '#94a3b8' : '#666', lineHeight: '1.5' }}>
               Bu veriler çalışma alışkanlıklarınızı analiz etmek ve size daha iyi öneriler sunmak için kullanılır
             </Text>
           </div>
           <div style={{ textAlign: 'center' }}>
-            <Text type="danger" style={{ fontSize: 12 }}>
+            <Text type="danger" style={{ fontSize: 12, color: isDark ? '#f87171' : undefined }}>
               Kaydetmeden Kapat seçeneğini kullanırsanız bu oturum kaydedilmeyecek.
             </Text>
           </div>

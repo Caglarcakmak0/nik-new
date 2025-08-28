@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Modal, Row, Col, Divider, Spin } from 'antd';
 import { CalendarOutlined } from '@ant-design/icons';
 import { Dayjs } from 'dayjs';
@@ -16,6 +16,7 @@ interface DayModalProps {
   selectedDayData: DayData | null;
   dayModalDate: Dayjs | null;
   sessions: StudySession[];
+  mode?: 'study' | 'question';
 }
 
 const DayModal: React.FC<DayModalProps> = ({
@@ -23,10 +24,10 @@ const DayModal: React.FC<DayModalProps> = ({
   onClose,
   selectedDayData,
   dayModalDate,
-  sessions
+  sessions,
+  mode = 'study'
 }) => {
   const { isDark } = useTheme();
-  const [loading, setLoading] = useState(false);
 
   if (!selectedDayData || !dayModalDate) {
     return null;
@@ -42,7 +43,7 @@ const DayModal: React.FC<DayModalProps> = ({
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <CalendarOutlined style={{ color: '#3b82f6' }} />
           <span style={{ fontWeight: 600, color: isDark ? '#f1f5f9' : '#1f2937' }}>
-            {dayjs(selectedDayData.date).format('DD MMMM YYYY')} - Çalışma Detayları
+            {dayjs(selectedDayData.date).format('DD MMMM YYYY')} - {mode === 'question' ? 'Soru Girişi' : 'Çalışma Detayları'}
           </span>
         </div>
       }
@@ -66,26 +67,28 @@ const DayModal: React.FC<DayModalProps> = ({
         }} />
         
         <div style={{ position: 'relative' }}>
-          <DayStats selectedDayData={selectedDayData} />
-          
-          <Divider style={{ margin: '16px 0 12px' }} />
-          
-          <SessionsList sessions={sortedSessions} />
-          
-          <Divider style={{ margin: '20px 0 12px' }} />
-          
-          <PracticeExams 
-            dayModalDate={dayModalDate}
-            sessions={sessions}
-          />
-          
-          <Divider style={{ margin: '20px 0 12px' }} />
-          
-          <QuickDYBEntry
-            dayModalDate={dayModalDate}
-            selectedDayData={selectedDayData}
-            sessions={sessions}
-          />
+          {mode !== 'question' && (
+            <>
+              <DayStats selectedDayData={selectedDayData} />
+              <Divider style={{ margin: '16px 0 12px' }} />
+              <SessionsList sessions={sortedSessions} />
+              <Divider style={{ margin: '20px 0 12px' }} />
+            </>
+          )}
+          {mode === 'question' && (
+            <>
+              <PracticeExams 
+                dayModalDate={dayModalDate}
+                sessions={sessions}
+              />
+              <Divider style={{ margin: '20px 0 12px' }} />
+              <QuickDYBEntry
+                dayModalDate={dayModalDate}
+                selectedDayData={selectedDayData}
+                sessions={sessions}
+              />
+            </>
+          )}
         </div>
       </div>
     </Modal>

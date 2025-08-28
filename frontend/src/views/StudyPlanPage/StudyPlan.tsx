@@ -22,7 +22,7 @@ import DailyTable from './bones/DailyTable/DailyTable';
 import CreatePlanModal from './bones/CreatePlan/CreatePlanModal';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
-import StudyPlanTour from '../../components/tour/StudentTour/StudyPlanTour';
+
 import './StudyPlan.scss';
 
 const { Title, Text } = Typography;
@@ -186,14 +186,14 @@ const StudyPlan: React.FC = () => {
   // URL'ye göre tab senkronize et (ayrı sayfalar)
   useEffect(() => {
     const path = location.pathname;
-    if (path === '/study-plan' || path.startsWith('/study-plan/daily')) {
+  if (path === '/study-plan') {
       if (activeTab !== 'daily') setActiveTab('daily');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname]);
 
   useEffect(() => {
-    const target = '/study-plan/daily';
+  const target = '/study-plan';
     if (window.location.pathname !== target) {
       window.history.replaceState({}, '', target);
     }
@@ -215,15 +215,15 @@ const StudyPlan: React.FC = () => {
           </Button>
         ]}
       >
-        <Title level={4}>Çalışma Programı</Title>
-        <Text>Bu sayfa, öğrencinin günlük çalışma programını planlama ve takibini içerir. Premium üyelik ile koç yönlendirmeleri ve düzenleme özellikleri aktif olur.</Text>
+  <Title level={4}>Günlük Programlar</Title>
+  <Text>Bu sayfa, öğrencinin günlük çalışma programını planlama ve takibini içerir. Premium üyelik ile koç yönlendirmeleri ve düzenleme özellikleri aktif olur.</Text>
       </Modal>
       {/* Header */}
       <div className="page-header" ref={headerRef as any}>
         <Row justify="space-between" align="middle">
           <Col>
             <Title level={2} style={{ fontWeight: 500, fontSize: '24px' }}>
-              <CalendarOutlined /> Çalışma Programı
+              <CalendarOutlined /> Günlük Programlar
             </Title>
           </Col>
           <Col>
@@ -334,16 +334,7 @@ const StudyPlan: React.FC = () => {
         loading={loading}
       />
 
-      {/* Page specific tour */}
-      <StudyPlanTour
-        userId={_user?._id}
-        targets={{
-          getHeaderEl: () => (headerRef.current as any) || null,
-          getDatePickerEl: () => (datePickerRef.current as any) || null,
-          getDailyTabEl: () => document.getElementById('tab-daily-label') as HTMLElement | null,
-          getMonthlyTabEl: () => null,
-        }}
-      />
+   
     </div>
   );
 };

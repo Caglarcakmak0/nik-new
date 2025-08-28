@@ -1,6 +1,4 @@
 import React from 'react';
-import { Button } from 'antd';
-import { EditOutlined } from '@ant-design/icons';
 import { Dayjs } from 'dayjs';
 import { useTheme } from '../../../../contexts/ThemeContext';
 import { DayData, ReminderItem } from '../../types';
@@ -11,7 +9,8 @@ interface CalendarCellProps {
   monthlyStats?: { completionRate: number; netScore: number };
   reminders?: ReminderItem[];
   onDayClick: (date: Dayjs) => void;
-  onReminderClick: (date: Dayjs) => void;
+  questionMode?: boolean;
+  examTotal?: number; // soru takviminde o gün çözülen toplam soru
 }
 
 const CalendarCell: React.FC<CalendarCellProps> = ({
@@ -20,17 +19,18 @@ const CalendarCell: React.FC<CalendarCellProps> = ({
   monthlyStats,
   reminders,
   onDayClick,
-  onReminderClick
+  questionMode = false,
+  examTotal
 }) => {
   const { isDark } = useTheme();
 
   // Yoğunluk ve plan tamamlama renkleri
-  const intensity = dayData ? Math.min(4, Math.floor(dayData.totalTime / 30)) : 0;
+  const intensity = questionMode ? 0 : (dayData ? Math.min(4, Math.floor(dayData.totalTime / 30)) : 0);
   const colors = ['#f8fafc', '#e0f2fe', '#bae6fd', '#7dd3fc', '#38bdf8'];
   const color = colors[intensity];
   
   let planColor: string | null = null;
-  if (monthlyStats) {
+  if (!questionMode && monthlyStats) {
     planColor = monthlyStats.completionRate >= 90 ? '#10b981' 
       : monthlyStats.completionRate >= 70 ? '#3b82f6' 
       : monthlyStats.completionRate >= 50 ? '#f59e0b' 
@@ -44,14 +44,25 @@ const CalendarCell: React.FC<CalendarCellProps> = ({
   const planText = isDark ? (planColor || '#cbd5e1') : (planColor || '#475569');
   const borderColor = planColor ? planColor : isDark ? '#334155' : colors[Math.min(4, intensity + 1)];
   
-  const isEmpty = !dayData && !monthlyStats && (!reminders || reminders.length === 0);
+  const isEmpty = questionMode ? !examTotal : (!dayData && !monthlyStats && (!reminders || reminders.length === 0));
 
   return (
     <>
-      
       <div
         className="calendar-day-content"
-        style={isEmpty ? {
+        style={questionMode ? {
+          position: 'relative',
+          background: 'transparent',
+          border: 'none',
+          minHeight: 54,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: 18,
+          fontWeight: 600,
+          color: textPrimary,
+          cursor: 'pointer'
+        } : (isEmpty ? {
           position: 'relative',
           background: 'transparent',
           padding: 2,
@@ -67,10 +78,14 @@ const CalendarCell: React.FC<CalendarCellProps> = ({
           transition: 'all 0.3s ease',
           boxShadow: isDark ? '0 1px 3px rgba(0,0,0,0.6)' : '0 1px 3px rgba(0,0,0,0.1)',
           minHeight: 54
-        }}
+        })}
         onClick={() => onDayClick(date)}
       >
-        {dayData && (
+        {questionMode && examTotal !== undefined && examTotal > 0 && (
+          <span>{examTotal}</span>
+        )}
+
+        {!questionMode && dayData && (
           <>
             <div style={{ fontSize: 11, color: textPrimary, fontWeight: 600 }}>
               {dayData.sessionCount} oturum
@@ -81,13 +96,13 @@ const CalendarCell: React.FC<CalendarCellProps> = ({
           </>
         )}
 
-        {monthlyStats && (
+        {!questionMode && monthlyStats && (
           <div style={{ fontSize: 9, color: planText, fontWeight: 600, marginTop: 2 }}>
             %{Math.round(monthlyStats.completionRate)} • Net {Math.round(monthlyStats.netScore * 10) / 10}
           </div>
         )}
 
-        {reminders && reminders.length > 0 && (
+        {!questionMode && reminders && reminders.length > 0 && (
           <div style={{ marginTop: 2 }}>
             <div style={{ 
               fontSize: 9, 

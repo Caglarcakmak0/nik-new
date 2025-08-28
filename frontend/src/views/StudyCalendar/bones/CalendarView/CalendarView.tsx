@@ -18,6 +18,8 @@ interface CalendarViewProps {
   onDayClick: (date: Dayjs) => void;
   onReminderClick: (date: Dayjs) => void;
   isStudent: boolean;
+  questionMode?: boolean; // soru takvimi modu
+  examTotalsMap?: Record<string, number>; // gün bazlı toplam soru sayısı
 }
 
 const CalendarView: React.FC<CalendarViewProps> = ({
@@ -29,7 +31,9 @@ const CalendarView: React.FC<CalendarViewProps> = ({
   sessions,
   onDayClick,
   onReminderClick,
-  isStudent
+  isStudent,
+  questionMode = false,
+  examTotalsMap = {}
 }) => {
   const { isDark } = useTheme();
   const [monthlyStats, setMonthlyStats] = useState<Record<string, { completionRate: number; netScore: number }>>({});
@@ -37,7 +41,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
 
   // Aylık plan istatistiklerini getir
   const fetchMonthlyStats = async (baseDate: Dayjs) => {
-    if (!isStudent) { 
+  if (!isStudent || questionMode) { 
       setMonthlyStats({}); 
       return; 
     }
@@ -62,6 +66,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
 
   // Hatırlatmaları getir
   const fetchReminders = async (baseDate: Dayjs) => {
+  if (questionMode) { setRemindersMap({}); return; }
     try {
       const start = baseDate.startOf('month').toDate().toISOString();
       const end = baseDate.endOf('month').toDate().toISOString();
@@ -79,20 +84,19 @@ const CalendarView: React.FC<CalendarViewProps> = ({
     }
   };
 
-  const openReminderModal = (date: Dayjs) => {
-    onReminderClick(date);
-  };
 
   // Cell render (month view)
   const dateCellRender = (date: Dayjs) => {
+    const key = date.format('YYYY-MM-DD');
     return (
-      <CalendarCell
+  <CalendarCell
         date={date}
-        dayData={dayDataMap[date.format('YYYY-MM-DD')]}
-        monthlyStats={monthlyStats[date.format('YYYY-MM-DD')]}
-        reminders={remindersMap[date.format('YYYY-MM-DD')]}
+        dayData={questionMode ? undefined : dayDataMap[key]}
+        monthlyStats={questionMode ? undefined : monthlyStats[key]}
+        reminders={questionMode ? undefined : remindersMap[key]}
         onDayClick={onDayClick}
-        onReminderClick={openReminderModal}
+        questionMode={questionMode}
+        examTotal={questionMode ? examTotalsMap[key] : undefined}
       />
     );
   };
@@ -128,11 +132,13 @@ const CalendarView: React.FC<CalendarViewProps> = ({
   };
 
   useEffect(() => {
-    fetchMonthlyStats(selectedDate);
-    fetchReminders(selectedDate);
-    
-    // Add reminder buttons to date-value areas
-    const addReminderButtons = () => {
+  fetchMonthlyStats(selectedDate);
+  fetchReminders(selectedDate);
+
+  if (questionMode) return; // soru modunda not ekleme / buton yok
+
+  // Add reminder buttons to date-value areas (only study calendar)
+  const addReminderButtons = () => {
       const dateValues = document.querySelectorAll('.ant-picker-calendar-date-value');
             dateValues.forEach((dateValue) => {
         const dateValueEl = dateValue as HTMLElement;
@@ -250,7 +256,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
     
     // Run after DOM updates
     setTimeout(addReminderButtons, 100);
-  }, [selectedDate.year(), selectedDate.month(), isStudent, onReminderClick, isDark]);
+  }, [selectedDate.year(), selectedDate.month(), isStudent, onReminderClick, isDark, questionMode]);
 
   return (
     <div className="calendar-view">

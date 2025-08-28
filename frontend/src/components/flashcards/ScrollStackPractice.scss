@@ -1,0 +1,182 @@
+.scroll-stack-practice {
+    position: relative;
+    overscroll-behavior: contain;
+    margin-top: 50px;
+    padding: 30px;
+}
+.scroll-stack-practice:focus,
+.scroll-stack-practice:hover {
+    cursor: ns-resize;
+}
+.scroll-stack-practice .stack-region {
+    position: relative;
+    width: 100%;
+    height: 340px;
+}
+.scroll-stack-practice .ss-card {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 300px;
+    transition: transform 0.35s ease-out;
+    border-radius: 25px;
+    cursor: pointer;
+    perspective: 1200px;
+}
+.scroll-stack-practice .ss-card .inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+    transition: transform 1s ease;
+}
+.scroll-stack-practice .ss-card.top.flipped .inner {
+    transform: rotateY(-180deg);
+}
+.scroll-stack-practice .ss-card .face {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    border-radius: 25px;
+    padding: 20px 22px 70px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 6px 20px -4px rgba(0, 0, 0, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: #374151;
+    color: #fff;
+    font-size: 15px;
+    line-height: 1.5;
+}
+.scroll-stack-practice .ss-card .face .meta {
+    font-size: 11px;
+    letter-spacing: 0.4px;
+    font-weight: 500;
+}
+.scroll-stack-practice .ss-card .face .meta .ant-tag {
+    border: none;
+    font-weight: 500;
+    padding: 8px 16px;
+    backdrop-filter: blur(4px);
+    line-height: 1.2;
+    font-size: 14px;
+}
+.scroll-stack-practice .ss-card .face.front .meta .ant-tag {
+    background: rgba(255, 255, 255, 0.18);
+    color: #fff;
+}
+.scroll-stack-practice .ss-card .face.back .meta .ant-tag {
+    background: rgba(0, 0, 0, 0.3);
+    color: #fff;
+}
+.scroll-stack-practice .ss-card .face .body {
+    font-size: 28px;
+}
+.scroll-stack-practice .ss-card.top .face .body p {
+    margin: 0 0 10px;
+}
+.scroll-stack-practice .ss-card.top .face .body code {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 2px 5px;
+    border-radius: 4px;
+    font-size: 12px;
+}
+.scroll-stack-practice .ss-card.top .face .body pre {
+    background: rgba(0, 0, 0, 0.35);
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    overflow: auto;
+}
+
+// Difficulty-specific subtle styling (shadows & borders for readability)
+.scroll-stack-practice .ss-card.diff-d1 .face {
+    box-shadow: 0 6px 20px -4px rgba(13, 148, 136, 0.55);
+}
+.scroll-stack-practice .ss-card.diff-d2 .face {
+    box-shadow: 0 6px 20px -4px rgba(37, 99, 235, 0.55);
+}
+.scroll-stack-practice .ss-card.diff-d3 .face {
+    box-shadow: 0 6px 20px -4px rgba(245, 158, 11, 0.55);
+}
+.scroll-stack-practice .ss-card.diff-d4 .face {
+    box-shadow: 0 6px 20px -4px rgba(249, 115, 22, 0.55);
+}
+.scroll-stack-practice .ss-card.diff-d5 .face {
+    box-shadow: 0 6px 20px -4px rgba(220, 38, 38, 0.55);
+}
+.scroll-stack-practice .ss-card .face.back {
+    transform: rotateY(180deg);
+}
+.scroll-stack-practice .ss-card .card-depth {
+    transform: translateZ(100px) scale(0.98);
+    perspective: inherit;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+.scroll-stack-practice .ss-card.moving-from-up {
+    transform: translate(0, -130%);
+    animation: sspSlideDown 0.35s ease-out forwards;
+}
+@keyframes sspSlideDown {
+    to {
+        transform: translate(0, 0);
+    }
+}
+.scroll-stack-practice .card-face-content {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+.scroll-stack-practice .card-face-content .meta {
+    display: flex;
+    gap: 8px;
+    font-size: 11px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+}
+.scroll-stack-practice .card-face-content .body {
+    font-size: 15px;
+    line-height: 1.55;
+    flex: 1 1 auto;
+    overflow: auto;
+    font-weight: 500;
+}
+.scroll-stack-practice .card-face-content .body strong {
+    font-weight: 600;
+}
+.scroll-stack-practice .card-face-content .body a {
+    color: #fff;
+    text-decoration: underline;
+}
+.scroll-stack-practice .answer-actions {
+    position: absolute;
+    bottom: 10px;
+    left: 0;
+    right: 0;
+    justify-content: center;
+}
+.scroll-stack-practice .hint {
+    position: absolute;
+    bottom: 10px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 11px;
+    opacity: 0.7;
+    letter-spacing: 0.5px;
+}
+.scroll-stack-practice .progress {
+    margin-top: 12px;
+    font-size: 12px;
+    opacity: 0.6;
+    text-align: right;
+}
+@media (prefers-reduced-motion: reduce) {
+    .scroll-stack-practice .ss-card .inner {
+        transition: none;
+    }
+}

@@ -5,7 +5,7 @@ import dayjs, { Dayjs } from 'dayjs';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { apiRequest, getYouTubePlaylistItems, getCoachSubjectPreferences, createCoachSubjectPreference, getCoachUsedVideos } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
-import CreateProgramTour from '../../components/tour/CoachTour/CreateProgramTour';
+
 import './CreateProgram.scss';
 
 type AssignedVideo = {
@@ -38,7 +38,8 @@ const { TextArea } = Input;
 
 const CreateProgram: React.FC = () => {
   const [form] = Form.useForm<ProgramForm>();
-  const { user } = useAuth();
+  // Auth context (not directly used here, but ensures protected access)
+  useAuth();
   const studentSelectRef = useRef<HTMLDivElement | null>(null);
   const datePickerRef = useRef<HTMLDivElement | null>(null);
   const subjectsListRef = useRef<HTMLDivElement | null>(null);
@@ -46,6 +47,8 @@ const CreateProgram: React.FC = () => {
   const navigate = useNavigate();
   const [search] = useSearchParams();
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(false); // edit mode load
+  const [editId, setEditId] = useState<string | null>(null);
   const [studentOptions, setStudentOptions] = useState<{ value: string; label: string }[]>([]);
   const isStudentLocked = !!search.get('studentId');
   // YouTube integration state
@@ -53,14 +56,15 @@ const CreateProgram: React.FC = () => {
   const [ytLoading, setYtLoading] = useState(false);
   const [playlistVideos, setPlaylistVideos] = useState<any[]>([]);
   const [manualPlaylistId, setManualPlaylistId] = useState('');
-  const [ytNextPageToken, setYtNextPageToken] = useState<string | null>(null);
-  const [usingRealApi, setUsingRealApi] = useState(false);
-  const [activeSubject, setActiveSubject] = useState<string | null>(null); // Koç hangi dersi için video seçiyor
+  // Pagination kaldırıldı; tüm videolar baştan çekiliyor
+  const [activeSubject, setActiveSubject] = useState<string | null>(null); // Seçili ders kodu (outline için)
   const [studentPreference, setStudentPreference] = useState<any | null>(null);
   const [usedVideoIds, setUsedVideoIds] = useState<Set<string>>(new Set());
   const [hideUsed, setHideUsed] = useState<boolean>(false);
   const videoScrollRef = useRef<HTMLDivElement | null>(null);
   const [creatingPreference, setCreatingPreference] = useState(false);
+  // Recently added video visual feedback
+  const [justAdded, setJustAdded] = useState<Set<string>>(new Set());
   // const { token } = theme.useToken(); // (kaldırıldı: şimdilik kullanılmıyor)
   // Tema algısı: body üzerinde theme-dark sınıfını dinle (daha tutarlı)
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => document.body.classList.contains('theme-dark'));
@@ -84,14 +88,21 @@ const CreateProgram: React.FC = () => {
 
   // Demo playlistler kaldırıldı; yalnızca preference playlistId veya manuel girilen ID kullanılacak
 
-  const fetchRealPlaylist = async (playlistId: string, append = false) => {
+  // Playlist'in TÜM videolarını baştan yükle (sayfa sonu yok)
+  const fetchRealPlaylist = async (playlistId: string) => {
     try {
       setYtLoading(true);
-      const res: any = await getYouTubePlaylistItems(playlistId, { pageToken: append ? ytNextPageToken || undefined : undefined, maxResults: 12 });
-      const vids = res?.data?.videos || [];
-      setPlaylistVideos(prev => append ? [...prev, ...vids] : vids);
-      setYtNextPageToken(res?.data?.nextPageToken || null);
-  setUsingRealApi(true);
+      let next: string | null | undefined = undefined;
+      let all: any[] = [];
+      do {
+        const res: any = await getYouTubePlaylistItems(playlistId, { pageToken: next || undefined, maxResults: 50 });
+        const vids = res?.data?.videos || [];
+        all = all.concat(vids);
+        next = res?.data?.nextPageToken || null;
+      } while (next);
+      setPlaylistVideos(all);
+      // Sessiz; gerekirse toplam gösterilebilir
+      // message.success(`Toplam ${all.length} video yüklendi`);
     } catch (e: any) {
       message.error(e.message || 'Playlist alınamadı');
     } finally {
@@ -114,18 +125,13 @@ const CreateProgram: React.FC = () => {
   };
 
   const addVideoToSubject = (video: any) => {
-    if (!activeSubject) {
-      message.warning('Önce sol taraftan bir ders seçin veya yeni ders ekleyin.');
+    const current: SubjectForm[] = form.getFieldValue('subjects') || [];
+    let index = current.findIndex(s => s.subject === activeSubject);
+    if (index === -1) {
+      message.warning('Önce sol kartlardan bir ders seçin.');
       return;
     }
-    const current: SubjectForm[] = form.getFieldValue('subjects') || [];
-    let idx = current.findIndex(s => s.subject === activeSubject);
-    if (idx === -1) {
-      // Otomatik ekle
-  current.push({ subject: activeSubject, description: '', duration: 0, videos: [] });
-      idx = current.length - 1;
-    }
-    const subjectEntry = current[idx];
+    const subjectEntry = current[index];
     subjectEntry.videos = subjectEntry.videos || [];
     // Aynı video tekrar eklenebilir; her ekleme ayrı uid alır
     const genUid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,8);
@@ -145,8 +151,13 @@ const CreateProgram: React.FC = () => {
     if (!subjectEntry.duration || subjectEntry.duration === 60) { // kaba kural: ilk default 60 ise güncelleyebiliriz
       subjectEntry.duration = Math.ceil(totalSeconds / 60) || subjectEntry.duration;
     }
-    current[idx] = { ...subjectEntry };
+  current[index] = { ...subjectEntry };
     form.setFieldsValue({ subjects: [...current] });
+  setActiveSubject(subjectEntry.subject);
+
+    // Visual highlight: mark video as just added for a short duration
+  // Kalıcı highlight (isteğe göre kaldırılabilir) - aynı videoyu tekrar eklerse yine yeşil kalır
+  setJustAdded(prev => new Set(prev).add(video.id));
   };
 
   const removeVideoFromSubject = (subjectIndex: number, uid: string) => {
@@ -159,19 +170,21 @@ const CreateProgram: React.FC = () => {
     form.setFieldsValue({ subjects: [...current] });
   };
 
+  // Form subjects (Hook en üst seviyede olmalı)
+  const subjects: SubjectForm[] = Form.useWatch('subjects', form) || [];
+
   const filteredVideos = useMemo(() => {
     let list = playlistVideos;
+    const assignedIds = new Set(subjects.flatMap((s: SubjectForm) => (s.videos || []).map(v => v.videoId)));
     if (videoSearch.trim()) {
       const q = videoSearch.toLowerCase();
       list = list.filter(v => (v.title || '').toLowerCase().includes(q));
     }
     if (hideUsed && usedVideoIds.size) {
-      list = list.filter(v => !usedVideoIds.has(v.id));
+      list = list.filter(v => !usedVideoIds.has(v.id) || assignedIds.has(v.id));
     }
-    return list.map(v => ({ ...v, _used: usedVideoIds.has(v.id) }));
-  }, [playlistVideos, videoSearch, hideUsed, usedVideoIds]);
-
-  const subjects: SubjectForm[] = Form.useWatch('subjects', form) || [];
+    return list.map(v => ({ ...v, _used: usedVideoIds.has(v.id), _assigned: assignedIds.has(v.id) }));
+  }, [playlistVideos, videoSearch, hideUsed, usedVideoIds, subjects]);
   const totalMinutes = useMemo(() => subjects.reduce((acc, s) => acc + (s?.duration || 0), 0), [subjects]);
   const totalHoursPart = Math.floor(totalMinutes / 60);
   const totalMinsPart = totalMinutes % 60;
@@ -203,11 +216,49 @@ const CreateProgram: React.FC = () => {
 
   useEffect(() => {
     const studentId = search.get('studentId');
-    form.setFieldsValue({
-      studentId: studentId || undefined,
-      date: dayjs(),
-      subjects: []
-    } as any);
+    const eid = search.get('editId');
+    setEditId(eid);
+    const init = async () => {
+      if (eid) {
+        try {
+          setInitialLoading(true);
+          const res = await apiRequest(`/coach/programs/${eid}`);
+          const prog = res.data;
+          form.setFieldsValue({
+            studentId: prog.studentId || studentId,
+            date: dayjs(prog.date),
+            subjects: (prog.subjects || []).map((s: any) => ({
+              subject: s.subject,
+              description: s.description || '',
+              duration: s.duration || s.targetTime || 60,
+              videos: (s.videos || []).map((v: any, i: number) => ({
+                uid: v.videoId + '-' + i,
+                videoId: v.videoId,
+                playlistId: v.playlistId,
+                title: v.title,
+                durationSeconds: v.durationSeconds || v.duration_seconds || v.duration || 0,
+                channelTitle: v.channelTitle,
+                position: v.position,
+                order: v.order ?? i
+              }))
+            }))
+          } as any);
+          // Form state ayarlandıktan sonra ilk dersi aktive et (playlist + kullanılan videoları getirecek)
+          setTimeout(()=> { activateSubject(0); }, 0);
+        } catch (e: any) {
+          message.error(e.message || 'Program yüklenemedi');
+        } finally {
+          setInitialLoading(false);
+        }
+      } else {
+        form.setFieldsValue({
+          studentId: studentId || undefined,
+          date: dayjs(),
+          subjects: []
+        } as any);
+      }
+    };
+    init();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -247,27 +298,35 @@ const CreateProgram: React.FC = () => {
       const total = values.subjects.reduce((acc, s) => acc + (s.duration || 0), 0);
       const totalHours = Math.floor(total / 60);
       const totalMinutes = total % 60;
+      // Backend POST endpoint koç -> DailyPlan dönüşümünde 'duration' alanını targetTime olarak kullanıyor.
+      // PUT endpoint ise güncellemede incoming.subject.targetTime bekliyor. Bu nedenle her iki alanı da gönderiyoruz.
       const payload = {
         studentId: values.studentId,
         date: values.date.format('YYYY-MM-DD'),
         subjects: values.subjects.map(s => ({
           subject: s.subject,
           description: s.description,
-            duration: s.duration,
-            videos: s.videos?.map(v => ({
-              videoId: v.videoId,
-              playlistId: v.playlistId,
-              title: v.title,
-              durationSeconds: v.durationSeconds,
-              channelTitle: v.channelTitle,
-              position: v.position,
-              order: v.order
-            })) || []
+          duration: s.duration,      // Yeni oluşturma (POST) ile geriye dönük uyumluluk
+          targetTime: s.duration,    // Güncelleme (PUT) için gerekli
+          videos: s.videos?.map(v => ({
+            videoId: v.videoId,
+            playlistId: v.playlistId,
+            title: v.title,
+            durationSeconds: v.durationSeconds,
+            channelTitle: v.channelTitle,
+            position: v.position,
+            order: v.order
+          })) || []
         })),
         title: `Koç Programı - ${values.date.format('DD/MM/YYYY')}`,
       };
-      await apiRequest('/coach/programs', { method: 'POST', body: JSON.stringify(payload) });
-      message.success(`Program oluşturuldu! Toplam süre: ${totalHours} saat ${totalMinutes} dakika`);
+      if (editId) {
+        await apiRequest(`/coach/programs/${editId}`, { method: 'PUT', body: JSON.stringify(payload) });
+        message.success(`Program güncellendi! Toplam süre: ${totalHours} saat ${totalMinutes} dakika`);
+      } else {
+        await apiRequest('/coach/programs', { method: 'POST', body: JSON.stringify(payload) });
+        message.success(`Program oluşturuldu! Toplam süre: ${totalHours} saat ${totalMinutes} dakika`);
+      }
       navigate('/coach/programs');
     } catch (e: any) {
       message.error(e.message || 'Program oluşturulamadı');
@@ -288,13 +347,44 @@ const CreateProgram: React.FC = () => {
     }
   };
 
+  // Belirli indexteki dersi aktif yap ve preference + playlist yükle
+  const activateSubject = async (index: number) => {
+    const list: SubjectForm[] = form.getFieldValue('subjects') || [];
+    if (!list[index]) return;
+    const code = list[index].subject || null;
+    setActiveSubject(code);
+    const studentId = form.getFieldValue('studentId') || lockedStudentId;
+    if (studentId && code) {
+      try {
+        const prefRes = await getCoachSubjectPreferences(studentId, code);
+        const pref = prefRes.data?.[0] || null;
+        setStudentPreference(pref);
+        const usedRes = await getCoachUsedVideos(studentId, code, 120);
+        setUsedVideoIds(new Set(usedRes.data || []));
+        if (pref?.playlistId) {
+          setManualPlaylistId(pref.playlistId);
+          fetchRealPlaylist(pref.playlistId);
+        } else {
+          setPlaylistVideos([]);
+          setManualPlaylistId('');
+        }
+      } catch {
+        setStudentPreference(null);
+      }
+    } else {
+      setStudentPreference(null);
+    }
+  };
+
   return (
     <div className="create-program">
+      {initialLoading && <div style={{padding:40}}><Skeleton active paragraph={{rows:6}} /></div>}
+      {!initialLoading && (
       <Form form={form} layout="vertical" onFinish={submit}>
         {/* Önce Program Dersleri Kartı */}
         <div className="program-and-playlist-stack">
           <Card
-            title={<span>Günlük Program <span style={{fontSize:12,color:'#888',fontWeight:400}}> | {subjects.length} ders, toplam {totalHoursPart>0 && `${totalHoursPart}sa `}{totalMinsPart}dk</span></span>}
+            title={<span>{editId ? 'Programı Düzenle' : 'Günlük Program'} <span style={{fontSize:12,color:'#888',fontWeight:400}}> | {subjects.length} ders, toplam {totalHoursPart>0 && `${totalHoursPart}sa `}{totalMinsPart}dk</span></span>}
             extra={
               <div className="program-head-extra">
                 <Form.Item name="studentId" rules={[{ required: true, message: 'Öğrenci seçiniz' }]} style={{ marginBottom:0 }}>
@@ -334,39 +424,21 @@ const CreateProgram: React.FC = () => {
             {(fields, { add, remove }) => (
               <>
                 <div ref={subjectsListRef as any} className="subjects-grid">
-                {fields.map(({ key, name, ...restField }) => (
-                  <Card key={key} size="small" className="subject-item-card" title={<Space size={6}>{`Ders ${name + 1}`}{subjects[name]?.subject && <span className="subject-pill">{subjectLabel(subjects[name]?.subject)}</span>}</Space>}>
+        {fields.map(({ key, name, ...restField }) => (
+                  <Card
+                    key={key}
+                    size="small"
+          className={`subject-item-card ${subjects[name]?.subject && subjects[name].subject === activeSubject ? 'is-active' : ''}`}
+                    title={<Space size={6}>{`Ders ${name + 1}`}{subjects[name]?.subject && <span className="subject-pill">{subjectLabel(subjects[name]?.subject)}</span>}</Space>}
+                    onClick={() => activateSubject(name)}
+                  >
                     <Space direction="vertical" style={{ width: '100%' }}>
                       <Form.Item {...restField} name={[name, 'subject']} label="Ders" rules={[{ required: true, message: 'Ders seçiniz' }]}>
                         <Select placeholder="Ders seçin" onChange={async (val) => {
                           const list: SubjectForm[] = form.getFieldValue('subjects') || [];
                           list[name].subject = val;
                           form.setFieldsValue({ subjects: [...list] });
-                          setActiveSubject(val);
-                          const studentId = form.getFieldValue('studentId') || lockedStudentId;
-                          if (studentId && val) {
-                            try {
-                              const prefRes = await getCoachSubjectPreferences(studentId, val);
-                              const pref = prefRes.data?.[0] || null;
-                              setStudentPreference(pref);
-                              const usedRes = await getCoachUsedVideos(studentId, val, 120);
-                              setUsedVideoIds(new Set(usedRes.data || []));
-                              if (pref?.playlistId) {
-                                setManualPlaylistId(pref.playlistId);
-                                fetchRealPlaylist(pref.playlistId, false);
-                              } else {
-                                // Playlist yoksa mevcut video listesini temizle
-                                setPlaylistVideos([]);
-                                setYtNextPageToken(null);
-                                setManualPlaylistId('');
-                                setUsingRealApi(false);
-                              }
-                            } catch {
-                              setStudentPreference(null);
-                            }
-                          } else {
-                            setStudentPreference(null);
-                          }
+                          await activateSubject(name);
                         }}>
                           <Option value="matematik">📐 Matematik</Option>
                           <Option value="turkce">📚 Türkçe</Option>
@@ -417,8 +489,8 @@ const CreateProgram: React.FC = () => {
                         </div>
                       </Form.Item>
                       {subjects[name]?.videos && subjects[name].videos!.length > 0 && (
-                        <Card size="small" style={{ background:'#f5f5f5' }} title={<span style={{ fontSize:12 }}>Atanan Videolar ({subjects[name].videos!.length})</span>} bodyStyle={{ padding:8 }}>
-                          <div style={{ display:'flex', flexDirection:'column', gap:4 }}>
+                        <Card size="small" style={{ background:'#f5f5f5', }} title={<span style={{ fontSize:12 }}>Atanan Videolar ({subjects[name].videos!.length})</span>} bodyStyle={{ padding:8 }}>
+                          <div style={{ display:'flex', flexDirection:'column', gap:4, overflowY:'scroll', maxHeight: 100 }}>
                             {subjects[name].videos!
                               .sort((a,b)=> (a.order||0)-(b.order||0))
                               .map(v => (
@@ -451,7 +523,7 @@ const CreateProgram: React.FC = () => {
           <div style={{ textAlign: 'right', marginTop: 16 }}>
             <Space>
               <Button onClick={() => navigate(-1)}>İptal</Button>
-              <Button ref={submitBtnRef as any} type="primary" htmlType="submit" size="large">Program Oluştur</Button>
+              <Button ref={submitBtnRef as any} type="primary" htmlType="submit" size="large">{editId ? 'Kaydet' : 'Program Oluştur'}</Button>
             </Space>
           </div>
           </Card>
@@ -489,7 +561,7 @@ const CreateProgram: React.FC = () => {
                       const pid = parsePlaylistInput(val);
                       if (!pid) { message.error('Geçersiz playlist'); return; }
                       setManualPlaylistId(pid);
-                      fetchRealPlaylist(pid, false);
+                      fetchRealPlaylist(pid);
                       const studentId = form.getFieldValue('studentId') || lockedStudentId;
                       if (studentId && activeSubject) {
                         setCreatingPreference(true);
@@ -512,19 +584,9 @@ const CreateProgram: React.FC = () => {
               )}
               <Divider className="playlist-divider" />
               <Input allowClear placeholder="Video ara..." value={videoSearch} onChange={e=>setVideoSearch(e.target.value)} size="middle" className="video-search-input" />
-              {usingRealApi && <span className="pill pill-mode">playlist</span>}
-              <div className="video-list-wrapper">
-                <div ref={videoScrollRef} className="video-scroll"
-                  onScroll={(e)=>{
-                    const el = e.currentTarget;
-                    if (!usingRealApi) return;
-                    if (ytLoading) return;
-                    if (!ytNextPageToken) return;
-                    if (el.scrollTop + el.clientHeight >= el.scrollHeight - 120) {
-                      fetchRealPlaylist(manualPlaylistId, true);
-                    }
-                  }}
-                >
+          
+              <div className="video-list-wrapper" style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                <div ref={videoScrollRef} className="video-scroll">
                 {ytLoading ? (
                   <Skeleton active paragraph={{ rows: 4 }} />
                 ) : filteredVideos.length === 0 ? (
@@ -538,8 +600,8 @@ const CreateProgram: React.FC = () => {
                     className="video-list"
                     renderItem={(v:any) => (
                       <List.Item className="video-list-row">
-                        <div className={`video-item ${v._used ? 'is-used' : ''} ${isDarkMode ? 'dark' : 'light'}`}
-                          onClick={()=> !v._used && addVideoToSubject(v)}
+                        <div className={`video-item ${v._used ? 'is-used' : ''} ${justAdded.has(v.id) ? 'just-added' : ''} ${isDarkMode ? 'dark' : 'light'}`}
+                          onClick={()=> addVideoToSubject(v)}
                         >
                           <div className="video-thumb-wrapper">
                             <img src={v.thumbnail} alt={v.title} className="video-thumb" />
@@ -550,7 +612,7 @@ const CreateProgram: React.FC = () => {
                               <Typography.Text className="video-title">{v.title}</Typography.Text>
                             </Tooltip>
                             {v._used && (
-                              <span className="video-used-badge">• kullanıldı</span>
+                              <span className="video-used-badge">• Bu Video Kullanıldı</span>
                             )}
                           </div>
                           <div className="video-actions">
@@ -560,7 +622,6 @@ const CreateProgram: React.FC = () => {
                               size="small"
                               className="video-add-btn"
                               onClick={(e)=>{e.stopPropagation(); addVideoToSubject(v);}}
-                              disabled={v._used}
                             >Ekle</Button>
                           </div>
                         </div>
@@ -573,17 +634,9 @@ const CreateProgram: React.FC = () => {
             </div>
           </Card>
         </div>
-      </Form>
+  </Form>
+  )}
 
-      <CreateProgramTour
-        userId={user?._id}
-        targets={{
-          getStudentSelectEl: () => (studentSelectRef.current as any) || null,
-          getDatePickerEl: () => (datePickerRef.current as any) || null,
-          getSubjectsListEl: () => (subjectsListRef.current as any) || null,
-          getSubmitButtonEl: () => (submitBtnRef.current as any) || null,
-        }}
-      />
     </div>
   );
 };

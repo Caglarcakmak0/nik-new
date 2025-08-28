@@ -6,37 +6,34 @@ import {
   Button, 
   Progress, 
   Tag, 
-  Space, 
   Typography, 
   Statistic,
   Row,
   Col,
   message,
-  Badge,
   Tooltip,
-  notification,
-  Alert,
   Input,
-  InputNumber,
-  
+  Modal,
   Pagination,
   Select
 } from 'antd';
 import type { ColumnsType, TableProps } from 'antd/es/table';
 import { 
-  EditOutlined,
   CheckCircleOutlined,
   ClockCircleOutlined,
   TrophyOutlined,
   FireOutlined,
-  BellOutlined,
   InfoCircleOutlined,
   StarOutlined,
-  BulbOutlined
+  BulbOutlined,
+  PlayCircleOutlined
 } from '@ant-design/icons';
+import StudyTimer from '../../../StudyTrackerPage/bones/StudyTimer/StudyTimer';
+import FullScreenSplitIntro from '../../../../components/animations/FullScreenSplitIntro';
+import ekranImage from '../../../../assets/ekran.jpeg';
 import { useAuth, useIsStudent } from '../../../../contexts/AuthContext';
 import './DailyTable.scss';
-import DailyTableTour from '../../../../components/tour/StudentTour/DailyTableTour';
+import ProgramDetailLayout from './ProgramDetailLayout';
 
 const { Title, Text } = Typography;
 
@@ -95,7 +92,7 @@ const DailyTable: React.FC<DailyTableProps> = ({
   const [previewSubjectIndex, setPreviewSubjectIndex] = useState<number | null>(null);
   const [coachProgram, setCoachProgram] = useState<any | null>(null);
   const [videoMetaMap, setVideoMetaMap] = useState<Record<string, any>>({});
-  const [previewPlaylistVideos, setPreviewPlaylistVideos] = useState<any[] | null>(null);
+  // const [previewPlaylistVideos, setPreviewPlaylistVideos] = useState<any[] | null>(null); // (kullanılmıyor)
   const [page, setPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
   const [sorterState, setSorterState] = useState<{ orderBy?: keyof Subject | 'completed' | 'net' | 'progress'; orderDirection?: 'ascend' | 'descend' } | undefined>();
@@ -117,156 +114,25 @@ const DailyTable: React.FC<DailyTableProps> = ({
   // Student feedback states
   const [dailyFeedback, setDailyFeedback] = useState<string>('');
   const [motivationScore, setMotivationScore] = useState<number>(5);
-  const [subjectInputs, setSubjectInputs] = useState<{[key: string]: {correct: number, wrong: number, blank: number}}>({});
+  // DYB inline inputları kaldırıldı; artık sadece plan verileri gösterilecek.
   
-  // Real-time sync states
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
-  const [lastSync, setLastSync] = useState<Date>(new Date());
-  const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(true);
-  const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const [pendingUpdates, setPendingUpdates] = useState<number>(0);
+  // Real-time sync state kaldırıldı
 
   // Advanced notifications state
   
-  const [showMotivationalAlert, setShowMotivationalAlert] = useState(false);
   const tableContainerRef = useRef<HTMLDivElement | null>(null);
 
-  // Smart notification system
-  // notifications reserved: currently disabled in tutorial phase
 
-  // Check for milestones and achievements
-  // Placeholder for future use (kept intentionally for tour/actions extensions)
-
-  // Daily motivation system
-  useEffect(() => {
-    const checkDailyMotivation = () => {
-      const completionRate = plan.stats.completionRate;
-      const hour = new Date().getHours();
-      
-      // Morning motivation (8-10 AM)
-      if (hour >= 8 && hour <= 10 && completionRate < 25) {
-        setShowMotivationalAlert(true);
-      }
-      
-      // Evening motivation (18-20 PM) 
-      if (hour >= 18 && hour <= 20 && completionRate < 75) {
-        notification.info({
-          message: '🌅 Akşam Motivasyonu',
-          description: 'Günü güçlü bir şekilde tamamlamak için son spurt!',
-          icon: <BellOutlined style={{ color: '#722ed1' }} />,
-          duration: 5,
-          placement: 'topRight'
-        });
-      }
-    };
-
-    const motivationTimer = setTimeout(checkDailyMotivation, 1000);
-    return () => clearTimeout(motivationTimer);
-  }, [plan.stats.completionRate]);
-
-  // Real-time sync effects
-  useEffect(() => {
-    // Online/offline status monitoring
-    const handleOnline = () => {
-      setIsOnline(true);
-      message.success('Bağlantı tekrar kuruldu!');
-      if (pendingUpdates > 0) {
-        handleManualRefresh();
-      }
-    };
-    
-    const handleOffline = () => {
-      setIsOnline(false);
-      message.warning('İnternet bağlantısı kesildi. Değişiklikler kaydedilecek.');
-    };
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, [pendingUpdates]);
+  // Online/offline izleme kaldırıldı
 
   // Auto-refresh setup
-  useEffect(() => {
-    if (autoRefreshEnabled && isOnline) {
-      refreshIntervalRef.current = setInterval(() => {
-        if (onRefresh) {
-          onRefresh();
-          setLastSync(new Date());
-        }
-      }, 30000); // 30 saniyede bir yenile
-    } else {
-      if (refreshIntervalRef.current) {
-        clearInterval(refreshIntervalRef.current);
-        refreshIntervalRef.current = null;
-      }
-    }
+  // Otomatik yenileme kaldırıldı
 
-    return () => {
-      if (refreshIntervalRef.current) {
-        clearInterval(refreshIntervalRef.current);
-      }
-    };
-  }, [autoRefreshEnabled, isOnline, onRefresh]);
-
-  // Fetch coach program for this student/date so we can show assigned videos
-  useEffect(() => {
-    const fetchCoachProgram = async () => {
-      try {
-        if (!user || !plan) return;
-        const dateStr = new Date(plan.date).toISOString().slice(0,10);
-        // If current user is student, fetch their DailyPlan for that date (may be coach-created)
-        if (user.role === 'student') {
-          try {
-            const res = await apiRequest(`/daily-plans/by-date/${dateStr}`);
-            const planRes = res.data || null;
-            setCoachProgram(planRes || null);
-          } catch (e) {
-            setCoachProgram(null);
-          }
-        } else {
-          // coach/admin view: query coach programs
-          const res = await apiRequest(`/coach/programs?studentId=${user._id}&date=${dateStr}&limit=1`);
-          const first = (res.data || [])[0] || null;
-          setCoachProgram(first);
-        }
-        // collect videoIds from coach program
-        const ids: string[] = [];
-        const first = coachProgram;
-        if (first && Array.isArray(first.subjects)) {
-          first.subjects.forEach((s:any) => {
-            (s.videos || []).forEach((v:any) => { if (v && v.videoId) ids.push(v.videoId); });
-          });
-        }
-        // also check plan.subjects for embedded videoIds
-        (plan.subjects || []).forEach((s:any) => { (s.videos || []).forEach((v:any) => { if (v && v.videoId) ids.push(v.videoId); }); });
-        const uniq = Array.from(new Set(ids));
-        if (uniq.length) {
-          try {
-            const metaRes: any = await getYouTubeVideos(uniq);
-            const items = metaRes.data?.videos || [];
-            const map: Record<string, any> = {};
-            items.forEach((it:any) => { map[it.id] = it; });
-            setVideoMetaMap(map);
-          } catch (e) {
-            // ignore meta fetch errors
-          }
-        }
-      } catch (e) {
-        setCoachProgram(null);
-      }
-    };
-    fetchCoachProgram();
-  }, [user, plan && plan.date]);
+  // (Taşındı) -> effect aşağıda state tanımlarından sonra tanımlanacak
 
   // When a subject is previewed, fetch coach-saved playlist (if any) and its items
   useEffect(() => {
-    let mounted = true;
-    const fetchPrefPlaylist = async () => {
-      setPreviewPlaylistVideos(null);
+  const fetchPrefPlaylist = async () => {
       try {
         if (previewSubjectIndex === null || !user || !plan) return;
         const subjCode = plan.subjects[previewSubjectIndex]?.subject;
@@ -289,14 +155,14 @@ const DailyTable: React.FC<DailyTableProps> = ({
           const vids = listRes.data?.videos || [];
           // ensure sorted by playlist position
           vids.sort((a:any,b:any) => (Number(a.position||0) - Number(b.position||0)));
-          if (mounted) setPreviewPlaylistVideos(vids);
+          // if (mounted) setPreviewPlaylistVideos(vids);
         }
       } catch (e) {
-        if (mounted) setPreviewPlaylistVideos(null);
+        // if (mounted) setPreviewPlaylistVideos(null);
       }
     };
     fetchPrefPlaylist();
-    return () => { mounted = false; };
+  return () => { /* cleanup */ };
   }, [previewSubjectIndex, user, plan]);
 
   const placeholderSvg = encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' width='320' height='180'><rect width='100%' height='100%' fill='%23e5e7eb'/><polygon points='130,90 210,50 210,130' fill='%239ca3af'/></svg>");
@@ -307,29 +173,10 @@ const DailyTable: React.FC<DailyTableProps> = ({
     return v.thumbnail || v.thumbnailUrl || v.thumb || v.thumbnail?.url || v.thumbnails?.medium?.url || v.thumbnails?.default?.url || v.thumbnails?.high?.url || placeholderDataUrl;
   };
 
-  // Manual refresh handler
-  const handleManualRefresh = async () => {
-    if (onRefresh) {
-      try {
-        await onRefresh();
-        setLastSync(new Date());
-        setPendingUpdates(0);
-        message.success('Veriler güncellendi!');
-      } catch (error) {
-        message.error('Güncelleme başarısız');
-      }
-    }
-  };
+  // Manual refresh handler kaldırıldı
 
   // Toggle auto refresh
-  const toggleAutoRefresh = () => {
-    setAutoRefreshEnabled(!autoRefreshEnabled);
-    message.info(
-      autoRefreshEnabled 
-        ? 'Otomatik güncelleme kapatıldı' 
-        : 'Otomatik güncelleme açıldı'
-    );
-  };
+  // toggleAutoRefresh kaldırıldı (kullanılmıyor)
 
   // Subject name mapping
   const getSubjectDisplayName = (subject: string): string => {
@@ -394,24 +241,53 @@ const DailyTable: React.FC<DailyTableProps> = ({
 
   
 
-  // Inline D/Y/B kaydetme yardımcıları
-  const getSubjectKey = useCallback((index: number) => String(index), []);
+  // Timer modal state
+  const [showTimer, setShowTimer] = useState(false);
+  const [activeSubject, setActiveSubject] = useState<{ subject: string; targetTime?: number } | null>(null);
+  const [showIntro, setShowIntro] = useState(false);
 
-  const saveDYBForSubject = useCallback((subjectIndex: number) => {
-    const key = getSubjectKey(subjectIndex);
-    const data = subjectInputs[key];
-    if (!data) return;
-    onSubjectUpdate(subjectIndex, {
-      correctAnswers: data.correct,
-      wrongAnswers: data.wrong,
-      blankAnswers: data.blank
-    });
-    if (isOnline) {
-      setLastSync(new Date());
-    } else {
-      setPendingUpdates(prev => prev + 1);
-    }
-  }, [getSubjectKey, subjectInputs, onSubjectUpdate, isOnline]);
+  // Fetch coach program (videos) when plan date changes, timer açılıyor veya aktif ders değişiyor
+  useEffect(() => {
+    const fetchCoachProgram = async () => {
+      try {
+        if (!user || !plan) return;
+        const dateStr = new Date(plan.date).toISOString().slice(0,10);
+        let latestProgram: any = null;
+        if (user.role === 'student') {
+          try {
+            const res = await apiRequest(`/daily-plans/by-date/${dateStr}`);
+            latestProgram = res.data || null;
+          } catch (e) {
+            latestProgram = null;
+          }
+        } else {
+          const res = await apiRequest(`/coach/programs?studentId=${user._id}&date=${dateStr}&limit=1`);
+          latestProgram = (res.data || [])[0] || null;
+        }
+        setCoachProgram(latestProgram);
+        const ids: string[] = [];
+        if (latestProgram?.subjects) {
+          latestProgram.subjects.forEach((s:any) => (s.videos||[]).forEach((v:any)=> v?.videoId && ids.push(v.videoId)));
+        }
+        (plan.subjects||[]).forEach((s:any)=> (s.videos||[]).forEach((v:any)=> v?.videoId && ids.push(v.videoId)));
+        const uniq = Array.from(new Set(ids));
+        if (uniq.length) {
+          try {
+            const metaRes: any = await getYouTubeVideos(uniq);
+            const items = metaRes.data?.videos || [];
+            const map: Record<string, any> = {};
+            items.forEach((it:any) => { map[it.id] = it; });
+            setVideoMetaMap(map);
+          } catch {}
+        } else {
+          setVideoMetaMap({});
+        }
+      } catch {
+        setCoachProgram(null);
+      }
+    };
+    fetchCoachProgram();
+  }, [user, plan && plan.date, showTimer, activeSubject?.subject]);
 
   const HeaderWithTooltip: React.FC<{ title: string; tooltip?: string }> = ({ title, tooltip }) => (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -510,99 +386,7 @@ const DailyTable: React.FC<DailyTableProps> = ({
       },
       sortOrder: sorterState?.orderBy === 'completed' ? sorterState.orderDirection : undefined,
     },
-    {
-      title: <HeaderWithTooltip title="D" tooltip={columnTooltips.correct} />,
-      dataIndex: 'correctAnswers',
-      key: 'correct',
-      width: 60,
-      align: 'center',
-      render: (correct: number, record) => {
-        if (isStudent) {
-          return (
-            <InputNumber
-              min={0}
-              max={999}
-              value={subjectInputs[getSubjectKey(record.index)]?.correct ?? correct}
-              onChange={(value) => {
-                const key = getSubjectKey(record.index);
-                const newInputs = { ...subjectInputs } as typeof subjectInputs;
-                if (!newInputs[key]) newInputs[key] = { correct: 0, wrong: 0, blank: 0 };
-                newInputs[key].correct = value || 0;
-                setSubjectInputs(newInputs);
-              }}
-              onBlur={() => saveDYBForSubject(record.index)}
-              size="small"
-              className="input-small"
-            />
-          );
-        }
-        return <Text className="text-correct">{correct}</Text>;
-      },
-      sorter: (a, b) => a.correctAnswers - b.correctAnswers,
-      sortOrder: sorterState?.orderBy === 'correctAnswers' ? sorterState.orderDirection : undefined,
-    },
-    {
-      title: <HeaderWithTooltip title="Y" tooltip={columnTooltips.wrong} />,
-      dataIndex: 'wrongAnswers',
-      key: 'wrong',
-      width: 60,
-      align: 'center',
-      render: (wrong: number, record) => {
-        if (isStudent) {
-          return (
-            <InputNumber
-              min={0}
-              max={999}
-              value={subjectInputs[getSubjectKey(record.index)]?.wrong ?? wrong}
-              onChange={(value) => {
-                const key = getSubjectKey(record.index);
-                const newInputs = { ...subjectInputs } as typeof subjectInputs;
-                if (!newInputs[key]) newInputs[key] = { correct: 0, wrong: 0, blank: 0 };
-                newInputs[key].wrong = value || 0;
-                setSubjectInputs(newInputs);
-              }}
-              onBlur={() => saveDYBForSubject(record.index)}
-              size="small"
-              className="input-small"
-            />
-          );
-        }
-        return <Text className="text-wrong">{wrong}</Text>;
-      },
-      sorter: (a, b) => a.wrongAnswers - b.wrongAnswers,
-      sortOrder: sorterState?.orderBy === 'wrongAnswers' ? sorterState.orderDirection : undefined,
-    },
-    {
-      title: <HeaderWithTooltip title="B" tooltip={columnTooltips.blank} />,
-      dataIndex: 'blankAnswers', 
-      key: 'blank',
-      width: 60,
-      align: 'center',
-      render: (blank: number, record) => {
-        if (isStudent) {
-          return (
-            <InputNumber
-              min={0}
-              max={999}
-              value={subjectInputs[getSubjectKey(record.index)]?.blank ?? blank}
-              onChange={(value) => {
-                const key = getSubjectKey(record.index);
-                const newInputs = { ...subjectInputs } as typeof subjectInputs;
-                if (!newInputs[key]) newInputs[key] = { correct: 0, wrong: 0, blank: 0 };
-                newInputs[key].blank = value || 0;
-                setSubjectInputs(newInputs);
-              }}
-              onBlur={() => saveDYBForSubject(record.index)}
-              size="small"
-              className="input-small"
-            />
-          );
-        }
-        return <Text className="text-blank">{blank}</Text>;
-      },
-      sorter: (a, b) => a.blankAnswers - b.blankAnswers,
-      sortOrder: sorterState?.orderBy === 'blankAnswers' ? sorterState.orderDirection : undefined,
-    },
+  // DYB sütunları kaldırıldı
     {
       title: <HeaderWithTooltip title="Net" tooltip={columnTooltips.net} />,
       key: 'net',
@@ -684,7 +468,34 @@ const DailyTable: React.FC<DailyTableProps> = ({
       ],
       onFilter: (value: any, record) => record.status === value,
     },
-  ], [subjectInputs, isStudent, sorterState]);
+    {
+      title: 'Çalış',
+      key: 'actions',
+      width: 110,
+      fixed: 'right',
+      render: (_, record) => (
+        <Button
+          type="primary"
+          size="small"
+          icon={<PlayCircleOutlined />}
+          onClick={(e) => {
+            e.stopPropagation();
+            if (showIntro) return;
+            setActiveSubject({ subject: record.subject, targetTime: record.targetTime });
+            setShowIntro(true);
+            // 1.2s (intro) + 0ms delay to open modal AFTER split starts fade
+            setTimeout(() => {
+              setShowTimer(true);
+            }, 1200); // match intro duration
+            // Remove intro after fade (1200 + 400)
+            setTimeout(() => setShowIntro(false), 1200 + 800);
+          }}
+        >
+          Hazır
+        </Button>
+      )
+    }
+  ], [isStudent, sorterState]);
 
   const sortedSubjects = useMemo(() => {
     const dataSource = plan.subjects.map((subject, index) => ({
@@ -771,79 +582,25 @@ const DailyTable: React.FC<DailyTableProps> = ({
         {/* Üst bilgi: Seçili ders açıklaması */}
         {typeof previewSubjectIndex === 'number' && plan.subjects[previewSubjectIndex] && (
           <div className="subject-preview">
-            <div className="subject-preview-header">
-              <Text strong>
-                {getSubjectDisplayName(plan.subjects[previewSubjectIndex].subject)} • Açıklama
-              </Text>
-              {' '}
-              <span
-                className={`priority-badge ${
-                  plan.subjects[previewSubjectIndex].priority <= 3
-                    ? 'high'
-                    : plan.subjects[previewSubjectIndex].priority <= 6
-                    ? 'medium'
-                    : 'low'
-                }`}
-              >
-                <span className="priority-dot" />
-                Öncelik {plan.subjects[previewSubjectIndex].priority}
-              </span>
-            </div>
-            <div className="subject-preview-body">
-              <Text>
-                {plan.subjects[previewSubjectIndex].description || 'Bu ders için henüz açıklama eklenmemiş.'}
-              </Text>
-
-              {/* Assigned videos from coach program (if any) */}
-              {coachProgram && (() => {
-                const subjCode = plan.subjects[previewSubjectIndex].subject;
-                const cpSub = (coachProgram.subjects || []).find((s:any) => s.subject === subjCode) || (coachProgram.subjects || [])[previewSubjectIndex];
-                const vids = cpSub?.videos || [];
-                if (!vids || vids.length === 0) return null;
-                const formatMinutesToHoursLocal = (mins?: number | null) => {
-                  const m = Number(mins) || 0;
-                  if (m < 60) return `${m} dk`;
-                  const hrs = Math.floor(m / 60);
-                  const rem = m % 60;
-                  return rem === 0 ? `${hrs} saat` : `${hrs} saat ${rem} dk`;
-                };
-
-                return (
-                  <div className="assigned-videos" style={{ marginTop: 12 }}>
-                    {vids.map((v:any, i:number) => {
-                        const meta = v?.videoId ? videoMetaMap[v.videoId] : null;
-                        const thumb = meta?.thumbnail || getThumbnailUrl(v);
-                        const dur = meta?.duration || v.duration || formatMinutesToHoursLocal(Math.ceil((v.durationSeconds||0)/60));
-                        const title = v.title || meta?.title || 'Video';
-                        const channel = meta?.channelTitle || v.channelTitle || '';
-                        return (
-                          <div key={v.videoId || i} className={`video-item ${v._used ? 'is-used' : ''}`}>
-                            <div className="video-header">
-                              <div className="channel-info">
-                                {channel && <span className="channel">{channel}</span>}
-                                {v.position != null && <span className="dot">•</span>}
-                                {v.position != null && <span className="position">{v.position + 1}. video</span>}
-                              </div>
-                              {v._used && <span className="used-pill">kullanıldı</span>}
-                            </div>
-                            <div className="video-thumb-wrapper">
-                              <img src={thumb} alt={title} className="video-thumb" onError={(e:any)=>{ e.currentTarget.src = placeholderDataUrl; }} />
-                              <div className="play-overlay" aria-hidden>
-                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="12" fill="rgba(0,0,0,0.55)"/><path d="M10 8L16 12L10 16V8Z" fill="#fff"/></svg>
-                              </div>
-                              <span className="video-duration-badge">{dur}</span>
-                            </div>
-                            <div className="video-body">
-                              <Tooltip title={title}>
-                                <div className="video-title">{title}</div>
-                              </Tooltip>
-                            </div>
-                          </div>
-                        );
-                      })}
-                  </div>
-                );
-              })()}
+            <div className="subject-preview-header enhanced">
+              <div className="sp-left">
+                <h3 className="pdl-heading sp-heading">{getSubjectDisplayName(plan.subjects[previewSubjectIndex].subject)}</h3>
+                <p className="pdl-desc sp-desc">{plan.subjects[previewSubjectIndex].description || 'Bu ders için henüz açıklama eklenmemiş.'}</p>
+              </div>
+              <div className="sp-meta">
+                <span
+                  className={`priority-badge ${
+                    plan.subjects[previewSubjectIndex].priority <= 3
+                      ? 'high'
+                      : plan.subjects[previewSubjectIndex].priority <= 6
+                      ? 'medium'
+                      : 'low'
+                  }`}
+                >
+                  <span className="priority-dot" />
+                  Öncelik {plan.subjects[previewSubjectIndex].priority}
+                </span>
+              </div>
             </div>
           </div>
         )}
@@ -870,65 +627,7 @@ const DailyTable: React.FC<DailyTableProps> = ({
             })}
           />
 
-          {/* Assigned videos panel shown under table when a subject is selected */}
-          {previewSubjectIndex !== null && (() => {
-            const subjIndex = previewSubjectIndex;
-            // prefer previewPlaylistVideos (coach-saved playlist) when available
-            const subjCode = plan.subjects[subjIndex]?.subject;
-            const cpSub = (coachProgram && (coachProgram.subjects || []).find((s:any) => s.subject === subjCode)) || (coachProgram && (coachProgram.subjects || [])[subjIndex]);
-            const vidsFromPlan = plan.subjects[subjIndex]?.videos || [];
-            const coachSelected = (cpSub && Array.isArray(cpSub.videos)) ? cpSub.videos : [];
-            const vids = (coachSelected && coachSelected.length)
-              ? coachSelected
-              : ((previewPlaylistVideos && previewPlaylistVideos.length) ? previewPlaylistVideos : vidsFromPlan);
-            if (!vids || vids.length === 0) return null;
-            const formatMinutesToHoursLocal = (mins?: number | null) => {
-              const m = Number(mins) || 0;
-              if (m < 60) return `${m} dk`;
-              const hrs = Math.floor(m / 60);
-              const rem = m % 60;
-              return rem === 0 ? `${hrs} saat` : `${hrs} saat ${rem} dk`;
-            };
-
-            return (
-              <div style={{ marginTop: 12 }}>
-                <div style={{ marginBottom:8, fontWeight:700 }}>Bu derse atanmış videolar</div>
-                <div className="assigned-videos">
-                  {vids.map((v:any, i:number) => {
-                    const meta = v?.videoId ? videoMetaMap[v.videoId] : null;
-                    const thumb = meta?.thumbnail || getThumbnailUrl(v);
-                    const dur = meta?.duration || v.duration || formatMinutesToHoursLocal(Math.ceil((v.durationSeconds||0)/60));
-                    const title = v.title || meta?.title || v.titleText || 'Video';
-                    const channel = meta?.channelTitle || v.channelTitle || '';
-                    return (
-                      <div key={v.videoId || i} className={`video-item ${v._used ? 'is-used' : ''}`}>
-                        <div className="video-header">
-                          <div className="channel-info">
-                            {channel && <span className="channel">{channel}</span>}
-                            {v.position != null && <span className="dot">•</span>}
-                            {v.position != null && <span className="position">{v.position + 1}. video</span>}
-                          </div>
-                          {v._used && <span className="used-pill">kullanıldı</span>}
-                        </div>
-                        <div className="video-thumb-wrapper">
-                          <img src={thumb} alt={title} className="video-thumb" onError={(e:any)=>{ e.currentTarget.src = placeholderDataUrl; }} />
-                          <div className="play-overlay" aria-hidden>
-                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="12" fill="rgba(0,0,0,0.55)"/><path d="M10 8L16 12L10 16V8Z" fill="#fff"/></svg>
-                          </div>
-                          <span className="video-duration-badge">{dur}</span>
-                        </div>
-                        <div className="video-body">
-                          <Tooltip title={title}>
-                            <div className="video-title">{title}</div>
-                          </Tooltip>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })()}
+         
 
           {/* Custom Pagination */}
           {totalCount > pageSize && (
@@ -1176,42 +875,22 @@ const DailyTable: React.FC<DailyTableProps> = ({
               icon={<CheckCircleOutlined />}
               onClick={async () => {
                 try {
-                  // Gather all subject data from inputs
-                  const feedbackData: any[] = [];
-                  
-                  // Process each subject
+                  // Her ders için mevcut doğru/yanlış/boş değerleri kullanarak genel feedback gönder
                   for (let index = 0; index < plan.subjects.length; index++) {
-                    const key = String(index);
-                    const inputData = subjectInputs[key];
-                    if (inputData && (inputData.correct > 0 || inputData.wrong > 0 || inputData.blank > 0)) {
-                      feedbackData.push({
-                        subjectIndex: index,
-                        correctAnswers: inputData.correct,
-                        wrongAnswers: inputData.wrong,
-                        blankAnswers: inputData.blank,
-                        feedbackText: dailyFeedback,
-                        motivationScore: motivationScore
-                      });
-                    }
-                  }
-                  
-                  if (feedbackData.length === 0) {
-                    message.warning('En az bir ders için D-Y-B değerlerini girmelisiniz');
-                    return;
-                  }
-                  
-                  // Send feedback for each subject
-                  for (const data of feedbackData) {
+                    const subj = plan.subjects[index];
                     await apiRequest(`/daily-plans/${plan._id}/student-feedback`, {
                       method: 'POST',
-                      body: JSON.stringify(data)
+                      body: JSON.stringify({
+                        subjectIndex: index,
+                        correctAnswers: subj.correctAnswers,
+                        wrongAnswers: subj.wrongAnswers,
+                        blankAnswers: subj.blankAnswers,
+                        feedbackText: dailyFeedback,
+                        motivationScore
+                      })
                     });
                   }
-                  
                   message.success('Günlük değerlendirmeniz koçunuza gönderildi!');
-                  
-                  // Clear inputs after successful submit
-                  setSubjectInputs({});
                   setDailyFeedback('');
                   setMotivationScore(5);
                   
@@ -1237,15 +916,62 @@ const DailyTable: React.FC<DailyTableProps> = ({
       )}
 
 
-      
-      {/* Table specific tour */}
-      <DailyTableTour
-        userId={user?._id}
-        targets={{
-          getFirstRowEl: () => (tableContainerRef.current?.querySelector('.ant-table-tbody tr') as HTMLElement | null) || null,
-          getTableEl: () => (tableContainerRef.current as any) || null,
-        }}
-      />
+
+      {/* Timer Modal */}
+  {showIntro && <FullScreenSplitIntro duration={1200} fadeDuration={800} label={activeSubject?.subject} imageSrc={ekranImage} />}
+      <Modal
+        open={showTimer}
+        onCancel={() => { setShowTimer(false); setActiveSubject(null); }}
+        footer={null}
+  getContainer={false}
+        destroyOnClose
+        width={activeSubject ? 980 : 520}
+        title={activeSubject ? `${activeSubject.subject} • Çalışma Oturumu` : 'Çalışma Oturumu'}
+      >
+        {activeSubject && (() => {
+          const subjIndex = plan.subjects.findIndex(s => s.subject === activeSubject.subject);
+          const subj = subjIndex >= 0 ? plan.subjects[subjIndex] : null;
+          const subjCode = subj?.subject;
+          const cpSub = (subjCode && coachProgram && (coachProgram.subjects || []).find((s:any) => s.subject === subjCode)) || (coachProgram && (coachProgram.subjects || [])[subjIndex]);
+          const vidsFromPlan = subj?.videos || [];
+          const coachSelected = (cpSub && Array.isArray(cpSub.videos)) ? cpSub.videos : [];
+          const vids = (coachSelected && coachSelected.length)
+            ? coachSelected
+            : vidsFromPlan;
+          return (
+            <div className="timer-modal-body" style={{ display:'flex', gap: 32, alignItems:'flex-start', flexDirection:'column' }}>
+              <div className="timer-panel" style={{ margin: 'auto' }}>
+                <StudyTimer
+                  size="large"
+                  initialConfig={{
+                    subject: activeSubject.subject,
+                    studyDuration: activeSubject.targetTime && activeSubject.targetTime > 0 ? Math.min(activeSubject.targetTime, 180) : 25,
+                    technique: 'Pomodoro'
+                  }}
+                  onSessionComplete={() => {
+                    setShowTimer(false);
+                    setActiveSubject(null);
+                    if (onRefresh) onRefresh();
+                  }}
+                />
+              </div>
+              <div className="timer-program-detail" style={{ flex:1, minWidth:0 }}>
+                {subj && vids && vids.length > 0 && (
+                  <ProgramDetailLayout
+                    key={`pdl-${vids.length}-${vids[0]?.videoId || vids[0]?._id || 'x'}`}
+                    subjectName={getSubjectDisplayName(subj.subject)}
+                    description={subj.description}
+                    videos={vids}
+                    getThumbnailUrl={getThumbnailUrl}
+                    videoMetaMap={videoMetaMap}
+                    onSelectVideo={() => {}}
+                  />
+                )}
+              </div>
+            </div>
+          );
+        })()}
+      </Modal>
     </div>
   );
 };

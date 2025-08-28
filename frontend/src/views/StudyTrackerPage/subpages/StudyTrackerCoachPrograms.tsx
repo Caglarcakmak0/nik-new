@@ -4,6 +4,8 @@ import { useAuth } from '../../../contexts/AuthContext';
 import { getStudentPrograms, StudentProgram } from '../../../services/api';
 import { PlayCircleOutlined, BookOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import StudyTimer from '../bones/StudyTimer/StudyTimer';
+import FullScreenSplitIntro from '../../../components/animations/FullScreenSplitIntro';
+import ekranImage from '../../../assets/ekran.jpeg';
 import '../StudyTracker.scss';
 
 const { Title, Text } = Typography;
@@ -18,6 +20,7 @@ const StudyTrackerCoachPrograms: React.FC = () => {
   // Timer modal state (yeniden eklendi)
   const [showTimer, setShowTimer] = useState(false);
   const [activeSubject, setActiveSubject] = useState<{ programId: string; subject: string; targetTime?: number; technique?: string } | null>(null);
+  const [showIntro, setShowIntro] = useState(false);
 
   const fetchPrograms = async () => {
     if (isFree) return;
@@ -70,7 +73,7 @@ const StudyTrackerCoachPrograms: React.FC = () => {
                 <Space size="large" wrap style={{ marginBottom: 16 }}>
                   <div>
                     <Text type="secondary" style={{ display: 'block', fontSize: 12 }}>İlerleme</Text>
-                    <Progress type="circle" percent={completionRate} size={50} strokeColor="#52c41a" />
+                    <Progress type="circle" percent={completionRate} size={100} strokeColor="#52c41a" />
                   </div>
                   <div>
                     <Text type="secondary" style={{ display: 'block', fontSize: 12 }}>Konular</Text>
@@ -117,8 +120,11 @@ const StudyTrackerCoachPrograms: React.FC = () => {
                                   icon={<PlayCircleOutlined />}
                                   disabled={subject.status === 'completed'}
                                   onClick={() => {
+                                    if (showIntro) return;
                                     setActiveSubject({ programId: program._id, subject: subject.subject, targetTime: subject.targetTime });
-                                    setShowTimer(true);
+                                    setShowIntro(true);
+                                    setTimeout(() => { setShowTimer(true); }, 2200);
+                                    setTimeout(() => setShowIntro(false), 2000 + 800);
                                   }}
                                   style={{ backgroundColor: subject.status === 'in_progress' ? '#52c41a' : undefined }}
                                 >
@@ -138,6 +144,7 @@ const StudyTrackerCoachPrograms: React.FC = () => {
         </Space>
       )}
       {/* Çalışma Timer Modal */}
+  {showIntro && <FullScreenSplitIntro duration={1200} fadeDuration={800} label={activeSubject?.subject} imageSrc={ekranImage} />}
       <Modal
         open={showTimer}
         onCancel={() => { setShowTimer(false); setActiveSubject(null); }}

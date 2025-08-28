@@ -15,9 +15,11 @@ const { Text } = Typography;
 
 interface StudyCalendarProps {
   refreshTrigger?: number;
+  // mode: 'study' (only sessions & stats) | 'question' (includes deneme sınavları + hızlı DYB girişi)
+  mode?: 'study' | 'question';
 }
 
-const StudyCalendar: React.FC<StudyCalendarProps> = ({ refreshTrigger = 0 }) => {
+const StudyCalendar: React.FC<StudyCalendarProps> = ({ refreshTrigger = 0, mode = 'study' }) => {
   const isStudent = useIsStudent();
   const [loading, setLoading] = useState(true);
   const [sessions, setSessions] = useState<StudySession[]>([]);
@@ -30,6 +32,10 @@ const StudyCalendar: React.FC<StudyCalendarProps> = ({ refreshTrigger = 0 }) => 
   // Reminder modal states
   const [showReminderModal, setShowReminderModal] = useState(false);
   const [reminderModalDate, setReminderModalDate] = useState<Dayjs | null>(null);
+
+  // Question mode: exam totals per day (toplam soru sayısı)
+  const [examTotalsMap, setExamTotalsMap] = useState<Record<string, number>>({});
+  const [planDYBTotalsMap, setPlanDYBTotalsMap] = useState<Record<string, number>>({});
 
   // Data fetch
   const fetchSessions = async () => {
@@ -77,7 +83,18 @@ const StudyCalendar: React.FC<StudyCalendarProps> = ({ refreshTrigger = 0 }) => 
 
   const handleDayClick = (date: Dayjs) => {
     const key = date.format('YYYY-MM-DD');
-    const data = dayDataMap[key];
+    let data = dayDataMap[key];
+    // Soru takvimi modunda boş gün bile açılsın
+    if (!data && mode === 'question') {
+      data = {
+        date: key,
+        sessions: [],
+        totalTime: 0,
+        averageQuality: 0,
+        averageEfficiency: 0,
+        sessionCount: 0
+      };
+    }
     if (data) {
       setSelectedDayData(data);
       setDayModalDate(date);
@@ -95,9 +112,60 @@ const StudyCalendar: React.FC<StudyCalendarProps> = ({ refreshTrigger = 0 }) => 
     setReminderModalDate(null);
   };
 
+  // Fetch study sessions (always for underlying data / might be hidden in question mode)
   useEffect(() => {
     fetchSessions();
   }, [refreshTrigger]);
+
+  // Fetch practice exams per month when in question mode
+  useEffect(() => {
+    const fetchExams = async () => {
+      if (mode !== 'question') { setExamTotalsMap({}); return; }
+      try {
+        const start = selectedDate.startOf('month').toISOString();
+        const end = selectedDate.endOf('month').toISOString();
+        const res = await apiRequest(`/student/exams?from=${start}&to=${end}&limit=500`, { method: 'GET' });
+        const list: any[] = res?.data || [];
+        const map: Record<string, number> = {};
+        list.forEach(ex => {
+          const key = dayjs(ex.date).format('YYYY-MM-DD');
+          // Yalnızca çözülen (doğru + yanlış) soru sayısını al
+          const attempted = (ex?.totals?.correctAnswers || 0) + (ex?.totals?.wrongAnswers || 0);
+          map[key] = (map[key] || 0) + attempted;
+        });
+        setExamTotalsMap(map);
+      } catch {
+        setExamTotalsMap({});
+      }
+    };
+    fetchExams();
+  }, [mode, selectedDate]);
+
+  // Fetch daily plans (DYB girişleri) per month when in question mode
+  useEffect(() => {
+    const fetchPlans = async () => {
+      if (mode !== 'question') { setPlanDYBTotalsMap({}); return; }
+      try {
+        const start = selectedDate.startOf('month').toISOString();
+        const end = selectedDate.endOf('month').toISOString();
+        // Varsayım: /daily-plans endpoint'i tarih aralığı filtrelemezse büyük liste dönebilir; burada optimize edilmemiş.
+        const res = await apiRequest(`/daily-plans?from=${start}&to=${end}&limit=500`, { method: 'GET' });
+        const list: any[] = Array.isArray(res?.data) ? res.data : (res?.data ? [res.data] : []);
+        const map: Record<string, number> = {};
+        list.forEach(plan => {
+          if (!plan?.date) return;
+          const key = dayjs(plan.date).format('YYYY-MM-DD');
+          const subjects: any[] = plan.subjects || [];
+          const attempted = subjects.reduce((sum, s) => sum + (s.correctAnswers || 0) + (s.wrongAnswers || 0), 0);
+          if (attempted > 0) map[key] = (map[key] || 0) + attempted;
+        });
+        setPlanDYBTotalsMap(map);
+      } catch {
+        setPlanDYBTotalsMap({});
+      }
+    };
+    fetchPlans();
+  }, [mode, selectedDate]);
 
   if (loading) {
     return (
@@ -123,23 +191,34 @@ const StudyCalendar: React.FC<StudyCalendarProps> = ({ refreshTrigger = 0 }) => 
           onDayClick={handleDayClick}
           onReminderClick={handleReminderClick}
           isStudent={isStudent}
+          questionMode={mode === 'question'}
+          examTotalsMap={Object.keys(examTotalsMap).length || Object.keys(planDYBTotalsMap).length ?
+            // iki kaynağı birleştir
+            Object.keys({ ...examTotalsMap, ...planDYBTotalsMap }).reduce<Record<string, number>>((acc, k) => {
+              acc[k] = (examTotalsMap[k] || 0) + (planDYBTotalsMap[k] || 0);
+              return acc;
+            }, {})
+          : examTotalsMap}
         />
       </Card>
 
-      <DayModal
+  <DayModal
         open={showDayModal}
         onClose={() => setShowDayModal(false)}
         selectedDayData={selectedDayData}
         dayModalDate={dayModalDate}
         sessions={sessions}
+        mode={mode}
       />
 
-      <ReminderModal
-        open={showReminderModal}
-        onClose={handleReminderModalClose}
-        selectedDate={reminderModalDate}
-        sessions={sessions}
-      />
+      {mode !== 'question' && (
+        <ReminderModal
+          open={showReminderModal}
+          onClose={handleReminderModalClose}
+          selectedDate={reminderModalDate}
+          sessions={sessions}
+        />
+      )}
     </div>
   );
 };

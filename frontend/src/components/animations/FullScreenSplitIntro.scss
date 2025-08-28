@@ -1,0 +1,60 @@
+.fs-split-intro {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  pointer-events: none; /* Kullanıcı etkileşimini bloklamıyoruz (istersen kaldır) */
+  --fs-split-duration: 20000ms;
+  --fs-split-fade: 20000ms;
+  --fs-split-ease: cubic-bezier(0.83, 0, 0.17, 1);
+  transition: opacity var(--fs-split-fade) ease;
+  opacity: 1;
+}
+.fs-split-intro.is-fading { opacity: 0; }
+.fs-split-intro .fs-panel {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 50%;
+  background: var(--ant-color-bg-container, #fff);
+  will-change: transform;
+  transition: transform var(--fs-split-duration) var(--fs-split-ease);
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.04);
+}
+.fs-split-intro .fs-panel.with-image { background: transparent; }
+.fs-split-intro .fs-panel.with-image::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--fs-img);
+  background-size: cover;
+  background-position: center top;
+  background-repeat: no-repeat;
+  transform: translateZ(0);
+}
+.fs-split-intro .fs-panel.bottom.with-image::before {
+  background-position: center bottom;
+}
+.fs-split-intro .fs-panel.top { top: 0; transform: translateY(0); border-bottom: 1px solid rgba(0,0,0,0.06); }
+.fs-split-intro .fs-panel.bottom { bottom: 0; transform: translateY(0); border-top: 1px solid rgba(0,0,0,0.06); }
+.fs-split-intro.is-animating .fs-panel.top { transform: translateY(-100%); }
+.fs-split-intro.is-animating .fs-panel.bottom { transform: translateY(100%); }
+.fs-center-label {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: clamp(1.1rem, 2.2vw, 2rem);
+  font-weight: 600;
+  color: var(--ant-color-text, #222);
+  mix-blend-mode: difference;
+  pointer-events: none;
+  opacity: 0.85;
+}
+@media (prefers-color-scheme: dark) {
+  .fs-split-intro .fs-panel { background: var(--ant-color-bg-container, #1f1f1f); }
+  .fs-split-intro .fs-panel.top { border-bottom-color: rgba(255,255,255,0.08); }
+  .fs-split-intro .fs-panel.bottom { border-top-color: rgba(255,255,255,0.08); }
+  .fs-center-label { color: #fafafa; mix-blend-mode: normal; }
+}

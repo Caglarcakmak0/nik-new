@@ -31,7 +31,7 @@ const StudyTracker: React.FC = () => {
             <Button icon={<HistoryOutlined />} onClick={() => navigate('/study-tracker/sessions')}>Oturum Geçmişi</Button>
             <Button icon={<CalendarOutlined />} onClick={() => navigate('/study-tracker/calendar')}>Takvim</Button>
             <Button icon={<TrophyOutlined />} onClick={() => navigate('/study-tracker/study-room')}>Çalışma Odası</Button>
-            <Button icon={<UserOutlined />} onClick={() => navigate('/study-tracker/coach-programs')}>Günlük Programlar</Button>
+            <Button icon={<UserOutlined />} onClick={() => navigate('/study-plan')}>Günlük Programlar</Button>
           </Space>
         </Card>
       </Space>

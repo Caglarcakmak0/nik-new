@@ -256,7 +256,6 @@ router.get('/programs/:id', async (req, res) => {
         _id: plan._id,
         title: plan.title,
         date: plan.date,
-
         status: plan.status,
         student: plan.userId ? {
           _id: plan.userId._id,
@@ -268,7 +267,16 @@ router.get('/programs/:id', async (req, res) => {
           description: s.description || '',
           targetTime: s.targetTime || 0,
           priority: s.priority || 5,
-
+          videos: (s.videos || []).map(v => ({
+            videoId: v.videoId,
+            playlistId: v.playlistId,
+            title: v.title,
+            durationSeconds: v.durationSeconds,
+            channelTitle: v.channelTitle,
+            position: v.position,
+            order: v.order,
+            addedAt: v.addedAt
+          }))
         }))
       }
     });
@@ -347,11 +355,29 @@ router.post('/programs', async (req, res) => {
     });
 
     await newPlan.save();
+      // Bildirim ekle (eski sistemdeki gibi)
+      const Notification = require('../models/Notification');
+      const dateParam = planDate.toISOString().slice(0,10);
+      try {
+        await Notification.create({
+          userId: studentId,
+          category: 'coach',
+          type: 'coach_program_created',
+          title: 'Koçun programını hazırladı!',
+          body: `${planDate.toLocaleDateString('tr-TR')} tarihli programınız yayınlandı. Hadi başlayalım!`,
+          actionUrl: `/study-plan?date=${dateParam}`,
+          importance: 'high',
+          dedupeKey: `coach_program_created:${studentId}:${dateParam}`,
+          meta: { dailyPlanId: String(newPlan._id), coachId: String(coachId), date: dateParam }
+        });
+      } catch (notifErr) {
+        console.error('Koç programı bildirimi eklenemedi:', notifErr);
+      }
 
-    return res.status(201).json({
-      message: 'Program başarıyla oluşturuldu ve öğrenciye atandı',
-      data: newPlan
-    });
+      return res.status(201).json({
+        message: 'Program başarıyla oluşturuldu ve öğrenciye atandı',
+        data: newPlan
+      });
   } catch (error) {
     console.error('POST /coach/programs error:', error);
     return res.status(500).json({ message: error.message });

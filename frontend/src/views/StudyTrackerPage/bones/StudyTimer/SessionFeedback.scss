@@ -54,9 +54,7 @@
         margin-right: 0;
       }
       
-      &:hover {
-        // transform: translateY(-2px); // Kaldırıldı - translateY animasyonu kullanılmıyor
-      }
+  // (hover effect intentionally removed)
     }
   }
 }
@@ -295,4 +293,30 @@
     border-color: rgba(82, 196, 26, 0.3);
     background: rgba(82, 196, 26, 0.05);
   }
+}
+
+// Dark mode overrides
+.theme-dark {
+  .session-feedback {
+    .session-feedback__label { color: #e2e8f0; }
+  }
+  .quality-rating {
+    .quality-rating__label { color: #e2e8f0; }
+    .quality-rating__text { color: #818cf8; }
+  }
+  .mood-selector {
+    .mood-selector__label { color: #e2e8f0; }
+    .ant-btn {
+      &.ant-btn-default { background: #1e293b; border-color: #334155; color: #cbd5e1; }
+      &.ant-btn-primary { background: linear-gradient(135deg,#4f46e5,#4338ca); box-shadow: 0 4px 12px rgba(79,70,229,0.4); }
+    }
+  }
+  .distraction-counter {
+    .distraction-counter__label { color: #e2e8f0; }
+    .distraction-counter__hint { color: #94a3b8; }
+    .ant-input-number { background: #0f172a; border-color: #334155; }
+    .ant-input-number-input { color: #f1f5f9; }
+    .ant-btn { background: #1e293b; border-color: #334155; color: #e2e8f0; }
+  }
+  .ant-modal-content { background: linear-gradient(145deg,#0f172a,#1e293b); }
 }

@@ -18,7 +18,6 @@ import Goals from "./views/GoalsPage/Goals";
 import StudyTrackerSessions from "./views/StudyTrackerPage/subpages/StudyTrackerSessions";
 import StudyTrackerCalendar from "./views/StudyTrackerPage/subpages/StudyTrackerCalendar";
 import StudyTrackerRoom from "./views/StudyTrackerPage/subpages/StudyTrackerRoom";
-import StudyTrackerCoachPrograms from "./views/StudyTrackerPage/subpages/StudyTrackerCoachPrograms";
 import StudyTrackerTimer from "./views/StudyTrackerPage/subpages/StudyTrackerTimer";
 import DailyPlanPage from "./views/StudyPlanPage/subpages/DailyPlanPage";
 // Eski StudentExams bileşeni kaldırıldı (denemeler takvim modalında yönetiliyor)
@@ -125,11 +124,7 @@ function ThemedApp() {
                         />
                         <Route
                           path="/study-tracker/coach-programs"
-                          element={
-                            <ProtectedRoute allowedRoles={["student"]}>
-                              <StudyTrackerCoachPrograms />
-                            </ProtectedRoute>
-                          }
+                          element={<Navigate to="/study-plan" replace />}
                         />
                         <Route
                           path="/study-plan"

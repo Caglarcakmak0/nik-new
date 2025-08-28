@@ -1,0 +1,36 @@
+// Unified font imports (Lexend Deca, Montserrat, Playfair Display for logo)
+@import url('https://fonts.googleapis.com/css2?family=Lexend+Deca:wght@100..900&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Playfair+Display:wght@500;600;700;800;900&display=swap');
+
+// Font family tokens (Lato removed)
+$font-heading: 'Montserrat', 'Lexend Deca', sans-serif; // Primary display & headings
+$font-body: 'Lexend Deca', 'Montserrat', sans-serif;    // Long-form readable body
+$font-ui: 'Lexend Deca', 'Montserrat', sans-serif;      // UI controls, buttons, nav
+$font-accent: 'Montserrat', 'Lexend Deca', sans-serif;  // Accents / callouts
+$font-numeric: 'Lexend Deca', 'Montserrat', sans-serif; // Numbers & stats
+$font-logo: 'Playfair Display', serif;                   // Logo font
+
+// CSS custom properties (optional runtime theming)
+:root {
+  --font-heading: #{$font-heading};
+  --font-body: #{$font-body};
+  --font-ui: #{$font-ui};
+  --font-accent: #{$font-accent};
+  --font-numeric: #{$font-numeric};
+  --font-logo: #{$font-logo};
+}
+
+// Utility classes
+.font-heading { font-family: var(--font-heading); }
+.font-body { font-family: var(--font-body); }
+.font-ui { font-family: var(--font-ui); }
+.font-accent { font-family: var(--font-accent); }
+.font-numeric { font-family: var(--font-numeric); font-variant-numeric: tabular-nums; }
+.font-logo { font-family: var(--font-logo); }
+
+// Automatic semantic mapping
+h1, h2, h3, h4, h5, h6 { font-family: var(--font-heading); }
+body { font-family: var(--font-body); }
+button, .ant-btn, input, select, textarea, .ant-menu, .ant-tabs, .ant-breadcrumb { font-family: var(--font-ui); }
+strong, b, em, i, mark, .accent, .callout { font-family: var(--font-accent); }
+.stats, .metric-value, .kpi, .score, .timer-display__digital-time .ant-typography { font-family: var(--font-numeric); }
+.logo-text, .brand-text, .font-logo { font-family: var(--font-logo); }

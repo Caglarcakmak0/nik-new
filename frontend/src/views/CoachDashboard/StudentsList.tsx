@@ -6,7 +6,6 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import dayjs from 'dayjs';
 import { apiRequest, toAbsoluteUrl } from '../../services/api';
 import { useAuth, useIsCoach } from '../../contexts/AuthContext';
-import StudentsListTour from '../../components/tour/CoachTour/StudentsListTour';
 
 type StudentRow = {
   _id: string;
@@ -22,7 +21,7 @@ type PaginationMeta = { page: number; limit: number; total: number };
 
 const StudentsList: React.FC = () => {
   const isCoach = useIsCoach();
-  const { user } = useAuth();
+  useAuth();
   const searchRef = useRef<HTMLDivElement | null>(null);
   const refreshBtnRef = useRef<HTMLButtonElement | null>(null);
   const navigate = useNavigate();
@@ -36,6 +35,8 @@ const StudentsList: React.FC = () => {
     total: 0,
   });
   const [query, setQuery] = useState<string>(searchParams.get('q') || '');
+  const [programMap, setProgramMap] = useState<Record<string, string | null>>({});
+  const [programMapLoading, setProgramMapLoading] = useState(false);
 
   const filteredRows = useMemo(() => {
     if (!query) return rows;
@@ -52,10 +53,33 @@ const StudentsList: React.FC = () => {
       const res = await apiRequest(`/coach/students?page=${page}&limit=${limit}`);
       setRows(res.data || []);
       setPagination({ page, limit, total: res.pagination?.total || 0 });
+      // Öğrenciler geldikten sonra bugünkü program id'lerini çek
+      buildProgramMap(res.data || []);
     } catch (e: any) {
       message.error(e.message || 'Öğrenci listesi getirilemedi');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const buildProgramMap = async (students: StudentRow[]) => {
+    try {
+      setProgramMapLoading(true);
+      const dateStr = dayjs().format('YYYY-MM-DD');
+      const entries = await Promise.all(students.map(async (s) => {
+        try {
+          const res = await apiRequest(`/coach/programs?studentId=${s._id}&date=${dateStr}&limit=1`);
+          const first = (res.data || [])[0];
+          return [s._id, first?._id || null] as [string, string | null];
+        } catch {
+          return [s._id, null] as [string, string | null];
+        }
+      }));
+      const map: Record<string, string | null> = {};
+      entries.forEach(([id, prog]) => { map[id] = prog; });
+      setProgramMap(map);
+    } finally {
+      setProgramMapLoading(false);
     }
   };
 
@@ -126,14 +150,26 @@ const StudentsList: React.FC = () => {
           <Link to={`/coach/students/${record._id}`}>
             <Button size="small" icon={<EyeOutlined />}>Görüntüle</Button>
           </Link>
-          <Button
-            size="small"
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={() => navigate(`/coach/programs/create?studentId=${record._id}`)}
-          >
-            Program Oluştur
-          </Button>
+          {programMap[record._id] ? (
+            <Button
+              size="small"
+              type="primary"
+              onClick={() => navigate(`/coach/programs/create?studentId=${record._id}&editId=${programMap[record._id]}`)}
+              loading={programMapLoading && programMap[record._id] === undefined}
+            >
+              Programı Düzenle
+            </Button>
+          ) : (
+            <Button
+              size="small"
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() => navigate(`/coach/programs/create?studentId=${record._id}`)}
+              loading={programMapLoading && programMap[record._id] === undefined}
+            >
+              Program Oluştur
+            </Button>
+          )}
         </Space>
       )
     }
@@ -177,14 +213,6 @@ const StudentsList: React.FC = () => {
         />
       </Card>
 
-      <StudentsListTour
-        userId={user?._id}
-        targets={{
-          getSearchEl: () => (searchRef.current as any) || document.querySelector('.ant-input-search') as HTMLElement | null,
-          getTableEl: () => document.querySelector('.ant-table') as HTMLElement | null,
-          getRefreshEl: () => (refreshBtnRef.current as any) || document.querySelector('.ant-card .ant-btn') as HTMLElement | null,
-        }}
-      />
     </div>
   );
 };

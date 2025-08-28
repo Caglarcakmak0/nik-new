@@ -14,8 +14,7 @@ export const AntdThemeProvider: React.FC<React.PropsWithChildren> = ({ children 
       token: {
         colorPrimary: "#1677ff",
         borderRadius: 12,
-        fontFamily:
-          '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+        fontFamily: 'var(--font-ui)',
       },
       components: {
         Layout: {

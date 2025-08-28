@@ -1,14 +1,289 @@
-.flashcards-page { padding: 8px; }
-.flashcards-side .ant-card { margin-bottom: 12px; }
-.flashcard-item { height: 100%; display:flex; flex-direction:column; }
-.flashcard-item .markdown-answer { font-size: 12px; line-height:1.4; max-height:140px; overflow:auto; }
-.flashcard-item .meta-row { margin-top:8px; display:flex; justify-content:space-between; font-size:11px; opacity:0.75; }
-.practice-area { max-width:720px; margin:0 auto; }
-.practice-question { margin-top:12px; }
-.practice-answer-box { min-height:120px; background:rgba(255,255,255,0.04); border:1px dashed #555; padding:12px; border-radius:8px; display:flex; align-items:center; justify-content:center; }
-.practice-answer-box .hidden-answer { opacity:0.6; font-size:13px; display:flex; align-items:center; gap:6px; }
-.practice-answer-box .markdown-answer { width:100%; max-height:260px; overflow:auto; }
-.practice-answer-box .markdown-answer.reveal { animation:fadeIn .3s ease; }
-.practice-head { display:flex; gap:8px; margin:8px 0; }
-.practice-footer { margin-top:12px; font-size:12px; opacity:.6; text-align:right; }
-@keyframes fadeIn { from { opacity:0; transform:translateY(4px);} to { opacity:1; transform:translateY(0);} }
+.flashcards-page {
+    padding: 8px;
+}
+.flashcards-side .ant-card {
+    margin-bottom: 12px;
+}
+.flashcard-item {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+.flashcard-item .markdown-answer {
+    font-size: 12px;
+    line-height: 1.4;
+    max-height: 140px;
+    overflow: auto;
+}
+.flashcard-item .meta-row {
+    margin-top: 8px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    opacity: 0.75;
+}
+.practice-area {
+    max-width: 720px;
+    margin: 0 auto;
+}
+.practice-question {
+    margin-top: 12px;
+}
+.practice-answer-box {
+    min-height: 120px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px dashed #555;
+    padding: 12px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.practice-answer-box .hidden-answer {
+    opacity: 0.6;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.practice-answer-box .markdown-answer {
+    width: 100%;
+    max-height: 260px;
+    overflow: auto;
+}
+.practice-answer-box .markdown-answer.reveal {
+    animation: fadeIn 0.3s ease;
+}
+.practice-head {
+    display: flex;
+    gap: 8px;
+    margin: 8px 0;
+}
+.practice-footer {
+    margin-top: 12px;
+    font-size: 12px;
+    opacity: 0.6;
+    text-align: right;
+}
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+// Flip card styles (switching flashcards)
+.flip-stack {
+    perspective: 1600px;
+    margin-top: 12px;
+}
+.flip-card {
+    position: relative;
+    width: 100%;
+    min-height: 260px;
+    cursor: pointer;
+}
+.flip-card-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+    transition: transform 0.6s cubic-bezier(0.65, 0.05, 0.36, 1);
+}
+.flip-card.flipped .flip-card-inner {
+    transform: rotateY(180deg);
+}
+.flip-card-face {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 14px;
+    padding: 16px 18px 40px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 4px 18px -4px rgba(0, 0, 0, 0.4);
+}
+.flip-card-back {
+    transform: rotateY(180deg);
+}
+.flip-card-face .fc-label {
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    opacity: 0.7;
+    margin-bottom: 4px;
+}
+.flip-card-face .fc-content {
+    flex: 1 1 auto;
+    font-size: 14px;
+    line-height: 1.45;
+}
+.flip-card-face .fc-content.scrollable {
+    overflow: auto;
+}
+.flip-card-face .fc-hint {
+    position: absolute;
+    bottom: 6px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 11px;
+    opacity: 0.45;
+    pointer-events: none;
+}
+.flip-card:focus {
+    outline: 2px solid #4096ff;
+    outline-offset: 2px;
+}
+
+// Reduce motion preference
+@media (prefers-reduced-motion: reduce) {
+    .flip-card-inner {
+        transition: none;
+    }
+}
+
+// New modular design overrides (inspired by provided flashcards-ui)
+.flashcards-page.modular {
+    --fc-bg: rgba(255, 255, 255, 0.04);
+    --fc-border: rgba(255, 255, 255, 0.08);
+}
+.flashcards-page.modular .fc-creator .ant-form-item-label > label {
+    font-size: 12px;
+    letter-spacing: 0.5px;
+}
+.flashcards-page.modular .fc-tile {
+    background: var(--fc-bg);
+    border: 1px solid var(--fc-border);
+    border-radius: 18px;
+    padding: 14px 16px 12px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    backdrop-filter: blur(6px);
+    transition:
+        background 0.25s,
+        border-color 0.25s,
+        transform 0.25s;
+}
+.flashcards-page.modular .fc-tile:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.14);
+    transform: translateY(-2px);
+}
+.flashcards-page.modular .fc-tile-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
+}
+.flashcards-page.modular .fc-pills {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+.flashcards-page.modular .pill {
+      font-size: 14px;
+    padding: 3px 9px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.08);
+    line-height: 1.2;
+    letter-spacing: 0.3px;
+}
+.flashcards-page.modular .pill.topic {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #fff;
+}
+.flashcards-page.modular .pill.diff {
+    background: linear-gradient(135deg, #0ea5e9, #6366f1);
+    color: #fff;
+}
+.flashcards-page.modular .pill.diff.d4 {
+    background: linear-gradient(135deg, #f59e0b, #ef4444);
+}
+.flashcards-page.modular .pill.diff.d5 {
+    background: linear-gradient(135deg, #dc2626, #7f1d1d);
+}
+.flashcards-page.modular .pill.rate {
+    background: linear-gradient(135deg, #fbbf24, #f59e0b);
+    color: #1e1e1e;
+}
+.flashcards-page.modular .fc-actions .ant-btn {
+    opacity: 0.7;
+}
+.flashcards-page.modular .fc-actions .ant-btn:hover {
+    opacity: 1;
+}
+.flashcards-page.modular .fc-question {
+    margin-top: 6px;
+    font-weight: 500;
+    font-size: 13px;
+}
+.flashcards-page.modular .fc-divider {
+    margin: 8px 0;
+    opacity: 0.5;
+    font-size: 11px;
+}
+.flashcards-page.modular .fc-answer {
+    font-size: 14px;
+    line-height: 1.5;
+    max-height: 140px;
+    overflow: auto;
+}
+.flashcards-page.modular .fc-meta {
+    margin-top: 8px;
+    font-size: 11px;
+    opacity: 0.6;
+    display: flex;
+    justify-content: space-between;
+}
+.flashcards-page.modular .practice-area {
+    margin-top: 4px;
+}
+.flashcards-page.modular .practice-selector-card {
+    background: var(--fc-bg);
+    border: 1px solid var(--fc-border);
+}
+.flashcards-page.modular .stacked-wrapper {
+    margin-top: 12px;
+}
+.flashcards-page.modular .stacked-card {
+    filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3));
+}
+.flashcards-page.modular .stacked-face {
+    background: radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.02));
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.flashcards-page.modular .stacked-face .meta {
+    font-size: 10px;
+}
+.flashcards-page.modular .stacked-face .hint {
+    font-size: 10px;
+}
+.flashcards-page.modular .stacked-progress {
+    font-weight: 500;
+}
+
+// Scrollbars subtle
+.flashcards-page.modular .fc-answer::-webkit-scrollbar,
+.flashcards-page.modular .markdown-answer::-webkit-scrollbar {
+    width: 6px;
+}
+.flashcards-page.modular .fc-answer::-webkit-scrollbar-track {
+    background: transparent;
+}
+.flashcards-page.modular .fc-answer::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+}
+:where(.css-dev-only-do-not-override-c1elp4).ant-btn-sm.ant-btn-icon-only {
+    width: 30px;
+}

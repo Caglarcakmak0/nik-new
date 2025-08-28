@@ -1,0 +1,33 @@
+.split-reveal {
+  position: relative;
+  overflow: hidden;
+  --split-duration: 600ms;
+  --split-ease: cubic-bezier(0.83, 0, 0.17, 1);
+}
+.split-reveal .split-inner {
+  position: relative;
+  z-index: 1;
+}
+.split-reveal .split-cover {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 50%;
+  background: var(--ant-color-bg-container, #fff);
+  z-index: 2;
+  pointer-events: none;
+  transition: transform var(--split-duration) var(--split-ease), opacity var(--split-duration) var(--split-ease);
+  will-change: transform;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.03);
+}
+.split-reveal .split-cover.top { top: 0; transform: translateY(0); border-bottom: 1px solid rgba(0,0,0,0.06); }
+.split-reveal .split-cover.bottom { bottom: 0; transform: translateY(0); border-top: 1px solid rgba(0,0,0,0.06); }
+.split-reveal.is-animating .split-cover.top { transform: translateY(-100%); }
+.split-reveal.is-animating .split-cover.bottom { transform: translateY(100%); }
+
+/* Dark mode uyumu (Ant Design tokenları yoksa fallback) */
+@media (prefers-color-scheme: dark) {
+  .split-reveal .split-cover { background: var(--ant-color-bg-container, #1f1f1f); }
+  .split-reveal .split-cover.top { border-bottom-color: rgba(255,255,255,0.08); }
+  .split-reveal .split-cover.bottom { border-top-color: rgba(255,255,255,0.08); }
+}

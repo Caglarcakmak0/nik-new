@@ -1,3 +1,35 @@
+// Koç program oluşturma sayfası için tam kaydırılabilir video listesi
+.program-create-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  min-height: 600px;
+}
+
+.playlist-card-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0%;
+  min-height: 0;
+  height: 100%;
+}
+
+.video-list-wrapper {
+  flex: 1 1 0%;
+  min-height: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.video-scroll {
+  flex: 1 1 0%;
+  min-height: 0;
+  height: 100%;
+  overflow-y: auto;
+  padding-right: 6px;
+}
 @import '../../styles/variables';
 @import '../../styles/mixins';
 
@@ -48,9 +80,11 @@
   .subjects-grid::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:4px; }
   .theme-dark .subjects-grid::-webkit-scrollbar-thumb { background:#475569; }
   .subject-item-card { flex:0 0 240px; scroll-snap-align:start; height:100%; display:flex; flex-direction:column; }
+  .subject-item-card.is-active { outline:2px solid #16a34a; box-shadow:0 0 0 2px rgba(34,197,94,0.35); }
   @media (min-width:900px) { .subject-item-card { flex:0 0 260px; } }
   @media (min-width:1400px) { .subject-item-card { flex:0 0 250px; } }
   .subject-item-card .ant-card-body { display:flex; flex-direction:column; gap:8px; }
+
 
   .page-header {
     margin-bottom: 24px;
@@ -133,6 +167,15 @@
   .video-item.is-used { opacity:.55; }
   /* Previously added videos should have an orange border (orange-500) */
   .video-item.is-used { border-color: #f97316 !important; box-shadow: 0 4px 14px rgba(249,115,22,0.12); }
+  /* Newly added (this session) visual feedback */
+  .video-item.just-added { 
+    border-color:#16a34a !important; 
+    box-shadow:0 0 0 1px #16a34a inset, 0 4px 16px -4px rgba(34,197,94,0.4); 
+    outline:2px solid #16a34a; 
+    outline-offset:2px; 
+    animation: pulseAdded 1.2s ease-in-out 1; 
+  }
+  @keyframes pulseAdded { 0% { box-shadow:0 0 0 2px rgba(34,197,94,0.4); } 60% { box-shadow:0 0 0 4px rgba(34,197,94,0); } 100% { box-shadow:0 0 0 0 rgba(34,197,94,0); } }
   .video-item.dark .video-title { color:#f1f5f9 !important; }
   .video-item.light .video-title { color:#1e293b !important; }
   .video-item.dark .video-duration-badge { background:rgba(0,0,0,0.55); }

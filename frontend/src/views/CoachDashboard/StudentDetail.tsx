@@ -5,7 +5,6 @@ import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 import { apiRequest } from '../../services/api';
 import { useAuth, useIsCoach } from '../../contexts/AuthContext';
-import StudentDetailTour from '../../components/tour/CoachTour/StudentDetailTour';
 
 const { Title, Text } = Typography;
 
@@ -249,15 +248,7 @@ const StudentDetail: React.FC = () => {
         </Col>
       </Row>
 
-      <StudentDetailTour
-        userId={user?._id}
-        targets={{
-          getHeaderEl: () => (headerRef.current as any) || document.querySelector('.ant-card') as HTMLElement | null,
-          getSummaryEl: () => (summaryRef.current as any) || null,
-          getProgramsTableEl: () => (tableRef.current as any) || null,
-          getCreateProgramButtonEl: () => document.querySelector('a[href^="/coach/programs/create"]') as HTMLElement | null,
-        }}
-      />
+
     </div>
   );
 };

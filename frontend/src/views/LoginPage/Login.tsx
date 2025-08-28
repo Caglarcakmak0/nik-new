@@ -7,7 +7,7 @@ import { useAuth } from '../../contexts/AuthContext'
 import { rememberMeService } from '../../services/rememberMe' // Remember Me servisini import et
 import { getCurrentMotivation, type Motivation as MotivationType } from '../../services/api'
 import logoNik from '../../assets/logoNik.png'
-import backgroundImage from '../../assets/UpscaleImage_2_20250710.dd4061c9.jpeg'
+import backgroundImage from '../../assets/ekran.jpeg'
 
 const { Title, Text } = Typography
 

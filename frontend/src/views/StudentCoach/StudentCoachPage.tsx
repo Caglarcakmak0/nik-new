@@ -3,7 +3,6 @@ import { Alert, Card, Spin, Typography, Modal, Button } from 'antd';
 import { getMyCoach, getCoachFeedbackStatus } from '../../services/api';
 import CoachProfile from './CoachProfile';
 import SecretFeedbackForm from '../../components/student/FeedbackForm/SecretFeedbackForm';
-import StudentCoachTour from '../../components/tour/StudentTour/StudentCoachTour';
 import { useAuth } from '../../contexts/AuthContext';
 import './StudentCoachPage.scss';
 
@@ -132,14 +131,7 @@ export const StudentCoachPage: React.FC = () => {
           onSubmitted={() => { load(); }}
         />
       </div>
-      <StudentCoachTour
-        userId={user?._id}
-        targets={{
-          getBannerEl: () => (bannerRef.current as any) || document.querySelector('.ant-alert') as HTMLElement | null,
-          getProfileEl: () => (profileRef.current as any) || null,
-          getProgramsEl: () => null, // Program bölümü kaldırıldı
-        }}
-      />
+
     </div>
   );
 };

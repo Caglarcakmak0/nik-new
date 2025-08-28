@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Card, List, Typography, Tag, Space, Button, Skeleton, Alert, Progress, Divider, Modal, message } from 'antd';
-import { PlayCircleOutlined, ClockCircleOutlined, BookOutlined, CheckCircleOutlined, TrophyOutlined, StopOutlined } from '@ant-design/icons';
+import { PlayCircleOutlined, ClockCircleOutlined, BookOutlined, CheckCircleOutlined, TrophyOutlined } from '@ant-design/icons';
 import { getStudentProgramDetail, StudentProgram, createStudySession, updateLiveTracking } from '../../services/api';
 import StudyTimer from '../../views/StudyTrackerPage/bones/StudyTimer/StudyTimer';
 import './StudentProgramDetail.scss';
@@ -94,7 +94,30 @@ const StudentProgramDetail: React.FC = () => {
           }
         };
       }
-      
+      // Eğer backend stats sağlamadıysa basit istatistikleri türet
+      if (!programData.stats) {
+        const subjects = programData.subjects || [];
+        const totalTargetTime = subjects.reduce((sum: number, s: any) => sum + (s.targetTime || 0), 0);
+        const totalStudyTime = subjects.reduce((sum: number, s: any) => sum + (s.studyTime || 0), 0);
+        const completionRate = subjects.length > 0
+          ? Math.round(subjects.reduce((acc: number, s: any) => {
+              if (s.targetTime && s.targetTime > 0) {
+                return acc + Math.min((s.studyTime || 0) / s.targetTime, 1);
+              }
+              return acc;
+            }, 0) / subjects.length * 100)
+          : 0;
+        const totalTargetQuestions = subjects.reduce((sum: number, s: any) => sum + (s.targetQuestions || 0), 0);
+        const totalCompletedQuestions = subjects.reduce((sum: number, s: any) => sum + (s.completedQuestions || 0), 0);
+        programData.stats = {
+          completionRate,
+            totalStudyTime,
+            totalTargetTime,
+            totalCompletedQuestions,
+            totalTargetQuestions,
+            netScore: 0
+        };
+      }
       setProgram(programData);
       setError(null);
     } catch (e: any) {
@@ -351,6 +374,25 @@ const StudentProgramDetail: React.FC = () => {
                                 ⭕ Boş: {s.blankAnswers || 0}
                               </Text>
                             </Space>
+                          )}
+
+                          {/* Atanan Videolar */}
+                          {Array.isArray((s as any).videos) && (s as any).videos.length > 0 && (
+                            <div className="subject-videos">
+                              <Text type="secondary">Videolar:</Text>
+                              <List
+                                size="small"
+                                dataSource={[...(s as any).videos].sort((a:any,b:any)=> (a.order||0)-(b.order||0))}
+                                renderItem={(v:any) => (
+                                  <List.Item style={{ padding: '4px 0', display:'flex', justifyContent:'space-between', gap:8 }}>
+                                    <a href={`https://www.youtube.com/watch?v=${v.videoId}${v.playlistId ? `&list=${v.playlistId}` : ''}`} target="_blank" rel="noopener noreferrer" style={{ flex:1, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>
+                                      {v.title || v.videoId}
+                                    </a>
+                                    <span style={{ color:'#888', fontSize:12 }}>{Math.ceil((v.durationSeconds || 0)/60)} dk</span>
+                                  </List.Item>
+                                )}
+                              />
+                            </div>
                           )}
 
 

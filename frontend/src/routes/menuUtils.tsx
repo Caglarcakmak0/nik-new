@@ -97,15 +97,9 @@ export const allMenuItems: MenuItemEx[] = [
     roles: ["student"],
   },
   {
-    key: "/study-tracker/coach-programs",
-    icon: <UserOutlined />,
-    label: "Günlük Programlar",
-    roles: ["student"],
-  },
-  {
     key: "/study-plan",
     icon: <BookOutlined />,
-    label: "Çalışma Programı",
+  label: "Günlük Programlar",
     roles: ["student"],
   },
   {

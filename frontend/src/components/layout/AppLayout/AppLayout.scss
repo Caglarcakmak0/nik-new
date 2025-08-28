@@ -125,7 +125,7 @@
 
         .brand-text {
           color: #fb923c;
-          font-family: 'Playfair Display';
+          font-family: var(--font-heading);
           font-weight: 900;
           font-size: 20px;
           transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -512,4 +512,10 @@
       }
     }
   }
+}
+
+// Logo font overrides removed: .brand-text already set to Playfair Display above
+// Apply Playfair Display only when sider is expanded
+.app-layout .app-sider .sider-logo.expanded .logo-text .brand-text {
+  font-family: 'Playfair Display', serif;
 }

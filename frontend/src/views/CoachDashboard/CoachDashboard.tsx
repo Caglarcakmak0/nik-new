@@ -8,7 +8,6 @@ import { StudentCard } from '../../components/coach';
 import { AnalyticsMiniCard, AnalyticsRangeCard, AnalyticsRange } from '../../components/feature/analytics';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
-import CoachDashboardTour from '../../components/tour/CoachTour/CoachDashboardTour';
 
 dayjs.extend(relativeTime);
 dayjs.locale('tr');
@@ -346,16 +345,7 @@ const CoachDashboard: React.FC = () => {
         />
       </Card>
 
-      {/* Coach page tour */}
-      <CoachDashboardTour
-        userId={user?._id}
-        targets={{
-          getHeaderEl: () => document.querySelector('.ant-typography') as HTMLElement | null,
-          getStatsCardsEl: () => document.querySelector('.ant-row') as HTMLElement | null,
-          getCreateButtonEl: () => document.querySelector('.ant-card .ant-btn-primary') as HTMLElement | null,
-          getTableEl: () => document.querySelector('.ant-table') as HTMLElement | null,
-        }}
-      />
+    
     </div>
   );
 };
