@@ -8,7 +8,11 @@ const JWT_SECRET_KEY = process.env.JWT_KEY;
 
 const authenticateToken = async  (req, res, next) => {
   const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1].replaceAll('"', ''); 
+  let token = authHeader && authHeader.split(' ')[1].replaceAll('"', '');
+  // Support token via query param (for EventSource which can't set headers)
+  if (!token && req.query && req.query.token) {
+    token = String(req.query.token);
+  }
   if (!token) {
     return res.status(401).end();
   }

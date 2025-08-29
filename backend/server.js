@@ -6,8 +6,8 @@ const cors = require("cors");
 const path = require("path");
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsdoc = require('swagger-jsdoc');
-const app = express();
-const port = process.env.PORT || 8000;
+const app = express(); 
+const port = process.env.PORT || 8000; 
 
 // .env yükleme: önce backend klasörü, bulunmazsa proje kökü (bir üst klasör)
 dotenv.config({ path: path.join(__dirname, '.env') });
@@ -141,18 +141,29 @@ app.use("/api", mainRoute);
 const { startCoachPerformanceJob } = require('./jobs/coachPerformance');
 const { startPerformanceNotificationsJob } = require('./jobs/performanceNotifications');
 const { startLeaderboardNotificationsJob } = require('./jobs/leaderboardNotifications');
+const { startHabitJobs } = require('./jobs/habitJobs');
 
-app.listen(port, async () => {
-    console.log(`[startup] Server listening on port ${port}. Mongo bağlanıyor...`);
+async function startServer(customPort) {
+    const p = customPort || port;
+    console.log(`[startup] Server listening on port ${p}. Mongo bağlanıyor...`);
     try {
         await connect();
-        console.log(`[startup] Ready -> http://localhost:${port}`);
+        console.log(`[startup] Ready -> http://localhost:${p}`);
         startCoachPerformanceJob();
         startPerformanceNotificationsJob();
         startLeaderboardNotificationsJob();
+        startHabitJobs();
+        return app.listen(p);
     } catch (error) {
         console.error('MongoDB connection error:', error);
         console.error('Uygulama Mongo olmadan çalışmayacak. Düzeltip yeniden başlatın.');
-        process.exit(1);
+        throw error;
     }
-});
+}
+
+// Auto start only if run directly
+if (require.main === module) {
+    startServer();
+}
+
+module.exports = { app, startServer };

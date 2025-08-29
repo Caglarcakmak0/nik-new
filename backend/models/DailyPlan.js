@@ -62,6 +62,17 @@ const DailyPlanSchema = mongoose.Schema({
             maxlength: [50, 'Konu adı en fazla 50 karakter olabilir'],
             trim: true
         }],
+        // Gelişmiş konu listesi: her konu için çalışma türü işaretleri
+        topicsDetailed: [{
+            topic: {
+                type: String,
+                maxlength: [60, 'Konu adı en fazla 60 karakter olabilir'],
+                trim: true,
+            },
+            solveQuestions: { type: Boolean, default: false }, // Soru çözümü yapılacak mı
+            watchVideo: { type: Boolean, default: false }, // Video izlenecek mi
+            durationMinutes: { type: Number, min: 5, max: 600 } // Konu özel hedef süre (dk)
+        }],
         priority: {
             type: Number,
             min: 1,

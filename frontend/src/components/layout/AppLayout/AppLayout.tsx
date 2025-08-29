@@ -36,7 +36,21 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   const { designMode } = useDesign();
   const menuItems = getRouteMenuByRole(user?.role);
   const planLabel = user?.role === 'student' ? ((user?.plan?.tier as any) === 'premium' ? 'Premium' : 'Free') : null;
-  const [globalMock, setGlobalMock] = useState(false);
+  const [globalMock, setGlobalMock] = useState<boolean>(()=> {
+    const stored = localStorage.getItem('globalMockMode');
+    return stored === '1';
+  });
+
+  // On mount dispatch current value so consumers listening before interaction receive state
+  React.useEffect(()=> {
+    window.dispatchEvent(new CustomEvent('global-mock-mode', { detail: { enabled: globalMock } }));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Persist whenever it changes
+  React.useEffect(()=> {
+    localStorage.setItem('globalMockMode', globalMock ? '1':'0');
+  }, [globalMock]);
 
   // Menu click handler
   const handleMenuClick = ({ key }: { key: string }) => {
@@ -248,7 +262,6 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
                   checked={globalMock}
                   onChange={(v) => {
                     setGlobalMock(v);
-                    // Uygulama genelinde dinlemek için custom event
                     window.dispatchEvent(new CustomEvent('global-mock-mode', { detail: { enabled: v } }));
                   }}
                 />

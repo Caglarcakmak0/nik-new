@@ -25,7 +25,7 @@ import {
 import { useGamification } from '../../../../hooks/useGamification';
 import XPBar from '../../../../components/XPBar';
 import DailyChallenges from '../../../../components/DailyChallenges';
-import { levelProgress } from '../../../../utils/levelCurve';
+import { getProgressFromStats } from '../../../../utils/leveling';
 import './GamificationSystem.scss';
 
 const { Title, Text } = Typography;
@@ -66,7 +66,7 @@ const GamificationSystem: React.FC = () => {
 
   if (!stats) return <div>Loading...</div>;
 
-  const lp = levelProgress(stats.currentLevel, stats.currentLevelXP, stats.nextLevelXP);
+  const lp = getProgressFromStats(stats.currentLevel, stats.currentLevelXP, stats.nextLevelXP, stats.totalXP);
   const title = dynamicLevelTitle(stats.currentLevel);
   // Derived values
   const xpToNext = stats ? (stats.nextLevelXP - stats.currentLevelXP) : 0;

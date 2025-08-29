@@ -20,6 +20,7 @@ import StudyTrackerCalendar from "./views/StudyTrackerPage/subpages/StudyTracker
 import StudyTrackerRoom from "./views/StudyTrackerPage/subpages/StudyTrackerRoom";
 import StudyTrackerTimer from "./views/StudyTrackerPage/subpages/StudyTrackerTimer";
 import DailyPlanPage from "./views/StudyPlanPage/subpages/DailyPlanPage";
+import WeeklyPlanPage from "./views/WeeklyPlanPage/WeeklyPlanPage";
 // Eski StudentExams bileşeni kaldırıldı (denemeler takvim modalında yönetiliyor)
 import TopicMatrix from "./views/TopicMatrix/TopicMatrix";
 import CoachDashboard from "./views/CoachDashboard/CoachDashboard";
@@ -39,11 +40,15 @@ import Statistics from "./views/Admin/Statistics";
 import ErrorPage from "./components/ErrorPage/ErrorPage";
 import FlashcardsPage from "./views/Flashcards/Flashcards";
 import AchievementsPage from "./views/StudyPlanPage/bones/Achievements/AchievementsPage";
+import ExamTrackerPage from "./views/ExamTrackerPage/ExamTrackerPage";
+import HabitsPage from "./views/HabitsPage/HabitsPage";
+import AIAssistantPage from "./views/AIAssistantPage";
 // Routing bileşeni (tema sağlayıcıdan bağımsız)
 function ThemedApp() {
   return (
     <AuthProvider>
-      <Router>
+  {/* React Router future flags prep (v7_startTransition, v7_relativeSplatPath) - only effective on newer versions */}
+  <Router future={{ v7_startTransition: true as any, v7_relativeSplatPath: true as any }}>
             <Routes>
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
@@ -135,6 +140,14 @@ function ThemedApp() {
                           }
                         />
                         <Route
+                          path="/weekly-plan"
+                          element={
+                            <ProtectedRoute allowedRoles={["student"]}>
+                              <WeeklyPlanPage />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
                           path="/topic-matrix"
                           element={
                             <ProtectedRoute allowedRoles={["student", "coach"]}>
@@ -155,6 +168,22 @@ function ThemedApp() {
                           element={
                             <ProtectedRoute allowedRoles={["student"]}>
                               <AchievementsPage />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/habits"
+                          element={
+                            <ProtectedRoute allowedRoles={["student"]}>
+                              <HabitsPage />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/ai-assistant"
+                          element={
+                            <ProtectedRoute allowedRoles={["student"]}>
+                              <AIAssistantPage />
                             </ProtectedRoute>
                           }
                         />
@@ -276,6 +305,14 @@ function ThemedApp() {
                           element={
                             <ProtectedRoute allowedRoles={["student"]}>
                               <Goals />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/exam-tracker"
+                          element={
+                            <ProtectedRoute allowedRoles={["student"]}>
+                              <ExamTrackerPage />
                             </ProtectedRoute>
                           }
                         />

@@ -1,115 +1,75 @@
-# YKS Portal AI Integration Plan
+## AI Integration (Simplified - OpenRouter Only)
 
-## Hedef
-YKS Portal'a ücretsiz dil modeli entegrasyonu ile akıllı asistan özelliği eklemek.
+Bu doküman önceki Ollama + RAG planını değiştirir. Yeni yaklaşım: Minimum eforla OpenRouter üzerinden tek endpoint ve basit kullanıcı bağlamı.
 
-## Teknoloji Yığını
-- **Model**: Ollama (Local, Ücretsiz)
-  - Llama 3.1, Qwen, Gemma seçenekleri
-- **Yaklaşım**: RAG (Retrieval Augmented Generation)
-- **Vektör DB**: Chroma/Pinecone
-- **Entegrasyon**: REST API
+### Amaç
+Öğrenciye anında: sınav soruları, çalışma tavsiyesi, motivasyon ve performans özeti sağlayan genel amaçlı chat.
 
-## Mevcut Veri Kaynakları
-Portal'da zaten mevcut:
-- Study sessions (çalışma kayıtları)
-- User stats (öğrenci istatistikleri)
-- Study goals (hedefler)
-- Daily plans (günlük planlar)
-- Achievements (başarılar)
-- Competition data (yarışma verileri)
+### Mimarinin Özeti
+- Sağlayıcı: OpenRouter (çoklu model gateway)
+- Model varsayılanı: `openai/gpt-4o` (ENV ile değiştirilebilir)
+- Backend Endpoint: `POST /api/ai/chat`
+- Kimlik Doğrulama: JWT (mevcut `authenticateToken`)
+- Rate Limit: 5dk / 30 istek (in-memory)
+- Kullanıcı Bağlamı: Son 7 gün çalışma süreleri + en çok çalışılan 3 ders + hedef alan + sınıf
+- Retrieval / Vektör DB: Yok (ileride eklenebilir). Şimdilik sadece internal basic keyword stub.
 
-## Eklenecek Veri Kaynakları
-1. **YKS Genel Bilgiler**
-   - Sınav formatı (TYT/AYT)
-   - Puanlama sistemi
-   - Üniversite-bölüm bilgileri
-   - Taban puanlar
+### Çevre Değişkenleri (.env)
+```
+AI_PROVIDER=openrouter
+OPENROUTER_API_KEY=sk-or-xxxxxxxxxxxxxxxx
+OPENROUTER_MODEL=openai/gpt-4o
+# Opsiyonel fallback yerel kullanım için (şu an aktif değilse gerekmiyor):
+# AI_PROVIDER=ollama
+# AI_MODEL=llama3.1
+```
 
-2. **Çalışma Tavsiyeleri**
-   - Konu bazında öneriler
-   - Zaman yönetimi
-   - Teknik stratejiler
-
-3. **Sık Sorulan Sorular**
-   - YKS süreçleri
-   - Başvuru prosedürleri
-   - Portal kullanımı
-
-## Implementation Plan
-
-### Phase 1: Ollama Setup
-- [ ] Ollama kurulumu
-- [ ] Model seçimi ve indirme
-- [ ] API endpoint testleri
-
-### Phase 2: RAG Infrastructure
-- [ ] Vektör veritabanı kurulumu
-- [ ] Veri indexleme sistemi
-- [ ] Arama fonksiyonları
-
-### Phase 3: Data Preparation
-- [ ] YKS temel bilgilerini hazırla
-- [ ] Portal verilerini dönüştür
-- [ ] Vektör indexleme
-
-### Phase 4: Backend Integration
-- [ ] AI endpoint'leri (/api/ai/chat)
-- [ ] RAG query sistemi
-- [ ] Response formatlama
-
-### Phase 5: Frontend Integration
-- [ ] Chat component
-- [ ] AI asistan UI
-- [ ] Context-aware öneriler
-
-### Phase 6: Advanced Features
-- [ ] Kişiselleştirilmiş öneriler
-- [ ] Çalışma planı oluşturma
-- [ ] Performans analizi
-
-## Örnek Use Cases
-- "TYT Matematik kaç soru?"
-- "Benim çalışma performansım nasıl?"
-- "Hangi konulara odaklanmalıyım?"
-- "Boğaziçi İşletme için ne kadar puan gerekli?"
-- "Çalışma planımı optimize et"
-
-## Teknik Detaylar
-```javascript
-// API Structure
+### İstek Örneği
+```
 POST /api/ai/chat
+Authorization: Bearer <JWT>
 {
-  "message": "TYT kaç dakika sürer?",
-  "context": "exam_info" // optional
-}
-
-// Response
-{
-  "response": "TYT sınavı 165 dakika sürer...",
-  "sources": ["yks_genel_bilgiler.txt"],
-  "confidence": 0.95
+  "message": "Son 1 haftalık çalışma performansımı nasıl geliştiririm?"
 }
 ```
 
-## Avantajları
-- ✅ Tamamen ücretsiz
-- ✅ Offline çalışabilir
-- ✅ Veri gizliliği
-- ✅ Özelleştirilebilir
-- ✅ Zamanla geliştirilir
+### Yanıt Örneği
+```
+{
+  "response": "Genel olarak sürelerin iyi; matematik ağırlıklı çalışmışsın...",
+  "sources": ["(şimdilik boş veya stub)"] ,
+  "model": "openai/gpt-4o"
+}
+```
 
-## Gereksinimler
-- 8GB+ RAM (16GB ideal)
-- ~4GB disk alanı
-- Ollama kurulumu
+### Güvenlik & Gizlilik
+- API key yalnızca backend `.env` içinde.
+- Frontend istekleri sadece JWT taşır; model anahtarı istemciye inmez.
+- Loglarda API key maskeleme (gerekirse wrapper eklenebilir) önerilir.
 
-## Timeline
-- Phase 1-2: 1 hafta
-- Phase 3-4: 1 hafta  
-- Phase 5-6: 2 hafta
+### Hatalar ve Fallback
+1. OpenRouter hata → JSON `{ response: 'OpenRouter hata: <mesaj>', model: 'error' }` döner.
+2. API key yok → Uyarı + stub yanıt (gerekirse sert 500'e çevrilebilir).
 
-**Toplam süre: ~1 ay**
+### İzleme (Öneri)
+- Kısa vadede: Response süresi + hata oranı console.
+- Orta vadede: `/admin` paneline basit AI metrics (count, avg latency) eklenebilir.
+
+### Basitleştirilmiş Yol Haritası
+1. (Done) OpenRouter entegrasyonu.
+2. (Optional) Streaming (SSE) ile token bazlı akış.
+3. (Optional) RAG: Konu özetleri + YKS FAQ markdown indeksleme.
+4. (Optional) Kişiselleştirilmiş çalışma planı öneri endpoint'i (`/api/ai/plan`).
+
+### Teknik Notlar
+- `aiService.js` içinde sağlayıcı seçimi: `AI_PROVIDER`.
+- OpenRouter çağrıları: `openai` SDK `chat.completions.create`.
+- Performans: İlk aşamada yeterli; ağırlaşırsa caching/memoization eklenebilir.
+
+### Gelecekte Eklenebilecek Değerler
+- Kullanıcı hedeflerine göre otomatik haftalık özet oluşturma.
+- Progress gap analizi (en çok çalışılan vs ihmal edilen ders).
+- Kaynak linkleri (dahili doküman tabanı eklenince).
 
 ---
-*Bu plan öğrencilere YKS sürecinde akıllı destek sağlamak için hazırlanmıştır.*
+Bu doküman güncel sade yaklaşımı temsil eder; eski Ollama/RAG planı geçersizdir.

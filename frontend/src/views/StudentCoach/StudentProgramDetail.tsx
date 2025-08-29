@@ -332,6 +332,17 @@ const StudentProgramDetail: React.FC = () => {
                               ))}
                             </div>
                           )}
+                          {Array.isArray((s as any).topicsDetailed) && (s as any).topicsDetailed.length > 0 && (
+                            <div>
+                              <Text type="secondary">Detaylı Konular: </Text>
+                              {(s as any).topicsDetailed.map((td: any, i: number) => (
+                                <Tag key={i} color={td.solveQuestions && td.watchVideo ? 'blue' : td.solveQuestions ? 'green' : td.watchVideo ? 'purple' : 'default'}>
+                                  {td.topic}{td.durationMinutes ? ` • ${td.durationMinutes}dk` : ''}
+                                  {td.solveQuestions && ' ✓S'}{td.watchVideo && ' ▶V'}
+                                </Tag>
+                              ))}
+                            </div>
+                          )}
                           
                           {/* Çalışma Süre İlerlemesi */}
                           <div>

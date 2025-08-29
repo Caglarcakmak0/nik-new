@@ -1,5 +1,9 @@
+// ===== TIMER DISPLAY - PREMIUM DESIGN =====
+@import '../../../../styles/variables';
+@import '../../../../styles/mixins';
+
 .timer-display {
-  color: white;
+  color: #0f172a;
 
   &__header {
     display: flex;
@@ -7,15 +11,20 @@
     margin-bottom: 24px;
     
     .ant-switch {
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      border-radius: 20px;
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+      border-radius: 16px;
+      transition: all 0.25s ease;
       
       &.ant-switch-checked {
-        background-color: rgba(255, 255, 255, 0.3);
+        background: #10b981;
+        border-color: #059669;
+        box-shadow: 0 4px 14px -4px rgba(16, 185, 129, 0.35);
       }
       
-      &:not(.ant-switch-checked) {
-        background-color: rgba(255, 255, 255, 0.1);
+      &:hover {
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
       }
     }
   }
@@ -42,8 +51,8 @@
     }
 
     .ant-progress-circle {
-      filter: drop-shadow(0 8px 24px rgba(102, 126, 234, 0.3));
-      transition: all 0.3s ease;
+      filter: drop-shadow(0 4px 12px rgba(16, 185, 129, 0.15));
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       
       .ant-progress-circle-path {
         transition: stroke-dasharray 0.3s ease;
@@ -55,12 +64,12 @@
     position: absolute;
     top: 10px;
     right: 10px;
-    animation: pulse 2s infinite;
-    background: rgba(255, 255, 255, 0.9);
+    animation: premiumPulse 2s infinite;
+    background: #10b981;
     border-radius: 50%;
     width: 12px;
     height: 12px;
-    box-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
+    box-shadow: 0 0 12px rgba(16, 185, 129, 0.6);
     z-index: 10;
   }
 
@@ -72,12 +81,12 @@
       margin-bottom: 16px;
       
       .ant-typography {
-        text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+   
+        text-shadow: none;
         font-family: 'Lexend Deca', sans-serif;
         font-weight: 700;
-        letter-spacing: 4px;
-        background-size: 200% 200%;
-        animation: gradientShift 3s ease infinite;
+        letter-spacing: 2px;
+        font-size: 3.5rem;
       }
     }
 
@@ -85,31 +94,32 @@
       margin-bottom: 16px;
       
       .ant-progress-line {
-        border-radius: 10px;
+        border-radius: 12px;
         
         .ant-progress-bg {
-          border-radius: 10px;
-          box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+          border-radius: 12px;
+          background: linear-gradient(90deg, #10b981, #059669);
+          box-shadow: 0 4px 14px -4px rgba(16, 185, 129, 0.35);
           transition: all 0.3s ease;
-          animation: progressGlow 2s ease-in-out infinite alternate;
         }
       }
     }
   }
 
   &__info {
-    margin-top: 32px;
-    padding: 16px;
+    margin-top: 24px;
+    padding: 14px 18px 16px;
     text-align: center;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(20px);
+    background: linear-gradient(145deg, #f8fafc 0%, #f1f5f9 100%);
+    border-radius: 14px;
+    border: 1px solid rgba(226, 232, 240, 0.7);
+    box-shadow: 0 2px 6px -2px rgba(15, 23, 42, 0.08);
 
     .ant-typography {
-      font-size: 14px;
-      font-weight: 500;
-      color: rgba(255, 255, 255, 0.8);
+      font-size: 12px;
+      font-weight: 600;
+      color: #64748b;
+      letter-spacing: 0.3px;
     }
   }
 
@@ -120,8 +130,8 @@
     }
 
     .timer-display__info {
-      margin-top: 24px;
-      padding: 12px;
+      margin-top: 18px;
+      padding: 10px 14px 12px;
     }
 
     .timer-display__pulse {
@@ -133,10 +143,41 @@
 
     .timer-display__digital {
       min-width: 150px;
+      
+      &-time .ant-typography {
+        font-size: 2.5rem;
+      }
     }
   }
 
-  // Apple-style animations
+  // Premium animations
+  @keyframes premiumPulse {
+    0% {
+      opacity: 1;
+      transform: scale(1);
+      box-shadow: 0 0 12px rgba(16, 185, 129, 0.6);
+    }
+    50% {
+      opacity: 0.8;
+      transform: scale(1.1);
+      box-shadow: 0 0 18px rgba(16, 185, 129, 0.8);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1);
+      box-shadow: 0 0 12px rgba(16, 185, 129, 0.6);
+    }
+  }
+
+  @keyframes premiumGlow {
+    0% {
+      box-shadow: 0 4px 14px -4px rgba(16, 185, 129, 0.35);
+    }
+    100% {
+      box-shadow: 0 6px 20px -4px rgba(16, 185, 129, 0.5);
+    }
+  }
+
   @keyframes fadeInUp {
     from {
       opacity: 0;
@@ -148,84 +189,72 @@
     }
   }
 
-  @keyframes pulse {
-    0% {
-      opacity: 1;
-      transform: scale(1);
-    }
-    50% {
-      opacity: 0.7;
-      transform: scale(1.2);
-    }
-    100% {
-      opacity: 1;
-      transform: scale(1);
-      opacity: 1;
-    }
-  }
-
-  @keyframes progressGlow {
-    0% {
-      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-    }
-    100% {
-      box-shadow: 0 4px 20px rgba(102, 126, 234, 0.5);
-    }
-  }
-
-  @keyframes gradientShift {
-    0% {
-      background-position: 0% 50%;
-    }
-    50% {
-      background-position: 100% 50%;
-    }
-    100% {
-      background-position: 0% 50%;
-    }
-  }
-
   // Animation classes
   &__content {
-    animation: fadeInUp 0.8s ease-out;
+    animation: fadeInUp 0.6s ease-out;
   }
 
   &__info {
-    animation: fadeInUp 1s ease-out 0.3s both;
-  }
-
-  // Glass morphism effects
-  &__header {
-    .ant-switch {
-      background: rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-    }
+    animation: fadeInUp 0.8s ease-out 0.2s both;
   }
 
   // Hover effects
   &__circular:hover {
     .ant-progress-circle {
-      filter: drop-shadow(0 12px 32px rgba(102, 126, 234, 0.4));
-      transition: filter 0.3s ease;
+      filter: drop-shadow(0 8px 20px rgba(16, 185, 129, 0.25));
       transform: scale(1.02);
     }
   }
 
   &__digital:hover {
-    .timer-display__digital-time .ant-typography {
-      animation: gradientShift 1.5s ease infinite;
-    }
-    
     .timer-display__digital-progress .ant-progress-bg {
-      animation: progressGlow 1s ease-in-out infinite alternate;
+      animation: premiumGlow 1.5s ease-in-out infinite alternate;
     }
   }
 
-  // Focus states for accessibility
+  // Focus states
   &__header .ant-switch:focus {
-    outline: 2px solid rgba(255, 255, 255, 0.5);
+    outline: 2px solid rgba(16, 185, 129, 0.5);
     outline-offset: 2px;
+  }
+}
+
+// Dark theme
+.theme-dark {
+  .timer-display {
+    color: #f1f5f9;
+
+    &__header {
+      .ant-switch {
+        background: #0f172a;
+        border-color: #334155;
+        
+        &.ant-switch-checked {
+          background: #059669;
+          border-color: #047857;
+        }
+      }
+    }
+
+    &__digital {
+      &-time .ant-typography {
+    
+      }
+      
+      &-progress .ant-progress-bg {
+        background: linear-gradient(90deg, #059669, #047857);
+      }
+    }
+
+    &__info {
+      background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
+      border-color: rgba(71, 85, 105, 0.55);
+      box-shadow: 0 2px 6px -2px rgba(0, 0, 0, 0.3);
+
+      .ant-typography {
+        color: #94a3b8;
+      }
+    }
   }
 }
 
@@ -234,15 +263,15 @@
   .timer-display--large {
     .timer-display__circular {
       .ant-progress-circle {
-        width: 200px !important;
-        height: 200px !important;
+        width: 220px !important;
+        height: 220px !important;
       }
     }
 
     .timer-display__digital-time {
       .ant-typography {
         font-size: 3rem !important;
-        letter-spacing: 2px;
+        letter-spacing: 1.5px;
       }
     }
   }
@@ -266,32 +295,37 @@
   }
 
   .timer-display__info {
-    padding: 12px;
+    padding: 10px 14px 12px;
     
     .ant-typography {
-      font-size: 12px;
+      font-size: 11px;
     }
   }
 }
 
-// Loading states
-.timer-display--loading {
-  opacity: 0.7;
-  pointer-events: none;
+// State variations
+.timer-display--completed {
+  .timer-display__circular .ant-progress-circle {
+    filter: drop-shadow(0 8px 20px rgba(82, 196, 26, 0.25));
+  }
   
   .timer-display__pulse {
-    animation: pulse 1.5s infinite;
+    background: #52c41a;
+    box-shadow: 0 0 16px rgba(82, 196, 26, 0.6);
   }
 }
 
-// Success state
-.timer-display--completed {
-  .timer-display__circular .ant-progress-circle {
-    filter: drop-shadow(0 8px 24px rgba(82, 196, 26, 0.3));
-  }
-  
+.timer-display--break {
   .timer-display__pulse {
-    background: rgba(82, 196, 26, 0.8);
-    box-shadow: 0 0 20px rgba(82, 196, 26, 0.6);
+    background: #52c41a;
+    box-shadow: 0 0 16px rgba(82, 196, 26, 0.6);
+  }
+}
+
+.timer-display--paused {
+  .timer-display__pulse {
+    background: #faad14;
+    box-shadow: 0 0 16px rgba(250, 173, 20, 0.6);
+    animation-duration: 3s;
   }
 }

@@ -1,15 +1,15 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { Card, List, Button, Segmented, Tag, Space, Popconfirm, Statistic, Row, Col, Tabs, App, Divider, Modal } from 'antd';
-import { RocketOutlined, ThunderboltOutlined, HistoryOutlined, TrophyOutlined, FireOutlined, RiseOutlined } from '@ant-design/icons';
+import React, { useEffect, useState } from 'react';
+import { Card, List, Button, Segmented, Tag, Space, Popconfirm, Tabs, App, Modal } from 'antd';
+import { ThunderboltOutlined, HistoryOutlined, TrophyOutlined, RiseOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import 'dayjs/locale/tr';
-import { getStudyRoomActivity, getActiveDuels, inviteDuel, respondDuel, apiRequest, getStudentPrograms, type Duel } from '../../../../services/api';
+import { getStudyRoomActivity, getActiveDuels, inviteDuel, respondDuel, apiRequest, type Duel } from '../../../../services/api';
 import { useGamification } from '../../../../hooks/useGamification';
-import XPBar from '../../../../components/XPBar';
 import DailyChallenges from '../../../../components/DailyChallenges';
 import { useAuth } from '../../../../contexts/AuthContext';
 import Leaderboard from '../../../StudyPlanPage/bones/Leaderboard/Leaderboard';
+import './studyRoomLayout.scss';
 
 dayjs.extend(relativeTime);
 dayjs.locale('tr');
@@ -26,27 +26,21 @@ const StudyRoom: React.FC = () => {
   // Removed unused 'loading' and 'activity' after refactor
   const [duels, setDuels] = useState<Duel[]>([]);
   const [studyRoomSessions, setStudyRoomSessions] = useState<any[]>([]);
-  const [allSessions, setAllSessions] = useState<any[]>([]);
-  const [programDailyTime, setProgramDailyTime] = useState<number>(0);
-  const [programWeeklyTime, setProgramWeeklyTime] = useState<number>(0);
-  const [programAllTime, setProgramAllTime] = useState<number>(0);
+  // Sadeleştirilmiş sürüm: geniş istatistik state'leri kaldırıldı
   const { user } = useAuth();
-  const { stats: gamification, events: xpEvents, challenges, refetch } = useGamification();
+  const { events: xpEvents, challenges, refetch } = useGamification();
   const [eventsVisible, setEventsVisible] = useState(false);
   const { message } = App.useApp();
 
   const fetchData = async () => {
     try {
-      const [_, activeDuels, sessions, allSess] = await Promise.all([
+      const [_, activeDuels, sessions] = await Promise.all([
         getStudyRoomActivity(period),
         getActiveDuels(),
-        fetchStudyRoomSessions(),
-        fetchAllSessions()
+        fetchStudyRoomSessions()
       ]);
       setDuels(activeDuels.data || []);
       setStudyRoomSessions(sessions);
-      setAllSessions(allSess);
-      await fetchCoachProgramTotals();
     } catch (e: any) {
       message.error(e?.message || 'Veri alınamadı');
     }
@@ -63,41 +57,7 @@ const StudyRoom: React.FC = () => {
     }
   };
 
-  const fetchAllSessions = async () => {
-    try {
-      const response = await apiRequest('/study-sessions', { method: 'GET' });
-      return Array.isArray(response) ? response : [];
-    } catch (error) {
-      console.error('All sessions fetch error:', error);
-      return [];
-    }
-  };
-
-  const fetchCoachProgramTotals = async () => {
-    try {
-      const now = dayjs();
-      const startOfToday = now.startOf('day').toDate().toISOString();
-      const endOfToday = now.endOf('day').toDate().toISOString();
-      const startOfWeek = now.startOf('week').toDate().toISOString();
-      const endOfWeek = now.endOf('week').toDate().toISOString();
-
-      const [dailyRes, weeklyRes, allRes] = await Promise.all([
-        getStudentPrograms({ from: startOfToday, to: endOfToday, limit: 500 }),
-        getStudentPrograms({ from: startOfWeek, to: endOfWeek, limit: 500 }),
-        getStudentPrograms({ from: '1970-01-01T00:00:00.000Z', to: now.endOf('day').toDate().toISOString(), limit: 1000 })
-      ]);
-
-      const sumTime = (items: Array<any>) => (items || []).reduce((sum, p) => sum + (Number(p?.stats?.totalStudyTime) || 0), 0);
-
-      setProgramDailyTime(sumTime(dailyRes?.data || []));
-      setProgramWeeklyTime(sumTime(weeklyRes?.data || []));
-      setProgramAllTime(sumTime(allRes?.data || []));
-    } catch (error) {
-      setProgramDailyTime(0);
-      setProgramWeeklyTime(0);
-      setProgramAllTime(0);
-    }
-  };
+  // Kaldırılan: geniş program toplamı hesaplamaları (basitleştirilmiş)
 
   // Timer kaldırıldı: study room oturumları yalnızca geçmişten okunur
 
@@ -107,111 +67,21 @@ const StudyRoom: React.FC = () => {
 
   // handleInvite logic centralized in Leaderboard prop usage
 
-  // Birleşik istatistikler: sol panel oturumları + koç programı toplamları (çift sayım önlenerek)
-  const myStudyRoomStats = useMemo(() => {
-    const today = dayjs();
-    const todaySessions = allSessions.filter(s => dayjs(s.date).isSame(today, 'day'));
-    const weekSessions = allSessions.filter(s => dayjs(s.date).isSame(today, 'week'));
-
-    const sumDur = (arr: any[]) => arr.reduce((sum, s) => sum + (Number(s?.duration) || 0), 0);
-    const todayLinked = todaySessions.filter(s => !!s.dailyPlanId);
-    const weekLinked = weekSessions.filter(s => !!s.dailyPlanId);
-    const allLinked = allSessions.filter(s => !!s.dailyPlanId);
-
-    const adjustedProgramDaily = Math.max(0, programDailyTime - sumDur(todayLinked));
-    const adjustedProgramWeekly = Math.max(0, programWeeklyTime - sumDur(weekLinked));
-    const adjustedProgramAll = Math.max(0, programAllTime - sumDur(allLinked));
-    
-    return {
-      todayTime: sumDur(todaySessions) + adjustedProgramDaily,
-      todayCount: todaySessions.length,
-      weekTime: sumDur(weekSessions) + adjustedProgramWeekly,
-      weekCount: weekSessions.length,
-      totalTime: sumDur(allSessions) + adjustedProgramAll,
-      avgQuality: allSessions.length > 0 
-        ? allSessions.reduce((sum, s) => sum + (Number(s?.quality) || 0), 0) / allSessions.length 
-        : 0
-    };
-  }, [allSessions, programDailyTime, programWeeklyTime, programAllTime]);
+  // İstatistik hesapları bu versiyonda kullanılmıyor (tasarım sadeleştirildi)
 
   return (
     <Space direction="vertical" size="large" style={{ width: '100%' }}>
-      {/* Kişisel Çalışma Odası Stats */}
-  <Card
-        title={
-          <Space>
-            <TrophyOutlined /> Benim Çalışma Odası Performansım
-          </Space>
-        }
-      >
-        <Row gutter={[16, 16]}>
-          <Col xs={12} sm={6}>
-            <Statistic
-              title="Bugün"
-              value={formatMinutes(myStudyRoomStats.todayTime)}
-              prefix={<FireOutlined style={{ color: '#ff4d4f' }} />}
-              valueStyle={{ color: '#ff4d4f' }}
-            />
-            <div style={{ fontSize: 12, color: '#8c8c8c' }}>
-              {myStudyRoomStats.todayCount} oturum
-            </div>
-          </Col>
-          <Col xs={12} sm={6}>
-            <Statistic
-              title="Bu Hafta"
-              value={formatMinutes(myStudyRoomStats.weekTime)}
-              prefix={<RocketOutlined style={{ color: '#1890ff' }} />}
-              valueStyle={{ color: '#1890ff' }}
-            />
-            <div style={{ fontSize: 12, color: '#8c8c8c' }}>
-              {myStudyRoomStats.weekCount} oturum
-            </div>
-          </Col>
-          <Col xs={12} sm={6}>
-            <Statistic
-              title="Toplam Süre"
-              value={formatMinutes(myStudyRoomStats.totalTime)}
-              prefix={<HistoryOutlined style={{ color: '#52c41a' }} />}
-              valueStyle={{ color: '#52c41a' }}
-            />
-          </Col>
-          <Col xs={12} sm={6}>
-            <Statistic
-              title="Ortalama Kalite"
-              value={myStudyRoomStats.avgQuality.toFixed(1)}
-              suffix="/5"
-              prefix={<TrophyOutlined style={{ color: '#faad14' }} />}
-              valueStyle={{ color: '#faad14' }}
-            />
-          </Col>
-        </Row>
-        <Divider />
-        <Row gutter={[16,16]}>
-          <Col xs={24} md={12}>
-            {gamification && (
-              <XPBar
-                totalXP={gamification.totalXP}
-                currentLevel={gamification.currentLevel}
-                currentLevelXP={gamification.currentLevelXP}
-                nextLevelXP={gamification.nextLevelXP}
-              />
-            )}
-          </Col>
-          <Col xs={24} md={12}>
-            {gamification && (
-              <Space size="large" style={{ width: '100%', justifyContent: 'space-around' }}>
-                <Statistic title="Streak" value={gamification.streak} suffix="gün" valueStyle={{ fontSize: 18 }} />
-                <Statistic title="Max Streak" value={gamification.maxStreak} suffix="gün" valueStyle={{ fontSize: 18 }} />
-                <Statistic title="Rozet" value={gamification.totalAchievements} valueStyle={{ fontSize: 18 }} />
-              </Space>
-            )}
-          </Col>
-        </Row>
-  <Button size="small" style={{ marginTop: 12 }} onClick={() => setEventsVisible(true)}>XP Olayları</Button>
-  {challenges && <DailyChallenges data={challenges} onClaimed={refetch} />}
-      </Card>
-
-      <Card
+      <div className="study-room-performance">
+        <div className="srp__header">
+          <div className="srp__head-left">
+            <h2 className="srp__title"><TrophyOutlined /> Benim Çalışma Odası Performansım</h2>
+            <p className="srp__subtitle">Günlük ilerlemeni, toplam süreyi ve kalite ortalamanı tek bakışta gör.</p>
+          </div>
+        </div>
+        <div className="srp__body">
+          <div className="srp__main">
+            {/* Buraya ileride özet istatistikler, XP bar vs. yeniden eklenebilir */}
+            <Card
         title={<Space><TrophyOutlined /> Rekabet</Space>}
         extra={
           <Segmented
@@ -290,8 +160,14 @@ const StudyRoom: React.FC = () => {
           ]}
         />
       </Card>
+          </div>
+              <DailyChallenges data={{ challenges: challenges?.challenges || [] }} loading={!challenges} onClaimed={refetch} />
+            
+          
+        </div>
+      </div>
 
-      {/* Alt kısımdaki mükerrer Aktif Düellolar kartı kaldırıldı (Rekabet sekmeleri altında gösteriliyor) */}
+  
 
       {/* Son Çalışma Odası Oturumları */}
       {studyRoomSessions.length > 0 && (

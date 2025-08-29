@@ -172,3 +172,35 @@ Proje hakkında sorularınız için:
 ---
 
 ⭐ **Bu projeyi beğendiyseniz yıldız vermeyi unutmayın!**
+
+## 📘 Exam Tracker Modülü (Deneme Takibi)
+
+Modern deneme takip arayüzü ile denemeleri ekleyip performans trendlerini ve zayıf konuları analiz eder.
+
+### Özellikler
+- CRUD (optimistic create + hata rollback)
+- Sunucu / Lokal (mock) geçiş anahtarı (UI üzerinde "Remote API" checkbox)
+- Özet kartları: Son deneme başarı, ortalama başarı, toplam deneme
+- TYT / AYT ayrı net & doğruluk toplulaştırması
+- Sık yapılan yanlış konular (Sunucu badge / Lokal fallback)
+- Öneri algoritması (son 2 deneme ağırlıklı + toplam yanlış pattern)
+- Konu geçmişi modalı (lazy fetch + 5 dk cache + range switch)
+- Aggregate (TYT/AYT) geçmiş modalı (bucket: day/week/month + range seçimi)
+- In‑memory cache & invalidation (create/update/delete sonrası ilgili anahtarlar temizlenir)
+- Virtualized liste (>150 deneme react-window)
+- Form doğrulama (negatif, tarih gelecekte, trim/normalize, otomatik subject ekleme)
+- Hata banner + kapatma; skeleton & boş durum ekranları
+- XP event tetikleme (backend create sonrası)
+
+### Teknik Notlar
+- Hook: `useExamTracker` parametre: `enableRemote` (false ise yalnızca sağlanan initial/mock veri)
+- Cache anahtarları: `topicHistory|topic|range`, `aggregateHistory|type|bucket|range`, `frequent|limit|period`
+- Varsayılan range: topicHistory=60d, aggregate=30d
+- AbortController ile yarışan isteklerin iptali (temel düzey)
+
+### Testler
+- Frontend: `useExamTracker` optimistic create + rollback
+- Backend: CRUD + overview + analytics endpoint testi, model net/accuracy testi
+
+### Geliştirme
+Exam Tracker sayfasını açtıktan sonra mock veri ile çalışmak için Remote API kutucuğunu kapatın; gerçek API için tekrar açın.

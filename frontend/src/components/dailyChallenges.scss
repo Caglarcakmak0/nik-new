@@ -1,0 +1,243 @@
+.daily-challenges {
+    position: relative;
+    margin-top: 18px;
+    border: 2px solid transparent;
+    border-radius: 20px;
+    padding: 22px 24px 26px;
+    background:
+        linear-gradient(145deg, #ffffff 0%, #f8fafc 60%, #eef2f6 100%) padding-box,
+        linear-gradient(130deg, rgba(16, 185, 129, 0.45), rgba(16, 185, 129, 0.12)) border-box;
+    box-shadow:
+        0 3px 10px -2px rgba(15, 23, 42, 0.08),
+        0 10px 28px -8px rgba(15, 23, 42, 0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    overflow: hidden;
+    transition: 0.55s;
+
+    &::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        border-radius: inherit;
+        background: radial-gradient(circle at 80% 15%, rgba(16, 185, 129, 0.28), transparent 65%);
+        opacity: 0;
+        filter: blur(12px);
+        transition: opacity 0.6s ease;
+    }
+    &:hover {
+        transform: translateY(-4px);
+        box-shadow:
+            0 8px 20px -6px rgba(16, 185, 129, 0.3),
+            0 20px 54px -10px rgba(16, 185, 129, 0.4);
+    }
+    &:hover::before {
+        opacity: 1;
+    }
+
+    &__head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        flex-wrap: wrap;
+    }
+    .dc-title {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 700;
+        letter-spacing: 0.4px;
+        color: #0f172a;
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+    .dc-count {
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        color: #64748b;
+        background: #f1f5f9;
+        padding: 6px 10px 7px;
+        border-radius: 10px;
+    }
+
+    &__list {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    .dc-item {
+        position: relative;
+        display: flex;
+        align-items: stretch;
+        gap: 20px;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        background: #ffffff;
+        padding: 14px 18px 16px;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+        transition: 0.4s;
+    }
+    .dc-item::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 6px;
+        border-radius: 16px 0 0 16px;
+        background: #e2e8f0;
+    }
+    .dc-item:hover {
+        transform: translateY(-3px);
+        box-shadow:
+            0 8px 18px -6px rgba(16, 185, 129, 0.25),
+            0 16px 42px -10px rgba(16, 185, 129, 0.3);
+    }
+    .dc-item--ready::before {
+        background: #10b981;
+    }
+    .dc-item--claimed::before {
+        background: #047857;
+    }
+    .dc-item--progress::before {
+        background: #0ea5e9;
+    }
+
+    .dc-item__main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+    .dc-item__top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+    }
+    .dc-item__title {
+        font-size: 15px;
+        font-weight: 700;
+        color: #0f172a;
+    }
+    .dc-item__desc {
+        margin: 0;
+        font-size: 12px;
+        font-weight: 600;
+        color: #64748b;
+    }
+
+    .dc-badge {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        padding: 6px 10px 7px;
+        border-radius: 10px;
+        text-transform: uppercase;
+        background: #f1f5f9;
+        color: #334155;
+    }
+    .dc-badge--progress {
+        background: #eff6ff;
+        color: #075985;
+    }
+    .dc-badge--ready {
+        background: #d1fae5;
+        color: #065f46;
+    }
+    .dc-badge--claimed {
+        background: #ecfdf5;
+        color: #047857;
+    }
+
+    .dc-progress-wrap {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+    .dc-progress-meta {
+        display: flex;
+        justify-content: space-between;
+        font-size: 11px;
+        font-weight: 600;
+        color: #475569;
+    }
+    .dc-xp {
+        background: #fef3c7;
+        color: #b45309;
+        font-weight: 700;
+        padding: 2px 8px 3px;
+        border-radius: 8px;
+    }
+
+    .dc-item__actions {
+        display: flex;
+        align-items: flex-end;
+    }
+    .dc-claim-btn {
+        font-weight: 600;
+        border-radius: 10px;
+    }
+    .dc-claimed-label {
+        font-size: 18px;
+        font-weight: 700;
+        color: #10b981;
+    }
+}
+
+.theme-dark .daily-challenges {
+    background:
+        linear-gradient(145deg, #1e293b 0%, #0f172a 60%, #0f172a 100%) padding-box,
+        linear-gradient(130deg, rgba(16, 185, 129, 0.55), rgba(16, 185, 129, 0.18)) border-box;
+    border-color: transparent;
+    .dc-title {
+        color: #e2e8f0;
+    }
+    .dc-count {
+        background: #334155;
+        color: #e2e8f0;
+    }
+    .dc-item {
+        background: #1e293b;
+        border-color: #334155;
+        box-shadow: 0 2px 6px -2px rgba(0, 0, 0, 0.55);
+    }
+    .dc-item__title {
+        color: #f1f5f9;
+    }
+    .dc-item__desc {
+        color: #94a3b8;
+    }
+    .dc-badge {
+        background: #334155;
+        color: #e2e8f0;
+    }
+    .dc-badge--progress {
+        background: #082f49;
+        color: #7dd3fc;
+    }
+    .dc-badge--ready {
+        background: #064e3b;
+        color: #6ee7b7;
+    }
+    .dc-badge--claimed {
+        background: #064e3b;
+        color: #34d399;
+    }
+    .dc-progress-meta {
+        color: #94a3b8;
+    }
+    .dc-xp {
+        background: #78350f;
+        color: #fcd34d;
+    }
+    .dc-claimed-label {
+        color: #34d399;
+    }
+}

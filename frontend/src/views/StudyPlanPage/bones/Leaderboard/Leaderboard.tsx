@@ -28,6 +28,7 @@ import {
   GiftOutlined,
   CheckOutlined
 } from '@ant-design/icons';
+import { deriveLevelFromTotalXP } from '../../../../utils/leveling';
 import { useAuth } from '../../../../contexts/AuthContext';
 import { apiRequest } from '../../../../services/api';
 import './Leaderboard.scss';
@@ -141,20 +142,8 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
     }
   };
 
-  // Level hesaplama
-  const calculateLevelProgress = (experience: number, level: number) => {
-    const baseXP = 1000;
-    const currentLevelXP = baseXP * Math.pow(1.5, level - 1);
-    const nextLevelXP = baseXP * Math.pow(1.5, level);
-    const progressXP = experience - currentLevelXP;
-    const neededXP = nextLevelXP - currentLevelXP;
-    
-    return {
-      progress: Math.min((progressXP / neededXP) * 100, 100),
-      current: Math.max(progressXP, 0),
-      needed: neededXP
-    };
-  };
+  // Level progress: unify with global leveling helper (derive from total experience)
+  const levelInfo = userStats ? deriveLevelFromTotalXP(userStats.experience) : null;
 
   // Rozet renk belirleme
   const getAchievementColor = (rarity: string) => {
@@ -317,15 +306,19 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
                 <Col span={8}>
                   <div>
                     <Text strong>Seviye İlerlemesi</Text>
-                    <Progress
-                      percent={calculateLevelProgress(userStats.experience, userStats.level).progress}
-                      size="small"
-                      strokeColor="#722ed1"
-                      style={{ marginTop: 4 }}
-                    />
-                    <Text type="secondary" style={{ fontSize: '12px' }}>
-                      {calculateLevelProgress(userStats.experience, userStats.level).current} / {calculateLevelProgress(userStats.experience, userStats.level).needed} XP
-                    </Text>
+                    {levelInfo && (
+                      <>
+                        <Progress
+                          percent={levelInfo.percent}
+                          size="small"
+                          strokeColor="#722ed1"
+                          style={{ marginTop: 4 }}
+                        />
+                        <Text type="secondary" style={{ fontSize: '12px' }}>
+                          {levelInfo.currentLevelXP} / {levelInfo.neededThisLevel} XP
+                        </Text>
+                      </>
+                    )}
                   </div>
                 </Col>
                 

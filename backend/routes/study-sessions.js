@@ -88,10 +88,61 @@ router.post("/", authenticateToken, checkRole(['student', 'coach']), async (req,
             console.error('Gamification side-effect error:', e);
         }
 
-        res.status(201).json({
-            message: "Study session başarıyla kaydedildi",
-            data: savedSession
-        });
+        // Habit auto-complete (best-effort)
+        try {
+            const HabitRoutine = require('../models/HabitRoutine');
+            const HabitLog = require('../models/HabitLog');
+            const start = new Date(savedSession.date);
+            const dayUTC = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), start.getUTCDate()));
+            const sessionMinutes = Math.max(0, Math.round((savedSession.duration || 0)));
+            // Fetch candidate routines (autoComplete true & active)
+            const candidates = await HabitRoutine.find({ userId, status: 'active', 'behavior.autoCompleteByStudySession': true });
+            for (const r of candidates) {
+                if (!r.isPlannedForDate || !r.isPlannedForDate(savedSession.date)) continue;
+                const tolerance = r.behavior?.toleranceMinutes ?? 15;
+                const minDur = r.behavior?.minSessionMinutes ?? 10;
+                if (sessionMinutes < minDur) continue; // not enough duration
+                // Compare planned time vs session start within tolerance window
+                const [ph, pm] = (r.schedule?.timeStart || '00:00').split(':').map(Number);
+                const planned = new Date(dayUTC); planned.setUTCHours(ph, pm, 0, 0);
+                const diffMin = Math.abs(Math.round((start - planned)/60000));
+                if (diffMin > tolerance) continue; // outside tolerance window
+                let log = await HabitLog.findOne({ userId, habitRoutineId: r._id, date: dayUTC });
+                if (!log) {
+                    log = await HabitLog.create({ userId, habitRoutineId: r._id, date: dayUTC, status: 'auto', completedAt: new Date(), autoCaptured: true, source:'session_hook' });
+                } else if (log.status === 'pending') {
+                    log.status = 'auto';
+                    log.completedAt = new Date();
+                    log.autoCaptured = true;
+                    log.source = 'session_hook';
+                    await log.save();
+                } else continue;
+                // streak update (treat auto as success)
+                const yesterday = new Date(dayUTC); yesterday.setUTCDate(yesterday.getUTCDate()-1);
+                const prev = await HabitLog.findOne({ userId, habitRoutineId: r._id, date: yesterday });
+                let streak = 1;
+                if (prev && ['done','late','auto'].includes(prev.status)) streak = (r.metrics.currentStreak || 0) + 1; else streak = 1;
+                r.metrics.currentStreak = streak;
+                if (streak > r.metrics.longestStreak) r.metrics.longestStreak = streak;
+                await r.save();
+                // XP & broadcast
+                try {
+                    const { addXP } = require('../services/xpService');
+                    const baseXP = r.gamification?.xpOnComplete || 5;
+                    const streakBonus = Math.min(streak, 30) * 0.6;
+                    const totalXP = Math.round(baseXP + streakBonus);
+                    if (totalXP > 0) await addXP(userId, totalXP, 'habit', { habitId: r._id, streak, auto:true });
+                } catch(e) { /* ignore */ }
+                try {
+                    const { broadcast } = require('../events/habitEvents');
+                    broadcast('habit_auto_complete', { userId, habitId: r._id, date: dayUTC.toISOString(), streak, diffMin });
+                } catch(e) { /* ignore */ }
+            }
+        } catch (e) {
+            console.error('Habit auto-complete error:', e.message);
+        }
+
+        res.status(201).json({ message: "Study session başarıyla kaydedildi", data: savedSession });
   } catch (error) {
     console.error('POST /study-sessions error:', error);
     res.status(500).json({ message: error.message });

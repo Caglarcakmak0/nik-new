@@ -267,6 +267,7 @@ router.get('/programs/:id', async (req, res) => {
           description: s.description || '',
           targetTime: s.targetTime || 0,
           priority: s.priority || 5,
+          topicsDetailed: (s.topicsDetailed || []).map(t => ({ topic: t.topic, solveQuestions: !!t.solveQuestions, watchVideo: !!t.watchVideo })),
           videos: (s.videos || []).map(v => ({
             videoId: v.videoId,
             playlistId: v.playlistId,
@@ -322,6 +323,12 @@ router.post('/programs', async (req, res) => {
       description: subject.description,
       targetTime: subject.duration, // koç manuel override edebilir
       priority: 5,
+      topicsDetailed: Array.isArray(subject.topicsDetailed) ? subject.topicsDetailed.filter(t=> t && t.topic).map(t=> ({
+        topic: t.topic,
+        solveQuestions: !!t.solveQuestions,
+        watchVideo: !!t.watchVideo,
+        durationMinutes: typeof t.durationMinutes === 'number' ? t.durationMinutes : undefined
+      })) : [],
       status: 'not_started',
       completedQuestions: 0,
       correctAnswers: 0,
@@ -441,6 +448,14 @@ router.put('/programs/:id', async (req, res) => {
         if (typeof incoming.description === 'string' || incoming.description === null) current.description = incoming.description || '';
         if (typeof incoming.targetTime === 'number') current.targetTime = incoming.targetTime; // manuel override
         if (typeof incoming.priority === 'number') current.priority = incoming.priority;
+        if (Array.isArray(incoming.topicsDetailed)) {
+          current.topicsDetailed = incoming.topicsDetailed.filter(t=> t && t.topic).map(t=> ({
+            topic: t.topic,
+            solveQuestions: !!t.solveQuestions,
+            watchVideo: !!t.watchVideo,
+            durationMinutes: typeof t.durationMinutes === 'number' ? t.durationMinutes : undefined
+          }));
+        }
 
         // Videolar tam liste override modu
         if (Array.isArray(incoming.videos)) {
@@ -468,6 +483,18 @@ router.put('/programs/:id', async (req, res) => {
             description: typeof incoming.description === 'string' ? incoming.description : '',
             targetTime: typeof incoming.targetTime === 'number' ? incoming.targetTime : undefined,
             priority: typeof incoming.priority === 'number' ? incoming.priority : 5,
+            topicsDetailed: Array.isArray(incoming.topicsDetailed) ? incoming.topicsDetailed.filter(t=> t && t.topic).map(t=> ({
+              topic: t.topic,
+              solveQuestions: !!t.solveQuestions,
+              watchVideo: !!t.watchVideo,
+              durationMinutes: typeof t.durationMinutes === 'number' ? t.durationMinutes : undefined
+            })) : [],
+            topicsDetailed: Array.isArray(incoming.topicsDetailed) ? incoming.topicsDetailed.filter(t=> t && t.topic).map(t=> ({
+              topic: t.topic,
+              solveQuestions: !!t.solveQuestions,
+              watchVideo: !!t.watchVideo,
+              durationMinutes: typeof t.durationMinutes === 'number' ? t.durationMinutes : undefined
+            })) : [],
 
             // Progress defaults
             completedQuestions: 0,

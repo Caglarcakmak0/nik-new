@@ -93,7 +93,13 @@ export const allMenuItems: MenuItemEx[] = [
   {
     key: "/study-tracker/study-room",
     icon: <TrophyOutlined />,
-    label: "Çalışma Odası",
+    label: "Kütüphane",
+    roles: ["student"],
+  },
+  {
+    key: "/weekly-plan",
+    icon: <CalendarOutlined />,
+    label: "Haftalık Plan",
     roles: ["student"],
   },
   {
@@ -125,6 +131,24 @@ export const allMenuItems: MenuItemEx[] = [
     key: "/study-plan/achievements",
     icon: <TrophyOutlined />,
     label: "Rozetlerim",
+    roles: ["student"],
+  },
+  {
+    key: "/habits",
+    icon: <ClockCircleOutlined />,
+    label: "Alışkanlıklarım",
+    roles: ["student"],
+  },
+  {
+    key: "/exam-tracker",
+    icon: <HistoryOutlined />,
+    label: "Deneme Takibi",
+    roles: ["student"],
+  },
+  {
+    key: "/ai-assistant",
+    icon: <BulbOutlined />,
+    label: "AI Asistan",
     roles: ["student"],
   },
 

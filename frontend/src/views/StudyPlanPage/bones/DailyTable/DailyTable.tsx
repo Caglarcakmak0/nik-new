@@ -35,7 +35,7 @@ import { useAuth, useIsStudent } from '../../../../contexts/AuthContext';
 import './DailyTable.scss';
 import ProgramDetailLayout from './ProgramDetailLayout';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 interface Subject {
   subject: string;
@@ -718,168 +718,98 @@ const DailyTable: React.FC<DailyTableProps> = ({
 
       {/* Student Feedback Section - Only visible to students */}
       {isStudent && (
-        <Card className="daily-evaluation-card" title={
-          <div className="evaluation-header">
-            <div className="evaluation-title">
-              <StarOutlined className="evaluation-icon" />
-              <span>Günlük Değerlendirme</span>
-              </div>
-            <div className="evaluation-subtitle">
-              Bugünkü çalışma deneyiminizi değerlendirin
-            </div>
+        <div className="daily-eval-root">
+          <div className="deval-head">
+            <h3 className="deval-title"><StarOutlined /> Günlük Değerlendirme</h3>
+            <p className="deval-sub">Bugünkü çalışma deneyimini hızlıca değerlendir.</p>
           </div>
-        }>
-          <div className="evaluation-content">
-            {/* Motivasyon ve Genel Durum */}
-            <div className="evaluation-section motivation-section">
-              <div className="section-header">
-                <Title level={5} className="section-title">
-                  <FireOutlined /> Motivasyon ve Genel Durum
-                </Title>
-                <Text type="secondary" className="section-description">
-                  Bugün kendinizi nasıl hissediyorsunuz?
-                  </Text>
-                </div>
-              
-              <div className="motivation-quick-actions">
-                <div className="quick-action-title">
-                  <Text strong>Motivasyon Seviyesi</Text>
-                </div>
-                <div className="quick-actions-grid">
-                  {[
-                    { value: 3, emoji: '😔', label: 'Zor Gün' },
-                    { value: 5, emoji: '😐', label: 'Normal' },
-                    { value: 7, emoji: '🙂', label: 'İyi' },
-                    { value: 9, emoji: '😊', label: 'Harika' }
-                  ].map((action) => (
-                    <button
-                      key={action.value}
-                      className={`quick-action-btn ${motivationScore === action.value ? 'active' : ''}`}
-                      onClick={() => setMotivationScore(action.value)}
-                    >
-                      <span className="action-emoji">{action.emoji}</span>
-                      <span className="action-label">{action.label}</span>
-                    </button>
-                  ))}
-                </div>
+          <div className="deval-body">
+            <section className="deval-block deval-motivation">
+              <div className="block-head">
+                <h5 className="block-title"><FireOutlined /> Motivasyon</h5>
+                <span className="block-hint">Günün hissi</span>
               </div>
-            </div>
+              <div className="deval-quick-actions">
+                {[{ value:3, emoji:'😔', label:'Zor Gün' },{ value:5, emoji:'😐', label:'Normal' },{ value:7, emoji:'🙂', label:'İyi' },{ value:9, emoji:'😊', label:'Harika' }].map(a => (
+                  <button key={a.value} type="button" className={`qa-btn ${motivationScore===a.value?'active':''}`} onClick={()=>setMotivationScore(a.value)}>
+                    <span className="qa-emoji">{a.emoji}</span>
+                    <span className="qa-label">{a.label}</span>
+                  </button>
+                ))}
+              </div>
+            </section>
 
-            {/* Detaylı Geri Bildirim */}
-            <div className="evaluation-section feedback-section">
-              <div className="section-header">
-                <Title level={5} className="section-title">
-                  <BulbOutlined /> Detaylı Geri Bildirim
-                </Title>
-                <Text type="secondary" className="section-description">
-                  Bugünkü çalışma deneyiminizi detaylandırın
-                </Text>
+            <section className="deval-block deval-feedback">
+              <div className="block-head">
+                <h5 className="block-title"><BulbOutlined /> Geri Bildirim</h5>
+                <span className="block-hint">En az 5 karakter</span>
               </div>
-              
-              <div className="feedback-content">
-                <div className="feedback-textarea-container">
-                  <div className="textarea-header">
-                    <Text strong className="textarea-label">Program Değerlendirmesi</Text>
-                    <div className="textarea-counter">
-                      <span className="current-count">{dailyFeedback.length}</span>
-                      <span className="max-count">/500</span>
-                    </div>
+              <div className="feedback-grid">
+                <div className="fb-left">
+                  <div className="fb-label-row">
+                    <span className="fb-label">Program Değerlendirmesi</span>
+                    <span className="fb-count">{dailyFeedback.length}/500</span>
                   </div>
-                  
                   <Input.TextArea
                     value={dailyFeedback}
-                    onChange={(e) => setDailyFeedback(e.target.value)}
-                    placeholder="Bugünkü çalışma programınız hakkında düşüncelerinizi yazın... Örneğin: Hangi konular zor geldi? Hangi teknikler işe yaradı? Yarın için önerileriniz neler?"
-                    rows={4}
+                    onChange={(e)=>setDailyFeedback(e.target.value)}
                     maxLength={500}
-                    className="feedback-textarea"
-                    showCount={false}
+                    rows={5}
+                    placeholder="Bugünkü program hakkında düşüncelerini yaz..."
+                    className="deval-textarea"
                   />
                 </div>
-                
-                <div className="feedback-suggestions">
-                  <div className="suggestions-header">
-                    <Text type="secondary" className="suggestions-title">
-                      💡 Önerilen Konular
-                    </Text>
-                  </div>
-                  <div className="suggestions-grid">
-                    {[
-                      'Hangi konular zor geldi?',
-                      'Hangi çalışma teknikleri işe yaradı?',
-                      'Yarın için önerileriniz neler?',
-                      'Motivasyonunuzu etkileyen faktörler?'
-                    ].map((suggestion, index) => (
-                      <button
-                        key={index}
-                        className="suggestion-btn"
-                        onClick={() => {
-                          if (dailyFeedback.length < 450) {
-                            setDailyFeedback(prev => 
-                              prev + (prev ? ' ' : '') + suggestion
-                            );
-                          }
-                        }}
-                      >
-                        {suggestion}
-                      </button>
+                <div className="fb-right">
+                  <div className="suggest-title">💡 Öneriler</div>
+                  <div className="suggest-pills">
+                    {['Zorlanan konular?','İşe yarayan teknik?','Yarın için odak?','Motivasyonu etkileyen şey?'].map((s,i)=>(
+                      <button key={i} type="button" className="suggest-pill" onClick={()=>{
+                        if(dailyFeedback.length<460){
+                          setDailyFeedback(prev=> prev + (prev?' ':'') + s);
+                        }
+                      }}>{s}</button>
                     ))}
                   </div>
                 </div>
               </div>
-            </div>
+            </section>
 
-            {/* Birleştirilmiş Performans İstatistikleri (ilk kart tasarımıyla) */}
-            <div className="evaluation-section performance-section merged-metrics">
-              <Card className="plan-summary merged" size="small" title={
-                <div style={{display:'flex',alignItems:'center',gap:8}}>
-                  <TrophyOutlined />
-                  <span>Günlük Performans Özeti</span>
-                </div>
-              }>
-                <Row gutter={[16,16]}>
-                  <Col xs={12} md={8} lg={4}>
-                    <Statistic title="Toplam Hedef" value={plan.stats.totalTargetQuestions ?? 0} />
-                  </Col>
-                  <Col xs={12} md={8} lg={4}>
-                    <Statistic title="Tamamlanan" value={plan.stats.totalCompletedQuestions ?? 0} suffix={`/${plan.stats.totalTargetQuestions ?? 0}`} />
-                  </Col>
-                  <Col xs={12} md={8} lg={4}>
-                    <Statistic title="Tamamlanma" value={Math.round(plan.stats.completionRate ?? 0)} suffix="%" />
-                  </Col>
-                  <Col xs={12} md={8} lg={4}>
-                    <Statistic title="Başarı Oranı" value={Math.round(plan.stats.successRate ?? 0)} suffix="%" />
-                  </Col>
-                  <Col xs={12} md={8} lg={4}>
-                    <Statistic title="Toplam Süre" value={plan.stats.totalStudyTime ?? 0} suffix="dk" />
-                  </Col>
-                  <Col xs={12} md={8} lg={4}>
-                    <Statistic title="Net Puan" value={Number.isFinite(plan.stats.netScore) ? plan.stats.netScore.toFixed(1) : 0} />
-                  </Col>
-                </Row>
-              </Card>
-            </div>
-
-            {/* Gönder Butonu */}
-            <div className="evaluation-submit">
-              <div className="submit-content">
-                <div className="submit-info">
-                  <Text type="secondary" className="submit-description">
-                    Değerlendirmeniz koçunuza gönderilecek ve gelecek programlarınızın iyileştirilmesinde kullanılacaktır.
-                  </Text>
-                </div>
-                
+            <section className="deval-block deval-metrics">
+              <div className="block-head">
+                <h5 className="block-title"><TrophyOutlined /> Günlük Metrikler</h5>
+                <span className="block-hint">Özet</span>
+              </div>
+              <div className="metrics-grid">
+                {[
+                  { key:'target', label:'Hedef', value: String(plan.stats.totalTargetQuestions ?? 0) },
+                  { key:'completed', label:'Tamamlanan', value:`${plan.stats.totalCompletedQuestions ?? 0}/${plan.stats.totalTargetQuestions ?? 0}` },
+                  { key:'completion', label:'Tamamlanma', value:`${Math.round(plan.stats.completionRate ?? 0)}%` },
+                  { key:'success', label:'Başarı', value:`${Math.round(plan.stats.successRate ?? 0)}%` },
+                  { key:'time', label:'Süre', value:`${plan.stats.totalStudyTime ?? 0} dk` },
+                  { key:'net', label:'Net', value: Number.isFinite(plan.stats.netScore) ? (plan.stats.netScore as number).toFixed(1) : '0' }
+                ].map(m => (
+                  <div key={m.key} className="metric-chip">
+                    <div className="m-value">{m.value}</div>
+                    <div className="m-label">{m.label}</div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </div>
+          <div className="deval-submit">
+            <div className="submit-text">Değerlendirmen koçuna gönderilecek ve plan optimizasyonunda kullanılacak.</div>
             <Button
               type="primary"
               size="large"
               icon={<CheckCircleOutlined />}
-              onClick={async () => {
+              className="deval-submit-btn"
+              disabled={!dailyFeedback.trim()}
+              onClick={async ()=>{
                 try {
-                  // Her ders için mevcut doğru/yanlış/boş değerleri kullanarak genel feedback gönder
                   for (let index = 0; index < plan.subjects.length; index++) {
                     const subj = plan.subjects[index];
                     await apiRequest(`/daily-plans/${plan._id}/student-feedback`, {
-                      method: 'POST',
+                      method:'POST',
                       body: JSON.stringify({
                         subjectIndex: index,
                         correctAnswers: subj.correctAnswers,
@@ -893,26 +823,15 @@ const DailyTable: React.FC<DailyTableProps> = ({
                   message.success('Günlük değerlendirmeniz koçunuza gönderildi!');
                   setDailyFeedback('');
                   setMotivationScore(5);
-                  
-                  // Refresh plan data
-                  if (onRefresh) {
-                    onRefresh();
-                  }
-                  
-                } catch (error: any) {
-                  console.error('Feedback submit error:', error);
-                  message.error(error.message || 'Feedback gönderilirken hata oluştu');
+                  onRefresh?.();
+                } catch (error:any){
+                  console.error(error);
+                  message.error(error.message || 'Feedback gönderilirken hata');
                 }
               }}
-                  className="submit-button"
-                  disabled={!dailyFeedback.trim()}
-                >
-                  Değerlendirmeyi Gönder
-            </Button>
-              </div>
-            </div>
+            >Gönder</Button>
           </div>
-        </Card>
+        </div>
       )}
 
 

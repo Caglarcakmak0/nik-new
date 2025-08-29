@@ -36,6 +36,11 @@ const NotificationsRoute = require("./notifications.js");
 const YouTubeRoute = require("./youtube.js");
 const RemindersRoute = require('./reminders.js');
 const FlashcardsRoute = require('./flashcards.js');
+const ExamAttemptsRoute = require('./examAttempts.js');
+const HabitsRoute = require('./habits.js');
+const HabitAnalyticsRoute = require('./habit-analytics.js');
+const AIRoute = require('./ai.js');
+const WeeklyPlansRoute = require('./weekly-plans.js');
 
 router.use("/users", UsersRoute);
 router.use("/image", ImageRoute);   
@@ -58,5 +63,10 @@ router.use("/notifications", NotificationsRoute);
 router.use("/youtube", YouTubeRoute);
 router.use('/reminders', RemindersRoute);
 router.use('/flashcards', FlashcardsRoute);
+router.use('/exam-attempts', ExamAttemptsRoute);
+router.use('/habits', HabitsRoute);
+router.use('/habit-analytics', HabitAnalyticsRoute);
+router.use('/ai', AIRoute);
+router.use('/weekly-plans', WeeklyPlansRoute);
 
 module.exports = router;

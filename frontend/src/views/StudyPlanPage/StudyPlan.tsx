@@ -76,7 +76,7 @@ const StudyPlan: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Dayjs>(dayjs());
   const [currentPlan, setCurrentPlan] = useState<DailyPlan | null>(null);
-  const [activeTab, setActiveTab] = useState<string>('daily');
+  const [activeTab] = useState<string>('daily');
   const location = useLocation();
   const [showCreateModal, setShowCreateModal] = useState(false);
 
@@ -185,11 +185,7 @@ const StudyPlan: React.FC = () => {
 
   // URL'ye göre tab senkronize et (ayrı sayfalar)
   useEffect(() => {
-    const path = location.pathname;
-  if (path === '/study-plan') {
-      if (activeTab !== 'daily') setActiveTab('daily');
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Study plan tek sekme: günlük
   }, [location.pathname]);
 
   useEffect(() => {
@@ -219,11 +215,11 @@ const StudyPlan: React.FC = () => {
   <Text>Bu sayfa, öğrencinin günlük çalışma programını planlama ve takibini içerir. Premium üyelik ile koç yönlendirmeleri ve düzenleme özellikleri aktif olur.</Text>
       </Modal>
       {/* Header */}
-      <div className="page-header" ref={headerRef as any}>
+  <div className="page-header" ref={headerRef as any}>
         <Row justify="space-between" align="middle">
           <Col>
             <Title level={2} style={{ fontWeight: 500, fontSize: '24px' }}>
-              <CalendarOutlined /> Günlük Programlar
+      <CalendarOutlined /> Günlük Programlar
             </Title>
           </Col>
           <Col>

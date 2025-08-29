@@ -7,6 +7,7 @@ import { apiRequest, getYouTubePlaylistItems, getCoachSubjectPreferences, create
 import { useAuth } from '../../contexts/AuthContext';
 
 import './CreateProgram.scss';
+import TopicMultiSelect from './TopicMultiSelect';
 
 type AssignedVideo = {
   // Lokal benzersiz kimlik (aynı video birden çok kez eklenebilsin)
@@ -25,6 +26,8 @@ type SubjectForm = {
   description: string;
   duration: number; // targetTime (dk)
   videos?: AssignedVideo[];
+  topicsDetailed?: { topic: string; solveQuestions?: boolean; watchVideo?: boolean; durationMinutes?: number }[];
+  hasManualDuration?: boolean; // kullanıcı slider/preset ile manuel değiştirdiyse true
 };
 
 type ProgramForm = {
@@ -193,7 +196,8 @@ const CreateProgram: React.FC = () => {
   const setDuration = (index: number, minutes: number) => {
     const list = [...(form.getFieldValue('subjects') || [])];
     if (!list[index]) return;
-    list[index].duration = minutes;
+  list[index].duration = minutes;
+  list[index].hasManualDuration = true;
     form.setFieldsValue({ subjects: list });
   };
 
@@ -231,6 +235,7 @@ const CreateProgram: React.FC = () => {
               subject: s.subject,
               description: s.description || '',
               duration: s.duration || s.targetTime || 60,
+              topicsDetailed: (s.topicsDetailed || []).map((t:any)=> ({ topic: t.topic, solveQuestions: !!t.solveQuestions, watchVideo: !!t.watchVideo, durationMinutes: t.durationMinutes })),
               videos: (s.videos || []).map((v: any, i: number) => ({
                 uid: v.videoId + '-' + i,
                 videoId: v.videoId,
@@ -308,6 +313,7 @@ const CreateProgram: React.FC = () => {
           description: s.description,
           duration: s.duration,      // Yeni oluşturma (POST) ile geriye dönük uyumluluk
           targetTime: s.duration,    // Güncelleme (PUT) için gerekli
+              topicsDetailed: (s.topicsDetailed||[]).filter(t=> t.topic).map(t=> ({ topic: t.topic, solveQuestions: !!t.solveQuestions, watchVideo: !!t.watchVideo, durationMinutes: t.durationMinutes })),
           videos: s.videos?.map(v => ({
             videoId: v.videoId,
             playlistId: v.playlistId,
@@ -452,6 +458,25 @@ const CreateProgram: React.FC = () => {
                       <Form.Item {...restField} name={[name, 'description']} label="Konu Açıklaması" rules={[{ required: true, message: 'Açıklama giriniz' }]}>
                         <TextArea rows={2} placeholder="Kısa açıklama" />
                       </Form.Item>
+                      {/* Konu Seçimi */}
+                      {subjects[name]?.subject && (
+                        <Form.Item label="Konular">
+                          <TopicMultiSelect
+                            subject={subjects[name]?.subject}
+                            value={subjects[name]?.topicsDetailed || []}
+                            onChange={(list)=>{
+                              const all: SubjectForm[] = form.getFieldValue('subjects') || [];
+                              all[name].topicsDetailed = list;
+                              // Otomatik süre hesapla: manuel override yoksa konu sürelerinin toplamını ata
+                              const totalTopicMinutes = list.reduce((sum, t)=> sum + (t.durationMinutes || 0), 0);
+                              if (totalTopicMinutes > 0 && !all[name].hasManualDuration) {
+                                all[name].duration = totalTopicMinutes;
+                              }
+                              form.setFieldsValue({ subjects: [...all] });
+                            }}
+                          />
+                        </Form.Item>
+                      )}
                       <Form.Item {...restField} name={[name, 'duration']} label="Süre (dk)" rules={[{ required: true, message: 'Süre giriniz' }]}
                         style={{ marginBottom: 4 }}
                       >

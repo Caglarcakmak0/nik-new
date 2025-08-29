@@ -158,7 +158,7 @@ const Dashboard: React.FC = () => {
             </Col>
             <Col xs={12} md={6} style={{ marginBottom: 12 }}>
               <AnalyticsMiniCard
-                title="Mevcut Seri"
+                title="Çalışma Serisi"
                 subValue={(studyStats?.streak || 0) + ' gün'}
                 data={streakSeries}
                 positive
@@ -173,7 +173,7 @@ const Dashboard: React.FC = () => {
             </Col>
             <Col xs={12} md={6} style={{ marginBottom: 12 }}>
               <AnalyticsMiniCard
-                title="Ortalama Kalite"
+                title="Çalışma Verimi "
                 subValue={(studyStats?.averageQuality || 0) + '/5'}
                 data={qualitySeries}
                 positive
@@ -241,75 +241,75 @@ const Dashboard: React.FC = () => {
             </Col>
           </Row>
           {/* Eski Study Plan Analytics içeriği - lazy yüklü */}
-          <React.Suspense fallback={<Card loading style={{ minHeight:180 }} />}> 
-            {dashboardData && advancedData && (
-              <Card style={{ marginTop: 32 }} title="Detaylı Analizler (Gerçek Veriler)">
-                <AdvancedAnalytics
-                  plan={(() => {
-                    // Server aggregated veriyi StudyPlanLike şekline map et
-                    const subjMap = advancedData.subjectStats;
-                    const sessionsList = (advancedData.sessions || []).map(s => ({
-                      ...s,
-                      _id: s._id || s.id
-                    }));
-                    // sessions'i subject'e göre grupla
-                    const grouped: Record<string, any[]> = {};
-                    sessionsList.forEach((s: any) => {
-                      const subj = s.subject || 'diger';
-                      if (!grouped[subj]) grouped[subj] = [];
-                      grouped[subj].push(s);
-                    });
-                    const subjects = subjMap.map(ss => {
-                      const sessList = grouped[ss.subject] || [];
-                      const correct = ss.correctAnswers || 0;
-                      const wrong = ss.wrongAnswers || 0;
-                      const blank = ss.blankAnswers || 0;
+            <React.Suspense fallback={<Card loading style={{ minHeight:180 }} />}> 
+              {dashboardData && advancedData && (
+                <Card style={{ marginTop: 32 }} title="Detaylı Analizler (Gerçek Veriler)">
+                  <AdvancedAnalytics
+                    plan={(() => {
+                      // Server aggregated veriyi StudyPlanLike şekline map et
+                      const subjMap = advancedData.subjectStats;
+                      const sessionsList = (advancedData.sessions || []).map(s => ({
+                        ...s,
+                        _id: s._id || s.id
+                      }));
+                      // sessions'i subject'e göre grupla
+                      const grouped: Record<string, any[]> = {};
+                      sessionsList.forEach((s: any) => {
+                        const subj = s.subject || 'diger';
+                        if (!grouped[subj]) grouped[subj] = [];
+                        grouped[subj].push(s);
+                      });
+                      const subjects = subjMap.map(ss => {
+                        const sessList = grouped[ss.subject] || [];
+                        const correct = ss.correctAnswers || 0;
+                        const wrong = ss.wrongAnswers || 0;
+                        const blank = ss.blankAnswers || 0;
+                        return {
+                          subject: ss.subject,
+                          targetQuestions: 0,
+                          targetTime: ss.totalTime,
+                          topics: [],
+                          priority: 5,
+                          completedQuestions: correct + wrong + blank,
+                          correctAnswers: correct,
+                          wrongAnswers: wrong,
+                          blankAnswers: blank,
+                          studyTime: ss.totalTime,
+                          status: 'completed',
+                          sessionIds: sessList
+                        };
+                      });
+                      const totalStudyTime = advancedData.overall.totalStudyTime;
+                      const { accuracyPercent } = advancedData.questionStatsSummary;
+                      const totalCompletedQuestions = advancedData.questionStatsSummary.totalAttempted;
+                      const successRate = Math.round(accuracyPercent);
                       return {
-                        subject: ss.subject,
-                        targetQuestions: 0,
-                        targetTime: ss.totalTime,
-                        topics: [],
-                        priority: 5,
-                        completedQuestions: correct + wrong + blank,
-                        correctAnswers: correct,
-                        wrongAnswers: wrong,
-                        blankAnswers: blank,
-                        studyTime: ss.totalTime,
-                        status: 'completed',
-                        sessionIds: sessList
-                      };
-                    });
-                    const totalStudyTime = advancedData.overall.totalStudyTime;
-                    const { accuracyPercent } = advancedData.questionStatsSummary;
-                    const totalCompletedQuestions = advancedData.questionStatsSummary.totalAttempted;
-                    const successRate = Math.round(accuracyPercent);
-                    return {
-                      _id: 'adv-analytics-plan',
-                      date: advancedData.from,
-                      title: 'Gelişmiş Analiz Dönemi',
-                      subjects,
-                      stats: {
-                        totalTargetQuestions: 0,
-                        totalCompletedQuestions,
-                        totalTargetTime: 0,
-                        totalStudyTime,
-                        completionRate: 0,
-                        netScore: 0, // advanced endpoint henüz netScore döndürmüyor
-                        successRate
-                      }
-                    } as any;
-                  })()}
-                  selectedDate={dayjs() as any}
-                  onRefresh={() => { fetchDashboardData(); }}
-                />
-              </Card>
-            )}
-            {dashboardData && !advancedData && (
-              <Card style={{ marginTop: 32 }} loading={advLoading} title="Detaylı Analizler">
-                {!advLoading && <span>Veri alınamadı.</span>}
-              </Card>
-            )}
-          </React.Suspense>
+                        _id: 'adv-analytics-plan',
+                        date: advancedData.from,
+                        title: 'Gelişmiş Analiz Dönemi',
+                        subjects,
+                        stats: {
+                          totalTargetQuestions: 0,
+                          totalCompletedQuestions,
+                          totalTargetTime: 0,
+                          totalStudyTime,
+                          completionRate: 0,
+                          netScore: 0, // advanced endpoint henüz netScore döndürmüyor
+                          successRate
+                        }
+                      } as any;
+                    })()}
+                    selectedDate={dayjs() as any}
+                    onRefresh={() => { fetchDashboardData(); }}
+                  />
+                </Card>
+              )}
+              {dashboardData && !advancedData && (
+                <Card style={{ marginTop: 32 }} loading={advLoading} title="Detaylı Analizler">
+                  {!advLoading && <span>Veri alınamadı.</span>}
+                </Card>
+              )}
+            </React.Suspense>
         </Space>
       )}
     </div>

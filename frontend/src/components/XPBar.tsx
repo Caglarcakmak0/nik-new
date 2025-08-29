@@ -1,5 +1,5 @@
 import React from 'react';
-import { Progress, Tooltip, Space, Tag } from 'antd';
+import './xpBar.scss';
 
 interface XPBarProps {
   totalXP: number;
@@ -19,22 +19,29 @@ function prevLevelCumulative(level: number) {
 
 const XPBar: React.FC<XPBarProps> = ({ totalXP, currentLevel, currentLevelXP, nextLevelXP }) => {
   const prevCum = prevLevelCumulative(currentLevel);
-  const neededForThis = nextLevelXP - prevCum;
+  const neededForThis = Math.max(0, nextLevelXP - prevCum);
   const percent = neededForThis > 0 ? Math.min(100, (currentLevelXP / neededForThis) * 100) : 100;
   const remaining = Math.max(0, neededForThis - currentLevelXP);
+  const isMaxed = neededForThis === 0 || percent >= 100;
+
   return (
-    <Tooltip title={`Seviye ${currentLevel} • Kalan ${remaining} XP`}>
-      <Space direction="vertical" style={{ width: '100%' }} size={4}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
-          <span>Seviye {currentLevel}</span>
-          <span>{currentLevelXP} / {neededForThis} XP</span>
+    <div className="xp-bar" aria-label={`Seviye ${currentLevel} ilerleme çubuğu`}>
+      <div className="xp-bar__head">
+        <span className="xp-bar__level-badge">Lv {currentLevel}</span>
+        <span className="xp-bar__numbers">{isMaxed ? 'MAX' : `${currentLevelXP} / ${neededForThis} XP`}</span>
+      </div>
+      <div className="xp-bar__track" role="progressbar" aria-valuemin={0} aria-valuemax={neededForThis || 100} aria-valuenow={isMaxed ? neededForThis || 100 : currentLevelXP} aria-valuetext={`%${Math.round(percent)}`}>
+        <div className="xp-bar__fill" style={{ width: `${percent}%` }}>
+          <span className="xp-bar__shine" />
         </div>
-        <Progress percent={percent} size="small" strokeColor="#faad14" showInfo={false} />
-        <div style={{ display: 'flex', gap: 4 }}>
-          <Tag color="gold" style={{ margin: 0 }}>Toplam {totalXP}</Tag>
-        </div>
-      </Space>
-    </Tooltip>
+        {!isMaxed && <span className="xp-bar__percent">%{Math.round(percent)}</span>}
+      </div>
+      <div className="xp-bar__footer">
+        <span className="xp-bar__total">Toplam {totalXP} XP</span>
+        {!isMaxed && <span className="xp-bar__remaining">Kalan {remaining} XP</span>}
+        {isMaxed && <span className="xp-bar__max">Seviye Tamamlandı</span>}
+      </div>
+    </div>
   );
 };
 

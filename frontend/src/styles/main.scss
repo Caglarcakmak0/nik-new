@@ -303,6 +303,16 @@ body h2.ant-typography {
   .ant-modal-content {
     // İçerik kesilmesin; body'de kaydırma olsun
     overflow: visible;
+  border-radius: 22px !important;
+  background: linear-gradient(135deg,#ffffff 0%, #f8fafc 100%) !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 10px 36px -8px rgba(15,23,42,0.25) !important;
+  position: relative !important;
+  }
+  .ant-modal-content::before {
+    content:"";
+    position:absolute; inset:0; border-radius:inherit; pointer-events:none;
+  background: radial-gradient(circle at 85% 15%, rgba(99,102,241,0.18), transparent 65%), radial-gradient(circle at 18% 85%, rgba(79,70,229,0.12), transparent 70%) !important;
   }
 
   .ant-modal-body {
@@ -589,23 +599,57 @@ body h2.ant-typography {
   }
   
   .ant-modal-header {
-    background: #1f2937 !important;
-    border-bottom-color: #374151 !important;
+  background: transparent !important;
+  border-bottom-color: rgba(226,232,240,0.8) !important;
+  padding: 18px 22px 10px !important;
   }
   
   .ant-modal-title {
-    color: #f9fafb !important;
+  color: #0f172a !important;
+  font-weight:700 !important;
+  letter-spacing:.3px !important;
   }
   
   .ant-modal-body {
-    background: #1f2937 !important;
-    color: #f9fafb !important;
+  background: transparent !important;
+  color: #0f172a !important;
+  padding: 4px 22px 16px !important;
   }
   
   .ant-modal-footer {
-    background: #1f2937 !important;
-    border-top-color: #374151 !important;
+  background: transparent !important;
+  border-top-color: rgba(226,232,240,0.8) !important;
+  padding: 14px 22px 20px !important;
   }
+
+// Light theme specific refinements for normal theme root (not .theme-dark)
+body:not(.theme-dark) .ant-modal-close-x {
+  width: 42px; height:42px; line-height:42px;
+  border-radius:14px;
+  display:flex; align-items:center; justify-content:center;
+  transition:.25s;
+}
+body:not(.theme-dark) .ant-modal-close-x:hover { background:#f1f5f9; }
+
+// Button alignment & spacing
+:where([class^="css-"]) .ant-modal-footer .ant-btn,
+.ant-modal-footer .ant-btn { border-radius:14px; height:44px; font-weight:600; }
+
+// Primary gradient style override
+body:not(.theme-dark) .ant-btn-primary { background:linear-gradient(145deg,#6366f1,#4f46e5) !important; border:none !important; box-shadow:0 4px 14px -4px rgba(99,102,241,0.45) !important; }
+body:not(.theme-dark) .ant-btn-primary:hover { filter:brightness(1.05); transform:translateY(-2px); }
+
+/* Dark theme modal redesign matching weekly plan custom modal */
+.theme-dark {
+  .ant-modal-content { background: linear-gradient(135deg,#1e293b 0%, #0f172a 100%) !important; border-color:#334155 !important; box-shadow:0 10px 36px -8px rgba(0,0,0,0.55) !important; }
+  .ant-modal-content::before { background: radial-gradient(circle at 85% 15%, rgba(99,102,241,0.28), transparent 65%), radial-gradient(circle at 18% 85%, rgba(79,70,229,0.18), transparent 70%) !important; }
+  .ant-modal-title { color:#f1f5f9 !important; }
+  .ant-modal-body { color:#e2e8f0 !important; }
+  .ant-modal-footer { border-top-color:#334155 !important; }
+  .ant-modal-close-x:hover { background:#1e293b !important; }
+  .ant-btn-primary { background:linear-gradient(145deg,#6366f1,#4338ca) !important; border:none !important; box-shadow:0 4px 14px -4px rgba(99,102,241,0.55); }
+  .ant-btn-primary:hover { filter:brightness(1.06); }
+}
   
   // Ant Design dropdown dark mode
   .ant-dropdown-menu {
