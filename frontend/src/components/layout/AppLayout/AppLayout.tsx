@@ -34,7 +34,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   const [notificationCenterVisible, setNotificationCenterVisible] = useState(false);
   const { themeMode, isDark, toggleTheme } = useTheme();
   const { designMode } = useDesign();
-  const menuItems = getRouteMenuByRole(user?.role);
+  const menuItems = getRouteMenuByRole(user?.role, user?.role === 'student' ? (user?.plan?.tier as any) : undefined);
   const planLabel = user?.role === 'student' ? ((user?.plan?.tier as any) === 'premium' ? 'Premium' : 'Free') : null;
   const [globalMock, setGlobalMock] = useState<boolean>(()=> {
     const stored = localStorage.getItem('globalMockMode');

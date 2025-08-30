@@ -142,11 +142,32 @@ const CalendarView: React.FC<CalendarViewProps> = ({
       const dateValues = document.querySelectorAll('.ant-picker-calendar-date-value');
             dateValues.forEach((dateValue) => {
         const dateValueEl = dateValue as HTMLElement;
+        // Colors (inline theme styles)
+        // Light mode palette: soft background, dark text
+        const light = {
+          background: '#e2e8f0',
+          color: '#334155',
+          hoverBg: '#cbd5e1',
+          hoverColor: '#1e293b'
+        };
+        const dark = {
+          background: '#334155',
+          color: '#e2e8f0',
+          hoverBg: '#475569',
+          hoverColor: '#f1f5f9'
+        };
+        const themeColors = isDark ? dark : light;
+
+        const existing = dateValueEl.querySelector<HTMLButtonElement>('.reminder-btn-injected');
+        if (existing) {
+          // Update inline styles for existing button on theme change
+          existing.setAttribute('data-theme', isDark ? 'dark' : 'light');
+          existing.style.background = themeColors.background;
+          existing.style.color = themeColors.color;
+          return; // no need to recreate
+        }
         
-        // Skip if button already exists
-        if (dateValueEl.querySelector('.reminder-btn-injected')) return;
-        
-        // Get the date number from the date value text
+
         const dateText = dateValueEl.textContent?.trim();
         if (!dateText || isNaN(Number(dateText))) return;
         
@@ -155,7 +176,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
         const currentYear = selectedDate.year();
         const cellDate = dayjs().year(currentYear).month(currentMonth).date(dayNumber);
         
-        // Create button with theme-aware styling
+  // Create button with theme-aware styling
         const button = document.createElement('button');
         button.className = 'reminder-btn-injected';
         button.setAttribute('data-date', cellDate.format('YYYY-MM-DD'));
@@ -169,52 +190,42 @@ const CalendarView: React.FC<CalendarViewProps> = ({
         `;
         
         button.innerHTML = iconSvg;
-        
-        // Theme-aware colors
-        const lightColors = {
-          background: '#e2e8f0',
-          color: '#334155',
-          hoverBackground: '#cbd5e1',
-          hoverColor: '#1f2937'
-        };
-        
-        const darkColors = {
-          background: '#334155',
-          color: '#e2e8f0',
-          hoverBackground: '#475569',
-          hoverColor: '#f1f5f9'
-        };
-        
-        const colors = isDark ? darkColors : lightColors;
-        
-        button.style.cssText = `
-          position: absolute;
-          top: 2px;
-          left: 2px;
-          width: 22px;
-          height: 22px;
-          background: ${colors.background};
-          border: none;
-          border-radius: 4px;
-          cursor: pointer;
-          z-index: 10;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          transition: all 0.2s ease;
-          color: ${colors.color};
-        `;
-        
-        // Add theme-aware hover effects
+
+        // Inline styling (override SCSS for immediate correctness)
+        button.setAttribute('aria-label', 'Hatırlatma ekle');
+        button.style.position = 'absolute';
+        button.style.top = '2px';
+        button.style.left = '2px';
+        button.style.width = '22px';
+        button.style.height = '22px';
+        button.style.border = 'none';
+        button.style.borderRadius = '4px';
+        button.style.cursor = 'pointer';
+        button.style.zIndex = '10';
+        button.style.display = 'flex';
+        button.style.alignItems = 'center';
+        button.style.justifyContent = 'center';
+        button.style.transition = 'background 0.18s ease, color 0.18s ease, transform 0.16s ease';
+        button.style.fontSize = '12px';
+        button.style.background = themeColors.background;
+        button.style.color = themeColors.color;
+
+        // Hover effects (inline)
         button.addEventListener('mouseenter', () => {
-          button.style.background = colors.hoverBackground;
-          button.style.transform = 'scale(1.1)';
-          button.style.color = colors.hoverColor;
+          button.style.background = themeColors.hoverBg;
+          button.style.color = themeColors.hoverColor;
+          button.style.transform = 'scale(1.08)';
         });
         button.addEventListener('mouseleave', () => {
-          button.style.background = colors.background;
+          button.style.background = themeColors.background;
+          button.style.color = themeColors.color;
           button.style.transform = 'scale(1)';
-          button.style.color = colors.color;
+        });
+        button.addEventListener('mousedown', () => {
+          button.style.transform = 'scale(0.94)';
+        });
+        button.addEventListener('mouseup', () => {
+          button.style.transform = 'scale(1)';
         });
         
         // Add click handler with direct date reference
@@ -246,7 +257,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
           }
         });
         
-        // Insert button
+  // Insert button
         dateValueEl.style.position = 'relative';
         dateValueEl.appendChild(button);
         

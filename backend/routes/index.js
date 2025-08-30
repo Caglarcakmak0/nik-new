@@ -41,6 +41,7 @@ const HabitsRoute = require('./habits.js');
 const HabitAnalyticsRoute = require('./habit-analytics.js');
 const AIRoute = require('./ai.js');
 const WeeklyPlansRoute = require('./weekly-plans.js');
+const AISuggestionsRoute = require('./ai-suggestions.js');
 
 router.use("/users", UsersRoute);
 router.use("/image", ImageRoute);   
@@ -68,5 +69,6 @@ router.use('/habits', HabitsRoute);
 router.use('/habit-analytics', HabitAnalyticsRoute);
 router.use('/ai', AIRoute);
 router.use('/weekly-plans', WeeklyPlansRoute);
+router.use('/ai-suggestions', AISuggestionsRoute);
 
 module.exports = router;

@@ -142,6 +142,7 @@ const { startCoachPerformanceJob } = require('./jobs/coachPerformance');
 const { startPerformanceNotificationsJob } = require('./jobs/performanceNotifications');
 const { startLeaderboardNotificationsJob } = require('./jobs/leaderboardNotifications');
 const { startHabitJobs } = require('./jobs/habitJobs');
+const { startAISuggestionCleanupJob } = require('./jobs/aiSuggestionCleanup');
 
 async function startServer(customPort) {
     const p = customPort || port;
@@ -153,6 +154,7 @@ async function startServer(customPort) {
         startPerformanceNotificationsJob();
         startLeaderboardNotificationsJob();
         startHabitJobs();
+    startAISuggestionCleanupJob();
         return app.listen(p);
     } catch (error) {
         console.error('MongoDB connection error:', error);

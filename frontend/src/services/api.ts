@@ -247,6 +247,40 @@ export const reassignStudent = async (payload: {
   });
 };
 
+// ==== AI Suggestions (Student) ====
+export interface AISuggestion {
+  _id: string;
+  type: string;
+  subject?: string;
+  topic?: string;
+  scopes: string[];
+  messages?: Record<string,string>;
+  status: 'active' | 'dismissed' | 'consumed' | 'stale';
+  dismissedScopes: string[];
+  consumedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export const getAISuggestions = async (scope: string) => {
+  const search = new URLSearchParams();
+  if(scope) search.set('scope', scope);
+  return apiRequest(`/ai-suggestions?${search.toString()}`);
+};
+
+export const generateAISuggestions = async () => {
+  return apiRequest('/ai-suggestions/generate', { method:'POST', body: JSON.stringify({}) });
+};
+
+export const dismissAISuggestion = async (id: string, scope?: string) => {
+  const qs = scope? `?scope=${encodeURIComponent(scope)}`:'';
+  return apiRequest(`/ai-suggestions/${id}/dismiss${qs}`, { method:'POST', body: JSON.stringify({}) });
+};
+
+export const acceptAISuggestion = async (id: string, payload: { targetDay?: number } = {}) => {
+  return apiRequest(`/ai-suggestions/${id}/accept`, { method:'POST', body: JSON.stringify(payload) });
+};
+
 // ==== Admin - Statistics ====
 export type FeedbackSummary = {
   totalFeedbacks: number;

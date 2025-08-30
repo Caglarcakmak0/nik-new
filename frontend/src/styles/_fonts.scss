@@ -31,6 +31,6 @@ $font-logo: 'Playfair Display', serif;                   // Logo font
 h1, h2, h3, h4, h5, h6 { font-family: var(--font-heading); }
 body { font-family: var(--font-body); }
 button, .ant-btn, input, select, textarea, .ant-menu, .ant-tabs, .ant-breadcrumb { font-family: var(--font-ui); }
-strong, b, em, i, mark, .accent, .callout { font-family: var(--font-accent); }
+
 .stats, .metric-value, .kpi, .score, .timer-display__digital-time .ant-typography { font-family: var(--font-numeric); }
 .logo-text, .brand-text, .font-logo { font-family: var(--font-logo); }

@@ -2,6 +2,7 @@ import React from 'react';
 import { DatePicker, Space, Alert } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
 import WeeklyPlanView from '../StudyPlanPage/bones/WeeklyPlan/WeeklyPlanView';
+import AISuggestionsPanel from '../../components/AISuggestions/AISuggestionsPanel';
 import './bones/weeklyPlanLayout.scss';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -32,7 +33,10 @@ const WeeklyPlanPage: React.FC = () => {
           <Alert type="warning" showIcon message="Bu sayfa ücretsiz kullanıcı alanı" description="Premium kullanıcılar günlük detaylı koç programı ekranını kullanır. Free plan ile haftalık basit planlama burada sunulur." style={{ marginBottom:20 }} />
         )}
 
-        <WeeklyPlanView referenceDate={selectedDate} />
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 280px', gap:16, alignItems:'start' }}>
+          <WeeklyPlanView referenceDate={selectedDate} />
+          <AISuggestionsPanel scope="weekly_plan" onAccepted={()=> {/* could refresh via event; rely on weekly plan fetch after accept */}} />
+        </div>
       </div>
     </div>
   );

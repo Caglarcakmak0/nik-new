@@ -58,9 +58,7 @@ const DayModal: React.FC<DayModalProps> = ({
         <div style={{ 
           position: 'absolute', 
           inset: 0, 
-          background: isDark 
-            ? 'linear-gradient(135deg,#0f172a 0%, #1e293b 60%)' 
-            : 'linear-gradient(135deg,#f0f9ff 0%, #ffffff 60%)', 
+        
           opacity: isDark ? 0.85 : 0.6, 
           borderRadius: 16, 
           pointerEvents: 'none' 

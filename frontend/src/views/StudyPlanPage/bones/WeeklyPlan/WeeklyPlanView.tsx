@@ -75,6 +75,10 @@ const WeeklyPlanView: React.FC<WeeklyPlanViewProps> = ({ referenceDate }) => {
   useEffect(()=>{ fetchPlan(); // eslint-disable-next-line
   },[referenceDate]);
 
+  // Expose refresh through window for AI panel accept callback (lightweight pub-sub)
+  // @ts-ignore
+  window.__refreshWeeklyPlan = fetchPlan;
+
   function openAdd(dayIndex:number){
   setEditingEntry(null);
   form.resetFields();

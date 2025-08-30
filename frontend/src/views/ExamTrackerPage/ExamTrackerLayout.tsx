@@ -7,6 +7,7 @@ import { AggregateHistoryModal } from './bones/AggregateHistoryModal.tsx';
 import { AddAttemptDrawer } from './bones/AddAttemptDrawer.tsx';
 import { DualNetSummaryCard } from './bones/DualNetSummaryCard.tsx';
 import '../ExamTrackerPage/bones/examTrackerLayout.scss';
+import AISuggestionsPanel from '../../components/AISuggestions/AISuggestionsPanel';
 
 export const ExamTrackerLayout: React.FC = () => {
   const [useRemote, setUseRemote] = React.useState(()=> {
@@ -35,7 +36,7 @@ export const ExamTrackerLayout: React.FC = () => {
           <button onClick={tracker.clearError} className="et-close">×</button>
         </div>
       )}
-      <div className="exam-tracker-layout__header">
+  <div className="exam-tracker-layout__header">
         <div className="exam-tracker-layout__title-block">
           <h1 className="etl-heading">Deneme Takibi</h1>
           <p className="etl-desc">Denemelerini ekle, zayıf konularını analiz et, önerileri takip et.</p>
@@ -52,8 +53,11 @@ export const ExamTrackerLayout: React.FC = () => {
             }}>{useRemote ? 'REAL API' : 'MOCK DATA'}</span>
           </div>
         </div>
-        <div className="exam-tracker-layout__actions">
+        <div className="exam-tracker-layout__actions" style={{ display:'flex', flexDirection:'column', gap:12, alignItems:'flex-end' }}>
           <button className="etl-btn etl-btn--primary" type="button" onClick={()=> tracker.setShowAdd(true)}>+ Deneme Ekle</button>
+          <div style={{ width:260 }}>
+            <AISuggestionsPanel scope="exam_tracker" />
+          </div>
         </div>
       </div>
       <div className="exam-tracker-layout__columns">

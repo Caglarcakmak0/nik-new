@@ -12,7 +12,7 @@ import {
   TrophyOutlined,
   HistoryOutlined
 } from "@ant-design/icons";
-import type { MenuItemEx, Role } from "./menuTypes";
+import type { MenuItemEx, Role, PlanTier } from "./menuTypes";
 
 // Tüm menü tek bir listede, her öğe hangi roller görebiliyorsa roles ile tanımlı
 export const allMenuItems: MenuItemEx[] = [
@@ -101,12 +101,14 @@ export const allMenuItems: MenuItemEx[] = [
     icon: <CalendarOutlined />,
     label: "Haftalık Plan",
     roles: ["student"],
+    plans: ["free"], // yalnızca free öğrenciler
   },
   {
     key: "/study-plan",
     icon: <BookOutlined />,
-  label: "Günlük Programlar",
+	label: "Günlük Programlar",
     roles: ["student"],
+    plans: ["premium"], // yalnızca premium öğrenciler
   },
   {
     key: "/topic-matrix",
@@ -186,16 +188,24 @@ export const allMenuItems: MenuItemEx[] = [
 // Role'a göre menü ağacını filtrele
 export const filterMenuByRole = (
   items: MenuItemEx[],
-  role?: Role
+  role?: Role,
+  planTier?: PlanTier
 ): MenuItemEx[] => {
   const filterItem = (item: MenuItemEx): MenuItemEx | null => {
-    const allowed = !item.roles || (role && item.roles.includes(role));
-    if (!allowed) return null;
+    // Role bazlı görünürlük
+    const allowedByRole = !item.roles || (role && item.roles.includes(role));
+    if (!allowedByRole) return null;
+
+    // Plan bazlı görünürlük (sadece öğrenci için uygula; koç/admin için es geç)
+    const applyPlan = role === 'student';
+    const allowedByPlan = !applyPlan || !item.plans || (planTier && item.plans.includes(planTier));
+    if (!allowedByPlan) return null;
 
     if (item.children && item.children.length) {
       const filteredChildren = filterMenuByRole(
         item.children as MenuItemEx[],
-        role
+        role,
+        planTier
       );
       if (filteredChildren.length === 0)
         return { ...item, children: undefined } as MenuItemEx;
@@ -210,8 +220,8 @@ export const filterMenuByRole = (
 };
 
 // Role'e göre kompoze menü
-export const composeMenuByRole = (userRole: Role | undefined): MenuItemEx[] => {
-  return filterMenuByRole(allMenuItems, userRole);
+export const composeMenuByRole = (userRole: Role | undefined, planTier?: PlanTier): MenuItemEx[] => {
+  return filterMenuByRole(allMenuItems, userRole, planTier);
 };
 
 // Utility: find title by key in a role-aware menu

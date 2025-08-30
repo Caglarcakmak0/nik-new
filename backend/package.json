@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "nodemon server.js",
     "start": "node server.js",
-    "seed:dev": "node scripts/devSeedUsers.js",
+  "seed:dev": "node scripts/devSeedUsers.js",
+  "seed:exams": "node scripts/devSeedExamAttempts.js",
     "verify:smtp": "node scripts/verifySmtp.js",
   "test": "jest --runInBand"
   },

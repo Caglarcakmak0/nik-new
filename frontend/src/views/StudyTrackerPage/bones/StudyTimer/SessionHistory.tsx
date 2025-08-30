@@ -371,14 +371,7 @@ const SessionHistory: React.FC<SessionHistoryProps> = ({ refreshTrigger = 0 }) =
 
           <RangePicker size="small" />
 
-          <Button
-            icon={<BarChartOutlined />}
-            type="dashed"
-            size="small"
-            onClick={() => message.info('Analiz özelliği yakında!')}
-          >
-            Analiz
-          </Button>
+          {/* Analiz button removed across project (feature planned) */}
         </Space>
       </div>
 

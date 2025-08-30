@@ -125,13 +125,20 @@
 
         .brand-text {
           color: #fb923c;
-          font-family: var(--font-heading);
+          font-family: var(--font-logo);
           font-weight: 900;
           font-size: 20px;
           transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             /* text-shadow removed */
           letter-spacing: 0.5px;
         }
+      }
+
+      // Force logo font (in case Ant overrides via .ant-typography)
+      .logo-text .brand-text.font-logo,
+      .logo-text .brand-text.ant-typography,
+      .app-layout .app-sider .sider-logo.expanded .logo-text .brand-text {
+        font-family: var(--font-logo) !important;
       }
 
              // Expanded durumda hiçbir hover efekti yok
@@ -276,19 +283,13 @@
       }
     }
 
-         &.expanded {
-       &:hover {
-         // Hiçbir hover efekti yok
-       }
-     }
+  // expanded state inherits base styles
 
      .logo-icon {
        filter: drop-shadow(0 2px 4px rgba(24, 144, 255, 0.5));
      }
 
-     .brand-text {
-  /* text-shadow removed */
-     }
+  // brand-text overrides handled earlier; removed empty ruleset
   }
 }
 

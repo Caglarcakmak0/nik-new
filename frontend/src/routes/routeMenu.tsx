@@ -1,7 +1,7 @@
-import type { MenuItemEx, Role } from './menuTypes';
+import type { MenuItemEx, Role, PlanTier } from './menuTypes';
 import { composeMenuByRole, getPageTitleFromMenu } from './menuUtils';
 
-export const getRouteMenuByRole = (userRole: Role | undefined): MenuItemEx[] => composeMenuByRole(userRole);
+export const getRouteMenuByRole = (userRole: Role | undefined, planTier?: PlanTier): MenuItemEx[] => composeMenuByRole(userRole, planTier);
 
 // Legacy export for backward compatibility (base menu only)
 export const routeMenu: MenuItemEx[] = composeMenuByRole(undefined);

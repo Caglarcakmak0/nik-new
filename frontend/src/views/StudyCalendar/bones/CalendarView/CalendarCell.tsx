@@ -82,7 +82,10 @@ const CalendarCell: React.FC<CalendarCellProps> = ({
         onClick={() => onDayClick(date)}
       >
         {questionMode && examTotal !== undefined && examTotal > 0 && (
-          <span>{examTotal}</span>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+            <div style={{ fontSize: 18, fontWeight: 700, color: '#10b981' /* yeşil */ }}>{examTotal}</div>
+            <div style={{ fontSize: 11, color: textSecondary, marginTop: 4 }}>Soru Çözüldü</div>
+          </div>
         )}
 
         {!questionMode && dayData && (
@@ -111,7 +114,8 @@ const CalendarCell: React.FC<CalendarCellProps> = ({
               overflow: 'hidden', 
               textOverflow: 'ellipsis' 
             }}>
-              📌 {reminders[0].text}
+              {/* Prefer showing the subject (etiket); fall back to note text */}
+              {reminders[0].subject ? `🏷️ ${reminders[0].subject}` : `📌 ${(reminders[0].text || '').split('\n')[0]}`}
               {reminders[0].isDone && <span style={{ textDecoration: 'line-through', opacity: 0.6 }}> ✓</span>}
             </div>
             {reminders.length > 1 && (

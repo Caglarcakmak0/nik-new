@@ -1,5 +1,5 @@
-import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { Modal, Button, Select, message, List, Tag, Spin } from 'antd';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { Modal, Button, AutoComplete, message, List, Tag, Spin } from 'antd';
 import ReactMarkdown from 'react-markdown';
 // @ts-ignore - type declarations not bundled
 import remarkGfm from 'remark-gfm';
@@ -62,18 +62,7 @@ const ReminderModal: React.FC<ReminderModalProps> = ({
     }, 0);
   };
 
-  const insertTemplate = useCallback((template: string) => {
-    const el = textareaRef.current;
-    if (!el) return;
-    const start = el.selectionStart;
-    const text = newReminderText;
-    const updated = text.slice(0, start) + template + text.slice(start);
-    setNewReminderText(updated);
-    setTimeout(() => {
-      el.focus();
-      el.selectionStart = el.selectionEnd = start + template.length;
-    }, 0);
-  }, [newReminderText]);
+
 
   // Günün hatırlatmalarını getir
   const fetchDayReminders = useCallback(async () => {
@@ -223,13 +212,13 @@ const ReminderModal: React.FC<ReminderModalProps> = ({
           )}
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <Select
+          <AutoComplete
             allowClear
             placeholder="Ders / Etiket (opsiyonel)"
             size="small"
             value={newReminderSubject}
             onChange={(v) => setNewReminderSubject(v)}
-            options={Array.from(new Set(sessions.map(s => s.subject))).slice(0, 20).map(s => ({ value: s, label: s }))}
+            style={{ width: '100%' }}
           />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             <div style={{ 
@@ -245,15 +234,8 @@ const ReminderModal: React.FC<ReminderModalProps> = ({
                 { label: 'B', title: 'Kalın', apply: () => wrapSelection('**', '**') },
                 { label: 'İ', title: 'İtalik', apply: () => wrapSelection('*', '*') },
                 { label: 'H1', title: 'Başlık 1', apply: () => prependLine('# ') },
-                { label: 'H2', title: 'Başlık 2', apply: () => prependLine('## ') },
-                { label: '- •', title: 'Liste', apply: () => prependLine('- ') },
-                { label: '1.', title: 'Numaralı', apply: () => prependLine('1. ') },
-                { label: '[ ]', title: 'Görev', apply: () => prependLine('- [ ] ') },
-                { label: 'Kod', title: 'Kod Blok', apply: () => wrapSelection('\n```\n', '\n```\n') },
-                { label: 'Link', title: 'Bağlantı', apply: () => wrapSelection('[', '](https://)') },
-                { label: 'Tablo', title: 'Tablo Şablonu', apply: () => insertTemplate('\n| Başlık | Başlık2 |\n| ------ | ------- |\n| Hücre  | Hücre   |\n') },
-                { label: 'Alıntı', title: 'Alıntı', apply: () => prependLine('> ') },
-                { label: 'ÖNEM', title: 'Önemli Etiket', apply: () => prependLine('> **ÖNEMLİ:** ') },
+
+
               ].map(btn => (
                 <Button 
                   key={btn.label} 
@@ -269,7 +251,7 @@ const ReminderModal: React.FC<ReminderModalProps> = ({
             <textarea
               value={newReminderText}
               onChange={e => setNewReminderText(e.target.value)}
-              placeholder={editingReminder ? 'Hatırlatmayı düzenle...' : 'Markdown destekli not yazın (Örn: **Matematik** tekrar)'}
+              placeholder={'Haydi Kendine Not Al!'}
               maxLength={5000}
               ref={textareaRef}
               style={{ 

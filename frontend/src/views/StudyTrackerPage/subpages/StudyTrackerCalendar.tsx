@@ -11,13 +11,13 @@ const StudyTrackerCalendar: React.FC = () => {
   return (
     <div className="study-tracker">
       <div style={{ marginBottom: 24, display: 'flex', alignItems: 'center', gap: 12 }}>
-        <Title level={2} style={{ margin: 0, fontWeight: 500, fontSize: '24px', display: 'flex', alignItems: 'center', gap: 12 }}>
+        <Title level={2} style={{ margin: 0, fontWeight: 500, fontSize: '18px ', display: 'flex', alignItems: 'center', gap: 12 }}>
           <span
             onClick={() => setMode('study')}
             style={{
               cursor: 'pointer',
               color: mode === 'study' ? '#3c3b3bff' : undefined,
-              textDecoration: mode === 'study' ? 'box-shadow: inset 0 -2px 0 0 currentColor' : 'none'
+              textDecoration: mode === 'study' ? 'underline' : 'none',
             }}
           >Çalışma Takvimi</span>
           <span style={{ opacity: 0.5 }}>|</span>
@@ -26,12 +26,13 @@ const StudyTrackerCalendar: React.FC = () => {
             style={{
               cursor: 'pointer',
               color: mode === 'question' ? '#3c3b3bff' : undefined,
+              textDecoration: mode === 'question' ? 'underline' : 'none',
             }}
           >Soru Takvimi</span>
         </Title>
       </div>
-  <StudyCalendar key={`calendar-${mode}`} mode={mode} />
-    </div>
+    <StudyCalendar key={`calendar-${mode}`} mode={mode} />
+  </div>
   );
 };
 
